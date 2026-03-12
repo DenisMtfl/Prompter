@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\PromptPlatform.Application\PromptPlatform.Application.csproj" />
+    <ProjectReference Include="..\PromptPlatform.Domain\PromptPlatform.Domain.csproj" />
+    <ProjectReference Include="..\PromptPlatform.Infrastructure\PromptPlatform.Infrastructure.csproj" />
+    <ProjectReference Include="..\PromptPlatform.Contracts\PromptPlatform.Contracts.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+</Project>

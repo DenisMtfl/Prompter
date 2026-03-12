@@ -1,0 +1,309 @@
+@page "/optimizer"
+@page "/de/optimizer"
+@page "/en/optimizer"
+@using System.Globalization
+@using System.Text.Json
+@inject IStringLocalizer<SharedResource> L
+@inject IPromptOptimizerService PromptOptimizerService
+@inject IUserLibraryService UserLibraryService
+@inject ISeoLandingPageService SeoLandingPageService
+@inject IJSRuntime JsRuntime
+@inject NavigationManager Navigation
+
+<PageTitle>@L["PageTitle_Optimizer"]</PageTitle>
+<HeadContent>
+    <meta name="description" content="@OptimizerMetaDescription" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@L["PageTitle_Optimizer"]" />
+    <meta property="og:description" content="@OptimizerMetaDescription" />
+    <meta property="og:url" content="@CanonicalUrl" />
+    <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
+    <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@L["PageTitle_Optimizer"]" />
+    <meta name="twitter:description" content="@OptimizerMetaDescription" />
+    <link rel="canonical" href="@CanonicalUrl" />
+    <link rel="alternate" hreflang="de" href="@GermanUrl" />
+    <link rel="alternate" hreflang="en" href="@EnglishUrl" />
+    <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
+    <script type="application/ld+json">@((MarkupString)OptimizerJsonLd)</script>
+</HeadContent>
+
+<div class="row g-4">
+    <div class="col-xl-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h1 class="h3 mb-3">@L["Optimizer_Title"]</h1>
+                <p class="text-secondary">@L["Optimizer_Subtitle_Advanced"]</p>
+
+                <form @onsubmit="OptimizeAsync" @onsubmit:preventDefault>
+                    <div class="mb-3">
+                        <label class="form-label">@L["Optimizer_Input"]</label>
+                        <textarea class="form-control" rows="10" @bind="Request.InputPrompt" placeholder="@L["Optimizer_Input_Placeholder"]"></textarea>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">@L["Optimizer_TargetLanguage"]</label>
+                            <select class="form-select" @bind="Request.TargetLanguage">
+                                <option value="de">@L["Language_German"]</option>
+                                <option value="en">@L["Language_English"]</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@L["Optimizer_Context"]</label>
+                            <select class="form-select" @bind="Request.Context">
+                                @foreach (var context in Enum.GetValues<OptimizerContext>())
+                                {
+                                    <option value="@context">@L[$"Optimizer_Context_{context}"]</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="includeWhyBetter" @bind="Request.IncludeImprovementSummary" />
+                        <label class="form-check-label" for="includeWhyBetter">@L["Optimizer_ShowWhyBetter"]</label>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(ValidationError))
+                    {
+                        <div class="alert alert-warning py-2 mt-3">@ValidationError</div>
+                    }
+
+                    <button type="submit" class="btn btn-primary mt-3 w-100">@L["Optimizer_Action"]</button>
+                </form>
+
+                <section class="mt-4 generator-context-links" aria-labelledby="optimizer-context-links-title">
+                    <h2 id="optimizer-context-links-title" class="h6 mb-2">@ContextLinksTitle</h2>
+                    <p class="small text-secondary mb-3">@ContextLinksSubtitle</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var link in OptimizerContextPages)
+                        {
+                            <a class="btn btn-sm btn-outline-secondary generator-topic-link" href="@link.Path">@link.Title</a>
+                        }
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <a class="btn btn-sm btn-outline-primary" href="@PresetsPath">@ContextPresetsCta</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="@GeneratorPath">@ContextGeneratorCta</a>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="h4 mb-0">@L["Optimizer_Result_Title"]</h2>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="CopyAsync" disabled="@(Result is null)">@L["Action_Copy"]</button>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="ToggleFavoriteAsync" disabled="@(Result is null)">
+                            @(Result is not null && UserLibraryService.IsFavorite(Result.OptimizedPrompt) ? L["Action_Unfavorite"] : L["Action_Favorite"])
+                        </button>
+                    </div>
+                </div>
+
+                @if (Result is null)
+                {
+                    <div class="placeholder-card">
+                        <p class="text-secondary mb-0">@L["Optimizer_Result_Empty"]</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge text-bg-success">@L["Optimizer_Score", Result.QualityScore]</span>
+                        <span class="badge text-bg-light border">@L[Result.ContextLabelKey]</span>
+                    </div>
+
+                    @if (Request.IncludeImprovementSummary)
+                    {
+                        <div class="mb-3">
+                            <h3 class="h6">@L["Optimizer_WhyBetter_Title"]</h3>
+                            <ul class="list-group">
+                                @foreach (var key in Result.ImprovementKeys)
+                                {
+                                    <li class="list-group-item">@L[key]</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <textarea class="form-control flex-fill" rows="14" readonly>@Result.OptimizedPrompt</textarea>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "history")]
+    public Guid? HistoryId { get; set; }
+
+    private PromptOptimizationRequest Request { get; set; } = new();
+    private PromptOptimizationResult? Result { get; set; }
+    private string ValidationError { get; set; } = string.Empty;
+    private Guid? LastLoadedHistoryId { get; set; }
+
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "de"
+        : "en";
+    private bool IsGerman => CurrentLanguage == "de";
+    private string ContextLinksTitle => IsGerman ? "Verwandte Themencluster" : "Related topic clusters";
+    private string ContextLinksSubtitle => IsGerman
+        ? "Direkte Navigation zu passenden Landingpages und Presets für deinen Optimizer-Kontext."
+        : "Direct access to matching landing pages and presets for your optimizer context.";
+    private string ContextPresetsCta => IsGerman ? "Preset-Bibliothek" : "Preset library";
+    private string ContextGeneratorCta => IsGerman ? "Zum Generator" : "Open generator";
+    private string OptimizerMetaDescription => CurrentLanguage.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "Optimiere bestehende Prompts mit klarerer Zieldefinition, Struktur und kontextabhängigen Qualitätsregeln."
+        : "Optimize existing prompts with clearer goals, stronger structure, and context-aware quality rules.";
+    private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
+    private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
+    private string LocalizedOptimizerPath => AppRoutes.OptimizerPathForCulture(CurrentLanguage);
+    private string CanonicalUrl => ToAbsolute(LocalizedOptimizerPath);
+    private string GermanUrl => ToAbsolute(AppRoutes.OptimizerPathForCulture("de"));
+    private string EnglishUrl => ToAbsolute(AppRoutes.OptimizerPathForCulture("en"));
+    private IReadOnlyList<SeoLandingPageLinkViewModel> OptimizerContextPages
+        => SeoLandingPageService.GetGeneratorContextPages(CurrentLanguage, MapContextToMainCategory(Request.Context), maxItems: 4);
+    private string OptimizerJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @graph = new object[]
+        {
+            new
+            {
+                @type = "WebPage",
+                name = L["PageTitle_Optimizer"].Value,
+                description = OptimizerMetaDescription,
+                url = CanonicalUrl,
+                inLanguage = CurrentLanguage
+            },
+            new
+            {
+                @type = "WebApplication",
+                name = "PromptForge Optimizer",
+                applicationCategory = "BusinessApplication",
+                operatingSystem = "Web",
+                url = CanonicalUrl,
+                description = OptimizerMetaDescription
+            }
+        }
+    });
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UserLibraryService.InitializeAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadFromHistoryQueryAsync();
+    }
+
+    private async Task OptimizeAsync()
+    {
+        ValidationError = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(Request.InputPrompt))
+        {
+            ValidationError = L["Optimizer_Validation_Input"];
+            return;
+        }
+
+        Result = PromptOptimizerService.Optimize(Request);
+
+        await UserLibraryService.AddHistoryAsync(new PromptHistoryEntry
+        {
+            Type = PromptRecordType.Optimized,
+            Title = L["Optimizer_Result_Title"],
+            Prompt = Result.OptimizedPrompt,
+            Source = L["Source_Optimizer"],
+            Category = Request.Context.ToString(),
+            Route = AppRoutes.Optimizer,
+            RequestPayloadJson = JsonSerializer.Serialize(Request, JsonOptions)
+        });
+    }
+
+    private async Task ToggleFavoriteAsync()
+    {
+        if (Result is null)
+        {
+            return;
+        }
+
+        await UserLibraryService.ToggleFavoriteAsync(
+            L["Optimizer_Result_Title"],
+            Result.OptimizedPrompt,
+            L["Source_Optimizer"],
+            Request.Context.ToString());
+    }
+
+    private async Task CopyAsync()
+    {
+        if (Result is null)
+        {
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("promptUi.copyText", Result.OptimizedPrompt);
+    }
+
+    private async Task LoadFromHistoryQueryAsync()
+    {
+        if (!HistoryId.HasValue)
+        {
+            return;
+        }
+
+        if (HistoryId.Value == LastLoadedHistoryId)
+        {
+            return;
+        }
+
+        await UserLibraryService.InitializeAsync();
+        var historyEntry = UserLibraryService.GetHistoryById(HistoryId.Value);
+        if (historyEntry is null)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(historyEntry.RequestPayloadJson))
+        {
+            var restored = JsonSerializer.Deserialize<PromptOptimizationRequest>(historyEntry.RequestPayloadJson, JsonOptions);
+            if (restored is not null)
+            {
+                Request = restored;
+            }
+        }
+        else
+        {
+            Request.InputPrompt = historyEntry.Prompt;
+        }
+
+        Result = PromptOptimizerService.Optimize(Request);
+        LastLoadedHistoryId = historyEntry.Id;
+        ValidationError = string.Empty;
+    }
+
+    private static MainCategory MapContextToMainCategory(OptimizerContext context)
+        => context switch
+        {
+            OptimizerContext.Business => MainCategory.Business,
+            OptimizerContext.SocialMedia => MainCategory.Influencer,
+            OptimizerContext.Politics => MainCategory.Politics,
+            OptimizerContext.University => MainCategory.University,
+            OptimizerContext.Coding => MainCategory.Coding,
+            _ => MainCategory.Business
+        };
+
+    private string ToAbsolute(string relativePath)
+    {
+        var normalized = string.IsNullOrWhiteSpace(relativePath) ? "/" : relativePath;
+        return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
+    }
+}

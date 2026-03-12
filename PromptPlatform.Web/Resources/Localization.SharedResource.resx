@@ -1,0 +1,258 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="Nav_Landing" xml:space="preserve"><value>Landing</value></data>
+  <data name="Nav_Generator" xml:space="preserve"><value>Prompt Generator</value></data>
+  <data name="Nav_Optimizer" xml:space="preserve"><value>Prompt Optimizer</value></data>
+  <data name="Nav_Presets" xml:space="preserve"><value>Presets</value></data>
+  <data name="Nav_History" xml:space="preserve"><value>History</value></data>
+  <data name="Nav_Favorites" xml:space="preserve"><value>Favorites</value></data>
+
+  <data name="Language_German" xml:space="preserve"><value>German</value></data>
+  <data name="Language_English" xml:space="preserve"><value>English</value></data>
+  <data name="Theme_Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Theme_Dark" xml:space="preserve"><value>Dark</value></data>
+
+  <data name="Footer_Copyright" xml:space="preserve"><value>© {0} PromptForge</value></data>
+  <data name="Footer_Tagline" xml:space="preserve"><value>Scalable multilingual platform for high-quality AI prompts.</value></data>
+
+  <data name="PageTitle_Landing" xml:space="preserve"><value>PromptForge - Landing</value></data>
+  <data name="PageTitle_Generator" xml:space="preserve"><value>PromptForge - Generator</value></data>
+  <data name="PageTitle_Optimizer" xml:space="preserve"><value>PromptForge - Optimizer</value></data>
+  <data name="PageTitle_Presets" xml:space="preserve"><value>PromptForge - Presets</value></data>
+  <data name="PageTitle_History" xml:space="preserve"><value>PromptForge - History</value></data>
+  <data name="PageTitle_Favorites" xml:space="preserve"><value>PromptForge - Favorites</value></data>
+  <data name="PageTitle_NotFound" xml:space="preserve"><value>PromptForge - Not Found</value></data>
+  <data name="PageTitle_Error" xml:space="preserve"><value>PromptForge - Error</value></data>
+
+  <data name="Action_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Action_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Action_Favorite" xml:space="preserve"><value>Add Favorite</value></data>
+  <data name="Action_Unfavorite" xml:space="preserve"><value>Remove Favorite</value></data>
+  <data name="Action_Reload" xml:space="preserve"><value>Reload</value></data>
+  <data name="Action_Retry" xml:space="preserve"><value>Retry</value></data>
+  <data name="Action_Resume" xml:space="preserve"><value>Resume</value></data>
+
+  <data name="Error_Unhandled" xml:space="preserve"><value>An unhandled error has occurred.</value></data>
+  <data name="Error_Title" xml:space="preserve"><value>An error occurred.</value></data>
+  <data name="Error_Subtitle" xml:space="preserve"><value>The request could not be processed. Please try again.</value></data>
+  <data name="Error_RequestId" xml:space="preserve"><value>Request ID:</value></data>
+  <data name="Error_Action" xml:space="preserve"><value>Back to landing page</value></data>
+
+  <data name="NotFound_Title" xml:space="preserve"><value>Page not found</value></data>
+  <data name="NotFound_Subtitle" xml:space="preserve"><value>The requested content does not exist or has moved.</value></data>
+  <data name="NotFound_Action" xml:space="preserve"><value>Go to landing page</value></data>
+
+  <data name="Reconnect_Rejoining" xml:space="preserve"><value>Rejoining the server...</value></data>
+  <data name="Reconnect_Retrying" xml:space="preserve"><value>Rejoin failed. Trying again in</value></data>
+  <data name="Reconnect_Seconds" xml:space="preserve"><value>seconds.</value></data>
+  <data name="Reconnect_Failed" xml:space="preserve"><value>Failed to rejoin.</value></data>
+  <data name="Reconnect_RetryOrReload" xml:space="preserve"><value>Please retry or reload the page.</value></data>
+  <data name="Reconnect_Paused" xml:space="preserve"><value>The session has been paused by the server.</value></data>
+  <data name="Reconnect_ResumeFailed" xml:space="preserve"><value>Failed to resume the session.</value></data>
+  <data name="Reconnect_Reload" xml:space="preserve"><value>Please reload the page.</value></data>
+
+  <data name="Landing_HeroBadge" xml:space="preserve"><value>Universal AI Prompt Platform</value></data>
+  <data name="Landing_HeroTitle" xml:space="preserve"><value>Generate better prompts for every target audience.</value></data>
+  <data name="Landing_HeroSubtitle" xml:space="preserve"><value>Create, optimize, save, and reuse prompts across business, education, coding, marketing, and more.</value></data>
+  <data name="Landing_CtaPrimary" xml:space="preserve"><value>Start Prompt Generator</value></data>
+  <data name="Landing_CtaSecondary" xml:space="preserve"><value>Browse Presets</value></data>
+
+  <data name="Landing_QuickFacts_Title" xml:space="preserve"><value>Why teams choose PromptForge</value></data>
+  <data name="Landing_QuickFacts_Item1" xml:space="preserve"><value>Structured prompt workflows for many domains</value></data>
+  <data name="Landing_QuickFacts_Item2" xml:space="preserve"><value>Built-in optimization with quality scoring</value></data>
+  <data name="Landing_QuickFacts_Item3" xml:space="preserve"><value>History and favorites with reusable assets</value></data>
+
+  <data name="Landing_Audiences_Title" xml:space="preserve"><value>Built for multiple audiences</value></data>
+  <data name="Landing_Audiences_Link" xml:space="preserve"><value>Explore all presets</value></data>
+  <data name="Landing_Audience_Action" xml:space="preserve"><value>Generate prompt</value></data>
+
+  <data name="Landing_Audience_Business" xml:space="preserve"><value>Business plans, strategy drafts, and operational decisions.</value></data>
+  <data name="Landing_Audience_Influencer" xml:space="preserve"><value>High-engagement content ideas, hooks, and scripts.</value></data>
+  <data name="Landing_Audience_Politics" xml:space="preserve"><value>Clear public communication and speech frameworks.</value></data>
+  <data name="Landing_Audience_School" xml:space="preserve"><value>Learning support, summaries, and practice prompts.</value></data>
+  <data name="Landing_Audience_University" xml:space="preserve"><value>Research prompts, thesis planning, and study guidance.</value></data>
+  <data name="Landing_Audience_Job" xml:space="preserve"><value>Application letters, interview preparation, and career growth.</value></data>
+  <data name="Landing_Audience_Marketing" xml:space="preserve"><value>Campaign ideas, messaging frameworks, and conversion prompts.</value></data>
+  <data name="Landing_Audience_Seo" xml:space="preserve"><value>Search-focused article and content optimization prompts.</value></data>
+
+  <data name="Landing_Features_Title" xml:space="preserve"><value>Core platform modules</value></data>
+  <data name="Landing_Feature_Generator_Title" xml:space="preserve"><value>Prompt Generator</value></data>
+  <data name="Landing_Feature_Generator_Desc" xml:space="preserve"><value>Structured forms and presets for reliable prompt output.</value></data>
+  <data name="Landing_Feature_Optimizer_Title" xml:space="preserve"><value>Prompt Optimizer</value></data>
+  <data name="Landing_Feature_Optimizer_Desc" xml:space="preserve"><value>Improve clarity, structure, specificity, and SEO quality.</value></data>
+  <data name="Landing_Feature_Library_Title" xml:space="preserve"><value>History and Favorites</value></data>
+  <data name="Landing_Feature_Library_Desc" xml:space="preserve"><value>Store successful prompts and build your reusable knowledge base.</value></data>
+
+  <data name="Landing_Workflow_Title" xml:space="preserve"><value>Workflow in three steps</value></data>
+  <data name="Landing_Workflow_Step1" xml:space="preserve"><value>Select audience, preset, and output language.</value></data>
+  <data name="Landing_Workflow_Step2" xml:space="preserve"><value>Generate a tailored prompt with constraints and context.</value></data>
+  <data name="Landing_Workflow_Step3" xml:space="preserve"><value>Optimize, save, and reuse high-performing prompts.</value></data>
+
+  <data name="Generator_Title" xml:space="preserve"><value>Prompt Generator</value></data>
+  <data name="Generator_Subtitle" xml:space="preserve"><value>Use presets and structured inputs to build high-quality prompts.</value></data>
+  <data name="Generator_Preset" xml:space="preserve"><value>Preset</value></data>
+  <data name="Generator_Audience" xml:space="preserve"><value>Audience</value></data>
+  <data name="Generator_Goal" xml:space="preserve"><value>Main goal</value></data>
+  <data name="Generator_Goal_Placeholder" xml:space="preserve"><value>What should the AI produce?</value></data>
+  <data name="Generator_Context" xml:space="preserve"><value>Context</value></data>
+  <data name="Generator_Context_Placeholder" xml:space="preserve"><value>Add target group, constraints, and background.</value></data>
+  <data name="Generator_Tone" xml:space="preserve"><value>Tone</value></data>
+  <data name="Generator_Length" xml:space="preserve"><value>Length</value></data>
+  <data name="Generator_OutputLanguage" xml:space="preserve"><value>Output language</value></data>
+  <data name="Generator_IncludeSeo" xml:space="preserve"><value>Include SEO optimization</value></data>
+  <data name="Generator_IncludeExamples" xml:space="preserve"><value>Include examples</value></data>
+  <data name="Generator_Action" xml:space="preserve"><value>Generate Prompt</value></data>
+  <data name="Generator_Output_Title" xml:space="preserve"><value>Generated Prompt</value></data>
+  <data name="Generator_Output_Empty" xml:space="preserve"><value>Generated prompt will appear here after submission.</value></data>
+
+  <data name="Optimizer_Title" xml:space="preserve"><value>Prompt Optimizer</value></data>
+  <data name="Optimizer_Subtitle" xml:space="preserve"><value>Refine your prompt for clarity, structure, and impact.</value></data>
+  <data name="Optimizer_Input" xml:space="preserve"><value>Input prompt</value></data>
+  <data name="Optimizer_Input_Placeholder" xml:space="preserve"><value>Paste your current prompt here.</value></data>
+  <data name="Optimizer_TargetLanguage" xml:space="preserve"><value>Target language</value></data>
+  <data name="Optimizer_Focus" xml:space="preserve"><value>Optimization focus</value></data>
+  <data name="Optimizer_Focus_Clarity" xml:space="preserve"><value>Clarity</value></data>
+  <data name="Optimizer_Focus_Structure" xml:space="preserve"><value>Structure</value></data>
+  <data name="Optimizer_Focus_Specificity" xml:space="preserve"><value>Specificity</value></data>
+  <data name="Optimizer_Focus_Seo" xml:space="preserve"><value>SEO</value></data>
+  <data name="Optimizer_Action" xml:space="preserve"><value>Optimize Prompt</value></data>
+  <data name="Optimizer_Result_Title" xml:space="preserve"><value>Optimized Prompt</value></data>
+  <data name="Optimizer_Result_Empty" xml:space="preserve"><value>Optimization result will appear here after submission.</value></data>
+  <data name="Optimizer_Score" xml:space="preserve"><value>Quality score: {0}%</value></data>
+
+  <data name="Optimizer_Improvement_Clarity" xml:space="preserve"><value>Clear wording and lower ambiguity.</value></data>
+  <data name="Optimizer_Improvement_Structure" xml:space="preserve"><value>Improved structure with ordered steps and cleaner flow.</value></data>
+  <data name="Optimizer_Improvement_Specificity" xml:space="preserve"><value>More specific requirements and constraints.</value></data>
+  <data name="Optimizer_Improvement_Seo" xml:space="preserve"><value>Added SEO-focused guidance and relevance.</value></data>
+
+  <data name="Presets_Title" xml:space="preserve"><value>Preset Library</value></data>
+  <data name="Presets_Subtitle" xml:space="preserve"><value>Choose proven templates for your domain and adapt quickly.</value></data>
+  <data name="Presets_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Presets_Search_Placeholder" xml:space="preserve"><value>Search by title or description...</value></data>
+  <data name="Presets_Filter_Audience" xml:space="preserve"><value>Audience filter</value></data>
+  <data name="Presets_Filter_All" xml:space="preserve"><value>All audiences</value></data>
+  <data name="Presets_TaskHint" xml:space="preserve"><value>Task hint</value></data>
+  <data name="Presets_Action_Use" xml:space="preserve"><value>Use preset</value></data>
+  <data name="Presets_Empty" xml:space="preserve"><value>No presets found for current filter.</value></data>
+
+  <data name="History_Title" xml:space="preserve"><value>Prompt History</value></data>
+  <data name="History_Subtitle" xml:space="preserve"><value>Track generated and optimized prompts.</value></data>
+  <data name="History_Clear" xml:space="preserve"><value>Clear History</value></data>
+  <data name="History_Empty" xml:space="preserve"><value>No history entries yet.</value></data>
+
+  <data name="Favorites_Title" xml:space="preserve"><value>Favorite Prompts</value></data>
+  <data name="Favorites_Subtitle" xml:space="preserve"><value>Your reusable prompt collection.</value></data>
+  <data name="Favorites_Empty" xml:space="preserve"><value>No favorite prompts yet.</value></data>
+
+  <data name="Source_Generator" xml:space="preserve"><value>Generator</value></data>
+  <data name="Source_Optimizer" xml:space="preserve"><value>Optimizer</value></data>
+  <data name="Source_Preset" xml:space="preserve"><value>Preset</value></data>
+
+  <data name="RecordType_Generated" xml:space="preserve"><value>Generated</value></data>
+  <data name="RecordType_Optimized" xml:space="preserve"><value>Optimized</value></data>
+
+  <data name="Audience_Business" xml:space="preserve"><value>Business</value></data>
+  <data name="Audience_Influencer" xml:space="preserve"><value>Influencer</value></data>
+  <data name="Audience_Politics" xml:space="preserve"><value>Politics</value></data>
+  <data name="Audience_School" xml:space="preserve"><value>School</value></data>
+  <data name="Audience_University" xml:space="preserve"><value>University</value></data>
+  <data name="Audience_Job" xml:space="preserve"><value>Job and Work</value></data>
+  <data name="Audience_Marketing" xml:space="preserve"><value>Marketing</value></data>
+  <data name="Audience_Seo" xml:space="preserve"><value>SEO</value></data>
+  <data name="Audience_Coding" xml:space="preserve"><value>Coding</value></data>
+  <data name="Audience_Youtube" xml:space="preserve"><value>YouTube</value></data>
+  <data name="Audience_ImageGeneration" xml:space="preserve"><value>Image Generation</value></data>
+  <data name="Audience_Productivity" xml:space="preserve"><value>Productivity</value></data>
+  <data name="Audience_Education" xml:space="preserve"><value>Education</value></data>
+
+  <data name="Tone_Professional" xml:space="preserve"><value>Professional</value></data>
+  <data name="Tone_Friendly" xml:space="preserve"><value>Friendly</value></data>
+  <data name="Tone_Persuasive" xml:space="preserve"><value>Persuasive</value></data>
+  <data name="Tone_Analytical" xml:space="preserve"><value>Analytical</value></data>
+  <data name="Tone_Creative" xml:space="preserve"><value>Creative</value></data>
+
+  <data name="Length_Short" xml:space="preserve"><value>Short</value></data>
+  <data name="Length_Medium" xml:space="preserve"><value>Medium</value></data>
+  <data name="Length_Long" xml:space="preserve"><value>Long</value></data>
+
+  <data name="Preset_BusinessStrategy_Title" xml:space="preserve"><value>Business Strategy Assistant</value></data>
+  <data name="Preset_BusinessStrategy_Desc" xml:space="preserve"><value>Create strategic options, priorities, and next actions for business goals.</value></data>
+  <data name="Preset_BusinessStrategy_Hint" xml:space="preserve"><value>Build a growth strategy for the next quarter with clear milestones.</value></data>
+
+  <data name="Preset_InfluencerContent_Title" xml:space="preserve"><value>Influencer Content Planner</value></data>
+  <data name="Preset_InfluencerContent_Desc" xml:space="preserve"><value>Generate platform-specific content concepts with hooks and engagement triggers.</value></data>
+  <data name="Preset_InfluencerContent_Hint" xml:space="preserve"><value>Create 5 short-form video concepts for an audience growth campaign.</value></data>
+
+  <data name="Preset_PoliticalSpeech_Title" xml:space="preserve"><value>Political Speech Draft</value></data>
+  <data name="Preset_PoliticalSpeech_Desc" xml:space="preserve"><value>Draft balanced and clear public communication for political contexts.</value></data>
+  <data name="Preset_PoliticalSpeech_Hint" xml:space="preserve"><value>Write a 3-minute speech introducing a local infrastructure initiative.</value></data>
+
+  <data name="Preset_SchoolLearning_Title" xml:space="preserve"><value>School Learning Coach</value></data>
+  <data name="Preset_SchoolLearning_Desc" xml:space="preserve"><value>Support student learning with explanations, exercises, and revision steps.</value></data>
+  <data name="Preset_SchoolLearning_Hint" xml:space="preserve"><value>Explain a math topic with examples and mini practice tasks.</value></data>
+
+  <data name="Preset_StudyResearch_Title" xml:space="preserve"><value>Study Research Planner</value></data>
+  <data name="Preset_StudyResearch_Desc" xml:space="preserve"><value>Structure research tasks, hypotheses, and literature review plans.</value></data>
+  <data name="Preset_StudyResearch_Hint" xml:space="preserve"><value>Create a thesis research outline with timeline and sources.</value></data>
+
+  <data name="Preset_JobApplication_Title" xml:space="preserve"><value>Job Application Expert</value></data>
+  <data name="Preset_JobApplication_Desc" xml:space="preserve"><value>Craft stronger CV bullets, cover letters, and interview answers.</value></data>
+  <data name="Preset_JobApplication_Hint" xml:space="preserve"><value>Draft a tailored cover letter for a senior developer role.</value></data>
+
+  <data name="Preset_SeoArticle_Title" xml:space="preserve"><value>SEO Article Blueprint</value></data>
+  <data name="Preset_SeoArticle_Desc" xml:space="preserve"><value>Create search-intent aligned article structures with keyword guidance.</value></data>
+  <data name="Preset_SeoArticle_Hint" xml:space="preserve"><value>Build an SEO article outline for the topic productivity automation.</value></data>
+
+  <data name="Preset_CodingAssistant_Title" xml:space="preserve"><value>Coding Solution Architect</value></data>
+  <data name="Preset_CodingAssistant_Desc" xml:space="preserve"><value>Design maintainable implementations, edge cases, and test strategy.</value></data>
+  <data name="Preset_CodingAssistant_Hint" xml:space="preserve"><value>Propose a scalable API architecture for a multi-tenant SaaS app.</value></data>
+
+  <data name="Preset_YoutubeScript_Title" xml:space="preserve"><value>YouTube Video Script</value></data>
+  <data name="Preset_YoutubeScript_Desc" xml:space="preserve"><value>Develop compelling long-form or short-form video scripts.</value></data>
+  <data name="Preset_YoutubeScript_Hint" xml:space="preserve"><value>Create a 6-minute script with hook, story arc, and CTA.</value></data>
+
+  <data name="Preset_ImagePrompt_Title" xml:space="preserve"><value>Image Generation Master Prompt</value></data>
+  <data name="Preset_ImagePrompt_Desc" xml:space="preserve"><value>Produce detailed visual prompts for style, mood, and composition.</value></data>
+  <data name="Preset_ImagePrompt_Hint" xml:space="preserve"><value>Generate a cinematic prompt for a futuristic city at sunrise.</value></data>
+
+  <data name="Preset_ProductivityPlan_Title" xml:space="preserve"><value>Productivity Execution Plan</value></data>
+  <data name="Preset_ProductivityPlan_Desc" xml:space="preserve"><value>Turn goals into practical routines, priorities, and execution blocks.</value></data>
+  <data name="Preset_ProductivityPlan_Hint" xml:space="preserve"><value>Create a weekly execution plan for deep work and meetings.</value></data>
+
+  <data name="Preset_EducationCourse_Title" xml:space="preserve"><value>Education Course Builder</value></data>
+  <data name="Preset_EducationCourse_Desc" xml:space="preserve"><value>Design modular courses with outcomes, lessons, and assessments.</value></data>
+  <data name="Preset_EducationCourse_Hint" xml:space="preserve"><value>Build a beginner course curriculum for AI prompt engineering.</value></data>
+
+  <data name="Tag_Business" xml:space="preserve"><value>Business</value></data>
+  <data name="Tag_Strategy" xml:space="preserve"><value>Strategy</value></data>
+  <data name="Tag_Productivity" xml:space="preserve"><value>Productivity</value></data>
+  <data name="Tag_Influencer" xml:space="preserve"><value>Influencer</value></data>
+  <data name="Tag_Marketing" xml:space="preserve"><value>Marketing</value></data>
+  <data name="Tag_Youtube" xml:space="preserve"><value>YouTube</value></data>
+  <data name="Tag_Politics" xml:space="preserve"><value>Politics</value></data>
+  <data name="Tag_Communication" xml:space="preserve"><value>Communication</value></data>
+  <data name="Tag_Public" xml:space="preserve"><value>Public</value></data>
+  <data name="Tag_School" xml:space="preserve"><value>School</value></data>
+  <data name="Tag_Education" xml:space="preserve"><value>Education</value></data>
+  <data name="Tag_University" xml:space="preserve"><value>University</value></data>
+  <data name="Tag_Research" xml:space="preserve"><value>Research</value></data>
+  <data name="Tag_Job" xml:space="preserve"><value>Job</value></data>
+  <data name="Tag_Career" xml:space="preserve"><value>Career</value></data>
+  <data name="Tag_SEO" xml:space="preserve"><value>SEO</value></data>
+  <data name="Tag_Content" xml:space="preserve"><value>Content</value></data>
+  <data name="Tag_Coding" xml:space="preserve"><value>Coding</value></data>
+  <data name="Tag_Engineering" xml:space="preserve"><value>Engineering</value></data>
+  <data name="Tag_ImageGeneration" xml:space="preserve"><value>Image Generation</value></data>
+  <data name="Tag_Creative" xml:space="preserve"><value>Creative</value></data>
+  <data name="Tag_Design" xml:space="preserve"><value>Design</value></data>
+  <data name="Tag_Workflow" xml:space="preserve"><value>Workflow</value></data>
+  <data name="Tag_Execution" xml:space="preserve"><value>Execution</value></data>
+  <data name="Tag_Curriculum" xml:space="preserve"><value>Curriculum</value></data>
+  <data name="Tag_Learning" xml:space="preserve"><value>Learning</value></data>
+  <data name="Nav_Toggle" xml:space="preserve"><value>Toggle navigation</value></data>
+<data name="Generator_Subtitle_Advanced" xml:space="preserve"><value>Build intelligent, category-aware prompts with platform and quality constraints.</value></data><data name="Generator_Field_Topic" xml:space="preserve"><value>Topic</value></data><data name="Generator_Field_Topic_Placeholder" xml:space="preserve"><value>Describe the core topic or task.</value></data><data name="Generator_Field_MainCategory" xml:space="preserve"><value>Main Category</value></data><data name="Generator_Field_Subcategory" xml:space="preserve"><value>Subcategory</value></data><data name="Generator_Field_Subcategory_Placeholder" xml:space="preserve"><value>Example: B2B outreach, exam prep, API design</value></data><data name="Generator_Field_Platform" xml:space="preserve"><value>Platform</value></data><data name="Generator_Field_Platform_Placeholder" xml:space="preserve"><value>Example: ChatGPT, LinkedIn, YouTube, Midjourney</value></data><data name="Generator_Field_TargetAudience" xml:space="preserve"><value>Target Audience</value></data><data name="Generator_Field_TargetAudience_Placeholder" xml:space="preserve"><value>Who is the output for?</value></data><data name="Generator_Field_Tone" xml:space="preserve"><value>Tone</value></data><data name="Generator_Field_Length" xml:space="preserve"><value>Length</value></data><data name="Generator_Field_Language" xml:space="preserve"><value>Language</value></data><data name="Generator_Field_ExtraInstructions" xml:space="preserve"><value>Extra Instructions</value></data><data name="Generator_Field_ExtraInstructions_Placeholder" xml:space="preserve"><value>Add constraints, do-not rules, or priorities.</value></data><data name="Generator_Field_OutputFormat" xml:space="preserve"><value>Output Format</value></data><data name="Generator_Field_RolePerspective" xml:space="preserve"><value>Role / Perspective</value></data><data name="Generator_Field_RolePerspective_Placeholder" xml:space="preserve"><value>Example: Senior brand strategist, policy analyst, lead engineer</value></data><data name="Generator_Field_ComplexityLevel" xml:space="preserve"><value>Complexity Level</value></data><data name="Generator_Default_TargetAudience" xml:space="preserve"><value>Professionals and decision-makers</value></data><data name="Generator_Default_Role" xml:space="preserve"><value>Senior domain expert</value></data><data name="Generator_Default_Subcategory" xml:space="preserve"><value>General use case</value></data><data name="Generator_Validation_Topic" xml:space="preserve"><value>Please enter a topic before generating the prompt.</value></data><data name="MainCategory_Business" xml:space="preserve"><value>Business</value></data><data name="MainCategory_Influencer" xml:space="preserve"><value>Influencer</value></data><data name="MainCategory_Politics" xml:space="preserve"><value>Politics</value></data><data name="MainCategory_School" xml:space="preserve"><value>School</value></data><data name="MainCategory_University" xml:space="preserve"><value>University</value></data><data name="MainCategory_Job" xml:space="preserve"><value>Job</value></data><data name="MainCategory_Coding" xml:space="preserve"><value>Coding</value></data><data name="MainCategory_ImageGeneration" xml:space="preserve"><value>Image Generation</value></data><data name="MainCategoryStyle_Business" xml:space="preserve"><value>Business style: professional and structured.</value></data><data name="MainCategoryStyle_Influencer" xml:space="preserve"><value>Influencer style: creative and attention-grabbing.</value></data><data name="MainCategoryStyle_Politics" xml:space="preserve"><value>Politics style: factual and neutral.</value></data><data name="MainCategoryStyle_School" xml:space="preserve"><value>School style: easy to understand.</value></data><data name="MainCategoryStyle_University" xml:space="preserve"><value>University style: academic.</value></data><data name="MainCategoryStyle_Job" xml:space="preserve"><value>Job style: professional.</value></data><data name="MainCategoryStyle_Coding" xml:space="preserve"><value>Coding style: technically precise.</value></data><data name="MainCategoryStyle_ImageGeneration" xml:space="preserve"><value>Image generation style: visually detailed.</value></data><data name="OutputFormat_BulletPoints" xml:space="preserve"><value>Bullet Points</value></data><data name="OutputFormat_StepByStep" xml:space="preserve"><value>Step by Step</value></data><data name="OutputFormat_Narrative" xml:space="preserve"><value>Narrative Text</value></data><data name="OutputFormat_Table" xml:space="preserve"><value>Table</value></data><data name="OutputFormat_Json" xml:space="preserve"><value>JSON</value></data><data name="Complexity_Basic" xml:space="preserve"><value>Basic</value></data><data name="Complexity_Intermediate" xml:space="preserve"><value>Intermediate</value></data><data name="Complexity_Advanced" xml:space="preserve"><value>Advanced</value></data><data name="Complexity_Expert" xml:space="preserve"><value>Expert</value></data><data name="Optimizer_Subtitle_Advanced" xml:space="preserve"><value>Enter an existing prompt and get a clearer, better-structured, context-aware version.</value></data><data name="Optimizer_Context" xml:space="preserve"><value>Context</value></data><data name="Optimizer_Context_Business" xml:space="preserve"><value>Business</value></data><data name="Optimizer_Context_SocialMedia" xml:space="preserve"><value>Social Media</value></data><data name="Optimizer_Context_Politics" xml:space="preserve"><value>Politics</value></data><data name="Optimizer_Context_University" xml:space="preserve"><value>University</value></data><data name="Optimizer_Context_Coding" xml:space="preserve"><value>Coding</value></data><data name="Optimizer_ShowWhyBetter" xml:space="preserve"><value>Show briefly why the optimized prompt is better</value></data><data name="Optimizer_WhyBetter_Title" xml:space="preserve"><value>Why this version is better</value></data><data name="Optimizer_Validation_Input" xml:space="preserve"><value>Please enter a prompt before optimization.</value></data><data name="Optimizer_Improvement_ClearGoal" xml:space="preserve"><value>Clearer objective definition with explicit outcome focus.</value></data><data name="Optimizer_Improvement_Role" xml:space="preserve"><value>Added explicit role definition for higher response quality.</value></data><data name="Optimizer_Improvement_OutputFormat" xml:space="preserve"><value>Defined concrete output format requirements.</value></data><data name="Optimizer_Improvement_TargetAudience" xml:space="preserve"><value>Made target audience explicit to improve relevance.</value></data><data name="Optimizer_Improvement_Style" xml:space="preserve"><value>Aligned style with the selected context and communication goals.</value></data><data name="Optimizer_Improvement_Context" xml:space="preserve"><value>Applied context-specific optimization (Business/Social Media/Politics/University/Coding).</value></data><data name="Presets_Filter_Category" xml:space="preserve"><value>Category filter</value></data><data name="Presets_Count" xml:space="preserve"><value>{0} presets</value></data><data name="Presets_ExamplePrompt" xml:space="preserve"><value>Example prompt</value></data><data name="Presets_Action_UseThis" xml:space="preserve"><value>Use this preset</value></data><data name="Generator_PresetLoaded" xml:space="preserve"><value>Preset loaded: {0}</value></data><data name="PresetCategory_Business" xml:space="preserve"><value>Business</value></data><data name="PresetCategory_Influencer" xml:space="preserve"><value>Influencer</value></data><data name="PresetCategory_YouTube" xml:space="preserve"><value>YouTube</value></data><data name="PresetCategory_Politics" xml:space="preserve"><value>Politics</value></data><data name="PresetCategory_School" xml:space="preserve"><value>School</value></data><data name="PresetCategory_University" xml:space="preserve"><value>University</value></data><data name="PresetCategory_Job" xml:space="preserve"><value>Job</value></data><data name="PresetCategory_Marketing" xml:space="preserve"><value>Marketing</value></data><data name="PresetCategory_Seo" xml:space="preserve"><value>SEO</value></data><data name="PresetCategory_Coding" xml:space="preserve"><value>Coding</value></data><data name="PresetCategory_ImageGeneration" xml:space="preserve"><value>Image Generation</value></data><data name="PresetCategory_Productivity" xml:space="preserve"><value>Productivity</value></data><data name="PresetCategory_Education" xml:space="preserve"><value>Education</value></data><data name="History_Filter_Category" xml:space="preserve"><value>Category filter</value></data><data name="History_Filter_All" xml:space="preserve"><value>All categories</value></data><data name="History_Count" xml:space="preserve"><value>{0} entries</value></data><data name="History_Action_Reload" xml:space="preserve"><value>Reload</value></data><data name="Favorites_Filter_Category" xml:space="preserve"><value>Category filter</value></data><data name="Favorites_Filter_All" xml:space="preserve"><value>All categories</value></data><data name="Favorites_Count" xml:space="preserve"><value>{0} favorites</value></data><data name="Category_General" xml:space="preserve"><value>General</value></data><data name="SeoLanding_Badge" xml:space="preserve"><value>SEO Prompt Landing Page</value></data><data name="SeoLanding_Benefits" xml:space="preserve"><value>Benefits</value></data><data name="SeoLanding_ExamplePrompts" xml:space="preserve"><value>Example Prompts</value></data><data name="SeoLanding_PresetExamples" xml:space="preserve"><value>Preset Examples</value></data><data name="SeoLanding_CtaTitle" xml:space="preserve"><value>Ready to generate better prompts?</value></data><data name="SeoLanding_CtaSubtitle" xml:space="preserve"><value>Start with a proven preset and customize it in the generator.</value></data><data name="SeoLanding_CtaGenerator" xml:space="preserve"><value>Open Generator</value></data><data name="SeoLanding_CtaPresets" xml:space="preserve"><value>Browse Presets</value></data><data name="SeoLanding_NotFound_Title" xml:space="preserve"><value>Landing page not found</value></data><data name="SeoLanding_NotFound_Desc" xml:space="preserve"><value>The requested landing page does not exist.</value></data><data name="SeoLanding_NotFound_Cta" xml:space="preserve"><value>Go to Presets</value></data></root>

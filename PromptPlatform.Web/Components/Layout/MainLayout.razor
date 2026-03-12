@@ -1,0 +1,55 @@
+@implements IDisposable
+@inherits LayoutComponentBase
+@inject IStringLocalizer<SharedResource> L
+@inject IUserLibraryService UserLibraryService
+@inject IThemeService ThemeService
+
+<div class="app-shell d-flex flex-column min-vh-100">
+    <NavMenu />
+
+    <main class="flex-fill">
+        <div class="container py-4 py-lg-5">
+            @Body
+        </div>
+    </main>
+
+    <footer class="app-footer border-top mt-auto">
+        <div class="container py-3 d-flex flex-column flex-md-row justify-content-between gap-2">
+            <span>@L["Footer_Copyright", DateTime.UtcNow.Year]</span>
+            <span>@L["Footer_Tagline"]</span>
+        </div>
+    </footer>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    @L["Error_Unhandled"]
+    <a href="." class="reload">@L["Action_Reload"]</a>
+    <span class="dismiss">x</span>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnStateChanged;
+        UserLibraryService.Changed += OnStateChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await ThemeService.InitializeAsync();
+        await UserLibraryService.InitializeAsync();
+    }
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        ThemeService.Changed -= OnStateChanged;
+        UserLibraryService.Changed -= OnStateChanged;
+    }
+}

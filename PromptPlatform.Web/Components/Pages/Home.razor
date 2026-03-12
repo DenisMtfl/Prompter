@@ -1,0 +1,191 @@
+@page "/"
+@page "/de"
+@page "/en"
+@using System.Text.Json
+@inject IStringLocalizer<SharedResource> L
+@inject ISeoLandingPageService SeoLandingPageService
+@inject NavigationManager Navigation
+
+<PageTitle>@L["PageTitle_Landing"]</PageTitle>
+<HeadContent>
+    <meta name="description" content="@HomeMetaDescription" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@HomeTitle" />
+    <meta property="og:description" content="@HomeMetaDescription" />
+    <meta property="og:url" content="@CanonicalUrl" />
+    <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
+    <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@HomeTitle" />
+    <meta name="twitter:description" content="@HomeMetaDescription" />
+    <link rel="canonical" href="@CanonicalUrl" />
+    <link rel="alternate" hreflang="de" href="@GermanHomeUrl" />
+    <link rel="alternate" hreflang="en" href="@EnglishHomeUrl" />
+    <link rel="alternate" hreflang="x-default" href="@EnglishHomeUrl" />
+    <script type="application/ld+json">@((MarkupString)HomeJsonLd)</script>
+</HeadContent>
+
+<div class="landing-page">
+    <section class="hero-section landing-hero rounded-4 p-4 p-lg-5 mb-5">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-8">
+                <span class="badge text-bg-primary mb-3">@L["Landing_HeroBadge"]</span>
+                <h1 class="display-5 fw-bold mb-3">@L["Landing_HeroTitle"]</h1>
+                <p class="lead mb-4">@L["Landing_HeroSubtitle"]</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-primary btn-lg" href="@GeneratorPath">@L["Landing_CtaPrimary"]</a>
+                    <a class="btn btn-outline-secondary btn-lg" href="@PresetsPath">@L["Landing_CtaSecondary"]</a>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100 hero-facts-card">
+                    <div class="card-body">
+                        <h2 class="h5 mb-3">@L["Landing_QuickFacts_Title"]</h2>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0">@L["Landing_QuickFacts_Item1"]</li>
+                            <li class="list-group-item px-0">@L["Landing_QuickFacts_Item2"]</li>
+                            <li class="list-group-item px-0">@L["Landing_QuickFacts_Item3"]</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-5 landing-section" aria-labelledby="cluster-title">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+            <div>
+                <h2 id="cluster-title" class="h3 mb-1">@ClusterTitle</h2>
+                <p class="text-secondary mb-0">@ClusterSubtitle</p>
+            </div>
+            <a class="link-secondary text-decoration-none" href="@PresetsPath">@ClusterAction</a>
+        </div>
+
+        <div class="row g-3">
+            @foreach (var clusterPage in ClusterPages)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card border-0 shadow-sm h-100 cluster-hub-card">
+                        <div class="card-body d-flex flex-column">
+                            <h3 class="h5">@clusterPage.Title</h3>
+                            <p class="text-secondary small">@clusterPage.Description</p>
+                            <div class="mt-auto d-flex gap-2 flex-wrap">
+                                <a class="btn btn-sm btn-outline-secondary" href="@clusterPage.Path">@ClusterPageButton</a>
+                                <a class="btn btn-sm btn-primary" href="@($"{PresetsPath}?category={clusterPage.Category}")">@ClusterPresetsButton</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="mb-5 landing-section">
+        <h2 class="h3 mb-3">@L["Landing_Features_Title"]</h2>
+        <div class="row g-3">
+            @foreach (var feature in FeatureCards)
+            {
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 feature-card-modern">
+                        <div class="card-body">
+                            <h3 class="h5">@L[feature.TitleKey]</h3>
+                            <p class="text-secondary mb-0">@L[feature.DescriptionKey]</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="landing-section">
+        <div class="card border-0 shadow-sm workflow-card">
+            <div class="card-body p-4 p-lg-5">
+                <h2 class="h3 mb-3">@L["Landing_Workflow_Title"]</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <h3 class="h6 text-primary">01</h3>
+                        <p class="mb-0">@L["Landing_Workflow_Step1"]</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="h6 text-primary">02</h3>
+                        <p class="mb-0">@L["Landing_Workflow_Step2"]</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="h6 text-primary">03</h3>
+                        <p class="mb-0">@L["Landing_Workflow_Step3"]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<SeoLandingPageLinkViewModel> ClusterPages { get; set; } = [];
+
+    private static readonly IReadOnlyList<(string TitleKey, string DescriptionKey)> FeatureCards =
+    [
+        ("Landing_Feature_Generator_Title", "Landing_Feature_Generator_Desc"),
+        ("Landing_Feature_Optimizer_Title", "Landing_Feature_Optimizer_Desc"),
+        ("Landing_Feature_Library_Title", "Landing_Feature_Library_Desc")
+    ];
+
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "de"
+        : "en";
+
+    private bool IsGerman => CurrentLanguage == "de";
+
+    private string ClusterTitle => IsGerman ? "Themencluster für organisches Wachstum" : "Topic clusters for organic growth";
+    private string ClusterSubtitle => IsGerman
+        ? "Jede Landingpage bildet ein eigenes Cluster und verlinkt auf passende Presets und verwandte Themenbereiche."
+        : "Each landing page forms its own cluster and links to matching presets and related topic pages.";
+    private string ClusterAction => IsGerman ? "Alle Presets durchsuchen" : "Browse all presets";
+    private string ClusterPageButton => IsGerman ? "Landingpage" : "Landing page";
+    private string ClusterPresetsButton => IsGerman ? "Presets" : "Presets";
+    private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
+    private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
+    private string HomeTitle => L["PageTitle_Landing"];
+    private string HomeMetaDescription => IsGerman
+        ? "PromptForge: KI-Prompt-Generator, Optimizer und Preset-Bibliothek mit skalierbaren SEO-Themenclustern."
+        : "PromptForge: AI prompt generator, optimizer, and preset library with scalable SEO topic clusters.";
+    private string CanonicalUrl => ToAbsolute(IsGerman ? "/de" : "/en");
+    private string GermanHomeUrl => ToAbsolute("/de");
+    private string EnglishHomeUrl => ToAbsolute("/en");
+    private string HomeJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @graph = new object[]
+        {
+            new
+            {
+                @type = "WebSite",
+                name = "PromptForge",
+                url = ToAbsolute("/"),
+                inLanguage = new[] { "de", "en" }
+            },
+            new
+            {
+                @type = "SoftwareApplication",
+                name = "PromptForge",
+                applicationCategory = "BusinessApplication",
+                operatingSystem = "Web",
+                offers = new { @type = "Offer", price = "0", priceCurrency = "USD" },
+                url = CanonicalUrl,
+                description = HomeMetaDescription
+            }
+        }
+    });
+
+    protected override void OnInitialized()
+    {
+        ClusterPages = SeoLandingPageService.GetClusterPages(CurrentLanguage);
+    }
+
+    private string ToAbsolute(string relativePath)
+    {
+        var normalized = string.IsNullOrWhiteSpace(relativePath) ? "/" : relativePath;
+        return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
+    }
+}

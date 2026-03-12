@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="PromptPlatform.Application/PromptPlatform.Application.csproj" />
+  <Project Path="PromptPlatform.Contracts/PromptPlatform.Contracts.csproj" />
+  <Project Path="PromptPlatform.Domain/PromptPlatform.Domain.csproj" />
+  <Project Path="PromptPlatform.Infrastructure/PromptPlatform.Infrastructure.csproj" />
+  <Project Path="PromptPlatform.Web/PromptPlatform.Web.csproj" />
+</Solution>

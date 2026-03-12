@@ -1,0 +1,27 @@
+.app-footer {
+    background: var(--app-footer-bg);
+    color: var(--app-footer-color);
+    font-size: 0.95rem;
+}
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: #ffeeba;
+    border-top: 1px solid #f5c06d;
+    bottom: 0;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.75rem 1rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1040;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}

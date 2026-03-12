@@ -1,0 +1,538 @@
+@page "/generator"
+@page "/de/generator"
+@page "/en/generator"
+@using System.Globalization
+@using System.Text.Json
+@inject IStringLocalizer<SharedResource> L
+@inject IPromptGenerationService PromptGenerationService
+@inject IPresetService PresetService
+@inject IUserLibraryService UserLibraryService
+@inject ISeoLandingPageService SeoLandingPageService
+@inject IJSRuntime JsRuntime
+@inject NavigationManager Navigation
+
+<PageTitle>@L["PageTitle_Generator"]</PageTitle>
+<HeadContent>
+    <meta name="description" content="@GeneratorMetaDescription" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@L["PageTitle_Generator"]" />
+    <meta property="og:description" content="@GeneratorMetaDescription" />
+    <meta property="og:url" content="@CanonicalUrl" />
+    <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
+    <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@L["PageTitle_Generator"]" />
+    <meta name="twitter:description" content="@GeneratorMetaDescription" />
+    <link rel="canonical" href="@CanonicalUrl" />
+    <link rel="alternate" hreflang="de" href="@GermanUrl" />
+    <link rel="alternate" hreflang="en" href="@EnglishUrl" />
+    <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
+    <script type="application/ld+json">@((MarkupString)GeneratorJsonLd)</script>
+</HeadContent>
+
+<div class="row g-4 generator-layout">
+    <div class="col-xl-6 d-flex">
+        <div class="card border-0 shadow-sm h-100 w-100 generator-form-card">
+            <div class="card-body">
+                <h1 class="h3 mb-3">@L["Generator_Title"]</h1>
+                <p class="text-secondary">@L["Generator_Subtitle_Advanced"]</p>
+
+                @if (ActivePreset is not null)
+                {
+                    <div class="alert alert-info py-2 mb-3 preset-loaded-banner">
+                        <div class="fw-semibold">@L["Generator_PresetLoaded", ActivePreset.GetTitle(CurrentLanguage)]</div>
+                        <div class="small">@ActivePreset.GetDescription(CurrentLanguage)</div>
+                    </div>
+                }
+
+                <form @onsubmit="GenerateAsync" @onsubmit:preventDefault>
+                    <div class="mb-3">
+                        <label class="form-label">@L["Generator_Field_Topic"]</label>
+                        <input class="form-control" @bind="Request.Topic" placeholder="@L["Generator_Field_Topic_Placeholder"]" />
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">@L["Generator_Field_MainCategory"]</label>
+                            <select class="form-select" @bind="Request.MainCategory">
+                                @foreach (var category in Enum.GetValues<MainCategory>())
+                                {
+                                    <option value="@category">@L[$"MainCategory_{category}"]</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@L["Generator_Field_Subcategory"]</label>
+                            <input class="form-control" @bind="Request.Subcategory" placeholder="@L["Generator_Field_Subcategory_Placeholder"]" />
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label">@L["Generator_Field_Platform"]</label>
+                            <select class="form-select" @bind="SelectedPlatformOption" @bind:after="OnPlatformOptionChanged">
+                                @foreach (var provider in TopAiProviders)
+                                {
+                                    <option value="@provider">@provider</option>
+                                }
+                                <option value="@CustomPlatformOptionValue">@CustomPlatformOptionLabel</option>
+                            </select>
+
+                            @if (IsCustomPlatformSelected)
+                            {
+                                <input class="form-control mt-2"
+                                       @bind="Request.Platform"
+                                       placeholder="@CustomPlatformPlaceholder"
+                                       aria-label="@CustomPlatformLabel" />
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@L["Generator_Field_TargetAudience"]</label>
+                            <input class="form-control" @bind="Request.TargetAudience" placeholder="@L["Generator_Field_TargetAudience_Placeholder"]" />
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <label class="form-label">@L["Generator_Field_Tone"]</label>
+                            <select class="form-select" @bind="Request.Tone">
+                                @foreach (var tone in Enum.GetValues<PromptTone>())
+                                {
+                                    <option value="@tone">@L[$"Tone_{tone}"]</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@L["Generator_Field_Length"]</label>
+                            <select class="form-select" @bind="Request.Length">
+                                @foreach (var length in Enum.GetValues<PromptLength>())
+                                {
+                                    <option value="@length">@L[$"Length_{length}"]</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@L["Generator_Field_Language"]</label>
+                            <select class="form-select" @bind="Request.Language">
+                                <option value="de">@L["Language_German"]</option>
+                                <option value="en">@L["Language_English"]</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label">@L["Generator_Field_OutputFormat"]</label>
+                            <select class="form-select" @bind="Request.OutputFormat">
+                                @foreach (var format in Enum.GetValues<OutputFormat>())
+                                {
+                                    <option value="@format">@L[$"OutputFormat_{format}"]</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@L["Generator_Field_ComplexityLevel"]</label>
+                            <select class="form-select" @bind="Request.ComplexityLevel">
+                                @foreach (var level in Enum.GetValues<ComplexityLevel>())
+                                {
+                                    <option value="@level">@L[$"Complexity_{level}"]</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">@L["Generator_Field_RolePerspective"]</label>
+                        <input class="form-control" @bind="Request.RolePerspective" placeholder="@L["Generator_Field_RolePerspective_Placeholder"]" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">@L["Generator_Field_ExtraInstructions"]</label>
+                        <textarea class="form-control" rows="4" @bind="Request.ExtraInstructions" placeholder="@L["Generator_Field_ExtraInstructions_Placeholder"]"></textarea>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(ValidationError))
+                    {
+                        <div class="alert alert-warning py-2">@ValidationError</div>
+                    }
+
+                    <button type="submit" class="btn btn-primary mt-2 w-100" disabled="@IsGenerating">@L["Generator_Action"]</button>
+                </form>
+
+                <section class="mt-4 generator-context-links" aria-labelledby="generator-context-links-title">
+                    <h2 id="generator-context-links-title" class="h6 mb-2">@ContextLinksTitle</h2>
+                    <p class="small text-secondary mb-3">@ContextLinksSubtitle</p>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var link in GeneratorContextPages)
+                        {
+                            <a class="btn btn-sm btn-outline-secondary generator-topic-link" href="@link.Path">@link.Title</a>
+                        }
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        @if (!string.IsNullOrWhiteSpace(CurrentCategoryLandingPath))
+                        {
+                            <a class="btn btn-sm btn-outline-primary" href="@CurrentCategoryLandingPath">@CurrentCategoryLandingLabel</a>
+                        }
+                        <a class="btn btn-sm btn-outline-secondary" href="@CurrentCategoryPresetsPath">@CurrentCategoryPresetsLabel</a>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6 d-flex">
+        <div class="card border-0 shadow-sm h-100 w-100 generator-result-card prompt-result-panel">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2 gap-2 result-toolbar">
+                    <div>
+                        <h2 class="h4 mb-1">@L["Generator_Output_Title"]</h2>
+                        <p class="text-secondary small mb-0">@L[$"MainCategoryStyle_{Request.MainCategory}"]</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="CopyAsync" disabled="@string.IsNullOrWhiteSpace(GeneratedPrompt)">@L["Action_Copy"]</button>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="ToggleFavoriteAsync" disabled="@string.IsNullOrWhiteSpace(GeneratedPrompt)">
+                            @(UserLibraryService.IsFavorite(GeneratedPrompt) ? L["Action_Unfavorite"] : L["Action_Favorite"])
+                        </button>
+                    </div>
+                </div>
+
+                @if (string.IsNullOrWhiteSpace(GeneratedPrompt))
+                {
+                    <div class="placeholder-card mt-2">
+                        <p class="text-secondary mb-0">@L["Generator_Output_Empty"]</p>
+                    </div>
+                }
+                else
+                {
+                    <textarea class="form-control flex-fill prompt-result-textarea" rows="24" readonly>@GeneratedPrompt</textarea>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "preset")]
+    public string? PresetId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "history")]
+    public Guid? HistoryId { get; set; }
+
+    private PromptGenerationRequest Request { get; set; } = new();
+    private string GeneratedPrompt { get; set; } = string.Empty;
+    private string GeneratedTitle { get; set; } = string.Empty;
+    private string ValidationError { get; set; } = string.Empty;
+    private bool IsGenerating { get; set; }
+
+    private IReadOnlyList<PromptPreset> PresetsCollection { get; set; } = [];
+    private PromptPreset? ActivePreset { get; set; }
+    private string? LastLoadedPresetId { get; set; }
+    private Guid? LastLoadedHistoryId { get; set; }
+    private string SelectedPlatformOption { get; set; } = "ChatGPT";
+
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private const string CustomPlatformOptionValue = "__custom_platform__";
+    private static readonly IReadOnlyList<string> TopAiProviders =
+    [
+        "ChatGPT",
+        "Claude",
+        "Gemini",
+        "Microsoft Copilot",
+        "Perplexity",
+        "Grok",
+        "Meta AI",
+        "Mistral Le Chat",
+        "DeepSeek",
+        "Qwen"
+    ];
+
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "de"
+        : "en";
+
+    private bool IsGerman => CurrentLanguage == "de";
+    private string ContextLinksTitle => IsGerman ? "Relevante Themenbereiche" : "Relevant topic areas";
+    private string ContextLinksSubtitle => IsGerman
+        ? "Nutze diese Landingpages für passende Presets, Anwendungsfälle und SEO-Cluster-Navigation."
+        : "Use these landing pages for matching presets, use cases, and SEO cluster navigation.";
+    private string CurrentCategoryLandingLabel => IsGerman ? "Zur passenden Landingpage" : "Open matching landing page";
+    private string CurrentCategoryPresetsLabel => IsGerman ? "Presets dieser Kategorie" : "Presets in this category";
+    private string CustomPlatformOptionLabel => IsGerman ? "Eigene Plattform (manuell)" : "Custom platform (manual)";
+    private string CustomPlatformLabel => IsGerman ? "Benutzerdefinierte Plattform" : "Custom platform";
+    private string CustomPlatformPlaceholder => IsGerman
+        ? "z. B. LinkedIn, YouTube, Midjourney, LMS"
+        : "e.g. LinkedIn, YouTube, Midjourney, LMS";
+    private bool IsCustomPlatformSelected => SelectedPlatformOption.Equals(CustomPlatformOptionValue, StringComparison.Ordinal);
+
+    private IReadOnlyList<SeoLandingPageLinkViewModel> GeneratorContextPages
+        => SeoLandingPageService.GetGeneratorContextPages(CurrentLanguage, Request.MainCategory, maxItems: 4);
+
+    private string? CurrentCategoryLandingPath
+        => SeoLandingPageService.GetMainCategoryLandingPath(CurrentLanguage, Request.MainCategory);
+
+    private string CurrentCategoryPresetsPath
+        => $"{AppRoutes.PresetsPathForCulture(CurrentLanguage)}?category={CategoryMappingUtility.ToPresetCategory(Request.MainCategory)}";
+    private string GeneratorMetaDescription => IsGerman
+        ? "Erzeuge hochwertige, kategoriespezifische KI-Prompts mit Struktur-, Format- und Qualitätsvorgaben."
+        : "Generate high-quality, category-specific AI prompts with structure, format, and quality constraints.";
+    private string LocalizedGeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
+    private string CanonicalUrl => ToAbsolute(LocalizedGeneratorPath);
+    private string GermanUrl => ToAbsolute(AppRoutes.GeneratorPathForCulture("de"));
+    private string EnglishUrl => ToAbsolute(AppRoutes.GeneratorPathForCulture("en"));
+    private string GeneratorJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @graph = new object[]
+        {
+            new
+            {
+                @type = "WebPage",
+                name = L["PageTitle_Generator"].Value,
+                description = GeneratorMetaDescription,
+                url = CanonicalUrl,
+                inLanguage = CurrentLanguage
+            },
+            new
+            {
+                @type = "WebApplication",
+                name = "PromptForge Generator",
+                applicationCategory = "BusinessApplication",
+                operatingSystem = "Web",
+                url = CanonicalUrl,
+                description = GeneratorMetaDescription
+            }
+        }
+    });
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UserLibraryService.InitializeAsync();
+        PresetsCollection = await PresetService.GetAllAsync();
+
+        Request.Platform = "ChatGPT";
+        Request.TargetAudience = L["Generator_Default_TargetAudience"];
+        Request.RolePerspective = L["Generator_Default_Role"];
+        Request.Subcategory = L["Generator_Default_Subcategory"];
+        Request.Language = CurrentLanguage;
+        SyncPlatformSelection();
+
+        var loadedHistory = await LoadHistoryFromQueryAsync();
+        if (!loadedHistory)
+        {
+            await LoadPresetFromQueryAsync();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var loadedHistory = await LoadHistoryFromQueryAsync();
+        if (!loadedHistory)
+        {
+            await LoadPresetFromQueryAsync();
+        }
+    }
+
+    private async Task<bool> LoadHistoryFromQueryAsync()
+    {
+        if (!HistoryId.HasValue)
+        {
+            return false;
+        }
+
+        if (HistoryId.Value == LastLoadedHistoryId)
+        {
+            return true;
+        }
+
+        await UserLibraryService.InitializeAsync();
+        var historyEntry = UserLibraryService.GetHistoryById(HistoryId.Value);
+        if (historyEntry is null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(historyEntry.RequestPayloadJson))
+        {
+            var restored = JsonSerializer.Deserialize<PromptGenerationRequest>(historyEntry.RequestPayloadJson, JsonOptions);
+            if (restored is not null)
+            {
+                Request = restored;
+            }
+        }
+        else
+        {
+            Request.Topic = historyEntry.Title;
+            Request.ExtraInstructions = historyEntry.Prompt;
+            Request.MainCategory = ParseMainCategory(historyEntry.Category);
+            Request.Language = CurrentLanguage;
+        }
+
+        GeneratedPrompt = historyEntry.Prompt;
+        GeneratedTitle = historyEntry.Title;
+        ActivePreset = null;
+        LastLoadedPresetId = null;
+        LastLoadedHistoryId = historyEntry.Id;
+        ValidationError = string.Empty;
+        SyncPlatformSelection();
+        return true;
+    }
+
+    private async Task LoadPresetFromQueryAsync()
+    {
+        if (string.IsNullOrWhiteSpace(PresetId))
+        {
+            return;
+        }
+
+        if (PresetId.Equals(LastLoadedPresetId, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var preset = PresetsCollection.FirstOrDefault(x => x.Id.Equals(PresetId, StringComparison.OrdinalIgnoreCase));
+        if (preset is null)
+        {
+            preset = await PresetService.GetByIdAsync(PresetId);
+        }
+
+        if (preset is null)
+        {
+            return;
+        }
+
+        ApplyPreset(preset);
+        ActivePreset = preset;
+        LastLoadedPresetId = preset.Id;
+        LastLoadedHistoryId = null;
+    }
+
+    private void ApplyPreset(PromptPreset preset)
+    {
+        var language = CurrentLanguage;
+
+        Request.MainCategory = preset.DefaultMainCategory;
+        Request.Topic = preset.GetDefaultTopic(language);
+        Request.Subcategory = preset.GetDefaultSubcategory(language);
+        Request.Platform = preset.DefaultPlatform;
+        Request.TargetAudience = preset.GetDefaultTargetAudience(language);
+        Request.Tone = preset.DefaultTone;
+        Request.Length = preset.DefaultLength;
+        Request.Language = language;
+        Request.OutputFormat = preset.DefaultOutputFormat;
+        Request.ComplexityLevel = preset.DefaultComplexityLevel;
+        Request.RolePerspective = preset.GetDefaultRole(language);
+        Request.ExtraInstructions = preset.GetDefaultExtraInstructions(language);
+        SyncPlatformSelection();
+    }
+
+    private async Task GenerateAsync()
+    {
+        ValidationError = string.Empty;
+
+        if (IsGenerating)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Request.Topic))
+        {
+            ValidationError = L["Generator_Validation_Topic"];
+            return;
+        }
+
+        IsGenerating = true;
+
+        try
+        {
+            GeneratedPrompt = PromptGenerationService.Generate(Request);
+            GeneratedTitle = string.IsNullOrWhiteSpace(Request.Topic)
+                ? L["Generator_Output_Title"]
+                : Request.Topic;
+
+            await UserLibraryService.AddHistoryAsync(new PromptHistoryEntry
+            {
+                Type = PromptRecordType.Generated,
+                Title = GeneratedTitle,
+                Prompt = GeneratedPrompt,
+                Source = L["Source_Generator"],
+                Category = Request.MainCategory.ToString(),
+                Route = AppRoutes.Generator,
+                RequestPayloadJson = JsonSerializer.Serialize(Request, JsonOptions)
+            });
+        }
+        finally
+        {
+            IsGenerating = false;
+        }
+    }
+
+    private async Task ToggleFavoriteAsync()
+    {
+        if (string.IsNullOrWhiteSpace(GeneratedPrompt))
+        {
+            return;
+        }
+
+        var title = string.IsNullOrWhiteSpace(GeneratedTitle) ? L["Generator_Output_Title"] : GeneratedTitle;
+        await UserLibraryService.ToggleFavoriteAsync(title, GeneratedPrompt, L["Source_Generator"], Request.MainCategory.ToString());
+    }
+
+    private async Task CopyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(GeneratedPrompt))
+        {
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("promptUi.copyText", GeneratedPrompt);
+    }
+
+    private void OnPlatformOptionChanged()
+    {
+        if (SelectedPlatformOption.Equals(CustomPlatformOptionValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Request.Platform = SelectedPlatformOption;
+    }
+
+    private void SyncPlatformSelection()
+    {
+        if (string.IsNullOrWhiteSpace(Request.Platform))
+        {
+            Request.Platform = TopAiProviders[0];
+            SelectedPlatformOption = TopAiProviders[0];
+            return;
+        }
+
+        var match = TopAiProviders.FirstOrDefault(x => x.Equals(Request.Platform, StringComparison.OrdinalIgnoreCase));
+        if (match is null)
+        {
+            SelectedPlatformOption = CustomPlatformOptionValue;
+            return;
+        }
+
+        SelectedPlatformOption = match;
+        Request.Platform = match;
+    }
+
+    private static MainCategory ParseMainCategory(string category)
+    {
+        if (Enum.TryParse<MainCategory>(category, true, out var parsed))
+        {
+            return parsed;
+        }
+
+        return MainCategory.Business;
+    }
+
+    private string ToAbsolute(string relativePath)
+    {
+        var normalized = string.IsNullOrWhiteSpace(relativePath) ? "/" : relativePath;
+        return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
+    }
+}

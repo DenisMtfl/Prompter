@@ -1,0 +1,33 @@
+@using System.Globalization
+@inject IStringLocalizer<SharedResource> L
+@inject NavigationManager Navigation
+@inject IJSRuntime JsRuntime
+
+<div class="dropdown">
+    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        @CurrentCultureLabel
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li><button class="dropdown-item" type="button" @onclick='() => SelectLanguageAsync("de")'>@L["Language_German"]</button></li>
+        <li><button class="dropdown-item" type="button" @onclick='() => SelectLanguageAsync("en")'>@L["Language_English"]</button></li>
+    </ul>
+</div>
+
+@code {
+    private string CurrentCultureLabel => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? L["Language_German"]
+        : L["Language_English"];
+
+    private string BuildCultureUrl(string culture)
+    {
+        var relative = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var returnPath = string.IsNullOrWhiteSpace(relative) ? "/" : $"/{relative}";
+        return $"/culture/set?culture={culture}&returnUrl={Uri.EscapeDataString(returnPath)}";
+    }
+
+    private async Task SelectLanguageAsync(string culture)
+    {
+        await JsRuntime.InvokeVoidAsync("promptLanguage.set", culture);
+        Navigation.NavigateTo(BuildCultureUrl(culture), forceLoad: true);
+    }
+}

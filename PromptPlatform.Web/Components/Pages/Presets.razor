@@ -1,0 +1,475 @@
+@page "/presets"
+@page "/de/presets"
+@page "/en/presets"
+@using System.Globalization
+@using System.Text.Json
+@inject IStringLocalizer<SharedResource> L
+@inject IPresetService PresetService
+@inject IUserLibraryService UserLibraryService
+@inject ISeoLandingPageService SeoLandingPageService
+@inject NavigationManager Navigation
+
+<PageTitle>@L["PageTitle_Presets"]</PageTitle>
+<HeadContent>
+    <meta name="description" content="@PresetsMetaDescription" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@L["PageTitle_Presets"]" />
+    <meta property="og:description" content="@PresetsMetaDescription" />
+    <meta property="og:url" content="@CanonicalUrl" />
+    <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
+    <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@L["PageTitle_Presets"]" />
+    <meta name="twitter:description" content="@PresetsMetaDescription" />
+    <link rel="canonical" href="@CanonicalUrl" />
+    <link rel="alternate" hreflang="de" href="@GermanUrl" />
+    <link rel="alternate" hreflang="en" href="@EnglishUrl" />
+    <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
+    <script type="application/ld+json">@((MarkupString)PresetsJsonLd)</script>
+</HeadContent>
+
+<section class="mb-4">
+    <h1 class="h3 mb-2">@L["Presets_Title"]</h1>
+    <p class="text-secondary mb-0">@L["Presets_Subtitle"]</p>
+</section>
+
+<section class="mb-4" aria-labelledby="preset-cluster-nav">
+    <div class="card border-0 shadow-sm preset-cluster-nav-card">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <h2 id="preset-cluster-nav" class="h5 mb-0">@ClusterNavigationTitle</h2>
+                <a class="link-secondary text-decoration-none fw-semibold" href="@GeneratorPath">@ClusterNavigationCta</a>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var clusterPage in ClusterPages)
+                {
+                    <a class="btn btn-sm btn-outline-secondary" href="@clusterPage.Path">@clusterPage.Title</a>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="card border-0 shadow-sm mb-4 preset-filter-card">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-xl-4">
+                <label class="form-label">@L["Presets_Search"]</label>
+                <input class="form-control" @bind="SearchText" placeholder="@SearchPlaceholder" />
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <label class="form-label">@MainCategoryLabel</label>
+                <select class="form-select" @bind="CategoryFilter" @bind:after="OnCategoryChanged">
+                    <option value="all">@AllLabel</option>
+                    @foreach (var category in Enum.GetValues<PresetCategory>())
+                    {
+                        <option value="@category">@GetCategoryLabel(category)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <label class="form-label">@SubcategoryLabel</label>
+                <select class="form-select" @bind="SubcategoryFilter">
+                    <option value="all">@AllLabel</option>
+                    @foreach (var subcategory in AvailableSubcategories)
+                    {
+                        <option value="@subcategory">@subcategory</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <label class="form-label">@PlatformLabel</label>
+                <select class="form-select" @bind="PlatformFilter">
+                    <option value="all">@AllLabel</option>
+                    @foreach (var platform in AvailablePlatforms)
+                    {
+                        <option value="@platform">@platform</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <label class="form-label">@LanguageLabel</label>
+                <select class="form-select" @bind="LanguageFilter" @bind:after="OnLanguageChanged">
+                    <option value="all">@AllLanguagesLabel</option>
+                    <option value="de">@L["Language_German"]</option>
+                    <option value="en">@L["Language_English"]</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-1 align-items-end">
+            <div class="col-sm-6 col-xl-3">
+                <label class="form-label">@SortLabel</label>
+                <select class="form-select" @bind="SortFilter">
+                    <option value="relevance">@SortRelevanceLabel</option>
+                    <option value="popularity">@SortPopularityLabel</option>
+                    <option value="title">@SortTitleLabel</option>
+                </select>
+            </div>
+            <div class="col-xl-9">
+                <div class="w-100 text-xl-end text-secondary small fw-semibold pt-2">
+                    @L["Presets_Count", FilteredPresets.Count]
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 preset-grid">
+    @if (FilteredPresets.Count == 0)
+    {
+        <div class="col-12">
+            <div class="alert alert-secondary">@L["Presets_Empty"]</div>
+        </div>
+    }
+    else
+    {
+        @foreach (var preset in FilteredPresets)
+        {
+            var landingPath = GetCategoryLandingPath(preset.Category);
+            var title = GetTitle(preset);
+            var description = GetDescription(preset);
+            var subcategory = GetSubcategory(preset);
+            var tags = GetTags(preset);
+
+            <div class="col-md-6 col-xxl-4 d-flex">
+                <div class="card h-100 border-0 shadow-sm preset-card w-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <h3 class="h5 mb-0">@title</h3>
+                            <span class="badge rounded-pill text-bg-light border preset-chip">@GetCategoryLabel(preset.Category)</span>
+                        </div>
+
+                        <p class="text-secondary mb-2">@description</p>
+
+                        <div class="preset-meta small text-secondary mb-2">
+                            <div><strong>@SubcategoryLabel:</strong> @subcategory</div>
+                            <div><strong>@PlatformLabel:</strong> @preset.DefaultPlatform</div>
+                            <div><strong>@ComplexityLabel:</strong> @L[$"Complexity_{preset.DefaultComplexityLevel}"]</div>
+                        </div>
+
+                        @if (tags.Count > 0)
+                        {
+                            <div class="preset-tag-list mb-3">
+                                @foreach (var tag in tags.Take(6))
+                                {
+                                    <span class="badge rounded-pill text-bg-light border me-1 mb-1">@tag</span>
+                                }
+                            </div>
+                        }
+
+                        <div class="small text-secondary mb-2 fw-semibold">@ExampleInputLabel</div>
+                        <pre class="history-prompt preset-example-input mb-3">@GetExampleInput(preset)</pre>
+
+                        <div class="small text-secondary mb-2 fw-semibold">@L["Presets_ExamplePrompt"]</div>
+                        <pre class="history-prompt preset-example mb-3">@GetExamplePrompt(preset)</pre>
+
+                        <div class="d-flex gap-2 mt-auto flex-wrap">
+                            <a class="btn btn-primary btn-sm" href="@($"{GeneratorPath}?preset={preset.Id}")">@UsePresetLabel</a>
+                            <button class="btn btn-outline-primary btn-sm" @onclick="() => TogglePresetFavoriteAsync(preset)">
+                                @(UserLibraryService.IsFavorite(GetExamplePrompt(preset)) ? L["Action_Unfavorite"] : L["Action_Favorite"])
+                            </button>
+
+                            @if (!string.IsNullOrWhiteSpace(landingPath))
+                            {
+                                <a class="btn btn-outline-secondary btn-sm" href="@landingPath">@CategoryLandingLabel</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "category")]
+    public string? Category { get; set; }
+
+    private IReadOnlyList<PromptPreset> PresetsCollection { get; set; } = [];
+    private IReadOnlyList<SeoLandingPageLinkViewModel> ClusterPages { get; set; } = [];
+
+    private string SearchText { get; set; } = string.Empty;
+    private string CategoryFilter { get; set; } = "all";
+    private string SubcategoryFilter { get; set; } = "all";
+    private string PlatformFilter { get; set; } = "all";
+    private string LanguageFilter { get; set; } = "all";
+    private string SortFilter { get; set; } = "relevance";
+
+    private string? LastAppliedCategoryQuery { get; set; }
+
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "de"
+        : "en";
+
+    private bool IsGerman => CurrentLanguage == "de";
+    private string ActiveContentLanguage => LanguageFilter switch
+    {
+        "de" => "de",
+        "en" => "en",
+        _ => CurrentLanguage
+    };
+
+    private string ClusterNavigationTitle => IsGerman ? "Themencluster und Landingpages" : "Topic clusters and landing pages";
+    private string ClusterNavigationCta => IsGerman ? "Direkt zum Generator" : "Open generator";
+    private string SearchPlaceholder => IsGerman ? "Titel, Beschreibung oder Tags durchsuchen" : "Search title, description, or tags";
+    private string MainCategoryLabel => IsGerman ? "Hauptbereich" : "Main area";
+    private string SubcategoryLabel => IsGerman ? "Unterkategorie" : "Subcategory";
+    private string PlatformLabel => IsGerman ? "Plattform" : "Platform";
+    private string LanguageLabel => IsGerman ? "Sprache" : "Language";
+    private string SortLabel => IsGerman ? "Sortierung" : "Sort";
+    private string SortRelevanceLabel => IsGerman ? "Relevanz" : "Relevance";
+    private string SortPopularityLabel => IsGerman ? "Beliebtheit" : "Popularity";
+    private string SortTitleLabel => IsGerman ? "Titel" : "Title";
+    private string AllLabel => IsGerman ? "Alle" : "All";
+    private string AllLanguagesLabel => IsGerman ? "Alle Sprachen" : "All languages";
+    private string UsePresetLabel => IsGerman ? "Preset nutzen" : "Use preset";
+    private string CategoryLandingLabel => IsGerman ? "Zur Landingpage" : "Open landing page";
+    private string ExampleInputLabel => IsGerman ? "Beispiel-Eingabe" : "Example input";
+    private string ComplexityLabel => IsGerman ? "Komplexität" : "Complexity";
+    private string PresetsMetaDescription => IsGerman
+        ? "Durchsuchbare Preset-Bibliothek mit Filtern nach Bereich, Plattform und Unterkategorie inklusive direkter Generator-Übernahme."
+        : "Searchable preset library with filters by domain, platform, and subcategory plus direct generator handoff.";
+    private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
+    private string LocalizedPresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
+    private string CanonicalUrl => ToAbsolute(LocalizedPresetsPath);
+    private string GermanUrl => ToAbsolute(AppRoutes.PresetsPathForCulture("de"));
+    private string EnglishUrl => ToAbsolute(AppRoutes.PresetsPathForCulture("en"));
+    private string PresetsJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @graph = new object[]
+        {
+            new
+            {
+                @type = "CollectionPage",
+                name = L["PageTitle_Presets"].Value,
+                description = PresetsMetaDescription,
+                url = CanonicalUrl,
+                inLanguage = CurrentLanguage
+            },
+            new
+            {
+                @type = "BreadcrumbList",
+                itemListElement = new object[]
+                {
+                    new { @type = "ListItem", position = 1, name = "PromptForge", item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage)) },
+                    new { @type = "ListItem", position = 2, name = L["PageTitle_Presets"].Value, item = CanonicalUrl }
+                }
+            }
+        }
+    });
+
+    private IReadOnlyList<string> AvailableSubcategories => PresetsCollection
+        .Where(MatchesCategory)
+        .Where(MatchesPlatform)
+        .Select(x => x.GetSubcategory(ActiveContentLanguage))
+        .Distinct(StringComparer.CurrentCultureIgnoreCase)
+        .OrderBy(x => x, StringComparer.CurrentCultureIgnoreCase)
+        .ToList();
+
+    private IReadOnlyList<string> AvailablePlatforms => PresetsCollection
+        .Where(MatchesCategory)
+        .Select(x => x.DefaultPlatform)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => x, StringComparer.CurrentCultureIgnoreCase)
+        .ToList();
+
+    private List<PromptPreset> FilteredPresets
+    {
+        get
+        {
+            var query = SearchText.Trim();
+
+            var scored = PresetsCollection
+                .Where(MatchesCategory)
+                .Where(MatchesSubcategory)
+                .Where(MatchesPlatform)
+                .Select(x => new ScoredPreset(x, ComputeRelevanceScore(x, query)))
+                .Where(x => string.IsNullOrWhiteSpace(query) || x.Score > 0)
+                .ToList();
+
+            return SortFilter switch
+            {
+                "popularity" => scored
+                    .OrderByDescending(x => x.Preset.PopularityScore)
+                    .ThenByDescending(x => x.Score)
+                    .ThenBy(x => x.Preset.GetTitle(ActiveContentLanguage), StringComparer.CurrentCultureIgnoreCase)
+                    .Select(x => x.Preset)
+                    .ToList(),
+                "title" => scored
+                    .OrderBy(x => x.Preset.GetTitle(ActiveContentLanguage), StringComparer.CurrentCultureIgnoreCase)
+                    .Select(x => x.Preset)
+                    .ToList(),
+                _ => scored
+                    .OrderByDescending(x => x.Score)
+                    .ThenByDescending(x => x.Preset.PopularityScore)
+                    .ThenBy(x => x.Preset.GetTitle(ActiveContentLanguage), StringComparer.CurrentCultureIgnoreCase)
+                    .Select(x => x.Preset)
+                    .ToList()
+            };
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PresetsCollection = await PresetService.GetAllAsync();
+        ClusterPages = SeoLandingPageService.GetClusterPages(CurrentLanguage);
+        ApplyCategoryQuery();
+        NormalizeFilterValues();
+    }
+
+    protected override void OnParametersSet()
+    {
+        ApplyCategoryQuery();
+        NormalizeFilterValues();
+    }
+
+    private void OnCategoryChanged()
+    {
+        SubcategoryFilter = "all";
+        PlatformFilter = "all";
+        NormalizeFilterValues();
+    }
+
+    private void OnLanguageChanged()
+    {
+        SubcategoryFilter = "all";
+        NormalizeFilterValues();
+    }
+
+    private void ApplyCategoryQuery()
+    {
+        if (Category == LastAppliedCategoryQuery)
+        {
+            return;
+        }
+
+        LastAppliedCategoryQuery = Category;
+
+        if (string.IsNullOrWhiteSpace(Category))
+        {
+            CategoryFilter = "all";
+            return;
+        }
+
+        if (!Enum.TryParse<PresetCategory>(Category, true, out var parsed))
+        {
+            return;
+        }
+
+        CategoryFilter = parsed.ToString();
+    }
+
+    private void NormalizeFilterValues()
+    {
+        if (!AvailablePlatforms.Contains(PlatformFilter, StringComparer.OrdinalIgnoreCase))
+        {
+            PlatformFilter = "all";
+        }
+
+        if (!AvailableSubcategories.Contains(SubcategoryFilter, StringComparer.CurrentCultureIgnoreCase))
+        {
+            SubcategoryFilter = "all";
+        }
+    }
+
+    private bool MatchesCategory(PromptPreset preset)
+        => CategoryFilter.Equals("all", StringComparison.OrdinalIgnoreCase)
+           || preset.Category.ToString().Equals(CategoryFilter, StringComparison.OrdinalIgnoreCase);
+
+    private bool MatchesPlatform(PromptPreset preset)
+        => PlatformFilter.Equals("all", StringComparison.OrdinalIgnoreCase)
+           || preset.DefaultPlatform.Equals(PlatformFilter, StringComparison.OrdinalIgnoreCase);
+
+    private bool MatchesSubcategory(PromptPreset preset)
+    {
+        if (SubcategoryFilter.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var localizedSubcategory = preset.GetSubcategory(ActiveContentLanguage);
+        return localizedSubcategory.Equals(SubcategoryFilter, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private int ComputeRelevanceScore(PromptPreset preset, string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return 1;
+        }
+
+        var score = 0;
+
+        if (LanguageFilter.Equals("de", StringComparison.OrdinalIgnoreCase))
+        {
+            score += ScoreForLanguage(query, preset.TitleDe, preset.DescriptionDe, preset.SubcategoryDe, preset.TagsDe);
+            return score;
+        }
+
+        if (LanguageFilter.Equals("en", StringComparison.OrdinalIgnoreCase))
+        {
+            score += ScoreForLanguage(query, preset.TitleEn, preset.DescriptionEn, preset.SubcategoryEn, preset.TagsEn);
+            return score;
+        }
+
+        score += ScoreForLanguage(query, preset.TitleDe, preset.DescriptionDe, preset.SubcategoryDe, preset.TagsDe);
+        score += ScoreForLanguage(query, preset.TitleEn, preset.DescriptionEn, preset.SubcategoryEn, preset.TagsEn);
+        return score;
+    }
+
+    private static int ScoreForLanguage(string query, string title, string description, string subcategory, IReadOnlyList<string> tags)
+    {
+        var score = 0;
+
+        if (title.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+        {
+            score += 12;
+        }
+
+        if (subcategory.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+        {
+            score += 7;
+        }
+
+        if (description.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+        {
+            score += 5;
+        }
+
+        var tagHits = tags.Count(x => x.Contains(query, StringComparison.CurrentCultureIgnoreCase));
+        score += tagHits * 4;
+
+        return score;
+    }
+
+    private string? GetCategoryLandingPath(PresetCategory category)
+        => SeoLandingPageService.GetCategoryLandingPath(CurrentLanguage, category);
+
+    private string GetCategoryLabel(PresetCategory category)
+        => CategoryLabelResolver.Resolve(category.ToString(), L);
+
+    private string GetTitle(PromptPreset preset) => preset.GetTitle(ActiveContentLanguage);
+    private string GetDescription(PromptPreset preset) => preset.GetDescription(ActiveContentLanguage);
+    private string GetSubcategory(PromptPreset preset) => preset.GetSubcategory(ActiveContentLanguage);
+    private IReadOnlyList<string> GetTags(PromptPreset preset) => preset.GetTags(ActiveContentLanguage);
+    private string GetExampleInput(PromptPreset preset) => preset.GetExampleInput(ActiveContentLanguage);
+    private string GetExamplePrompt(PromptPreset preset) => preset.GetExamplePrompt(ActiveContentLanguage);
+
+    private async Task TogglePresetFavoriteAsync(PromptPreset preset)
+    {
+        var title = GetTitle(preset);
+        var preview = GetExamplePrompt(preset);
+        await UserLibraryService.ToggleFavoriteAsync(title, preview, L["Source_Preset"], preset.Category.ToString());
+    }
+
+    private string ToAbsolute(string relativePath)
+    {
+        var normalized = string.IsNullOrWhiteSpace(relativePath) ? "/" : relativePath;
+        return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
+    }
+
+    private sealed record ScoredPreset(PromptPreset Preset, int Score);
+}

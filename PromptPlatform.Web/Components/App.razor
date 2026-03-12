@@ -1,0 +1,60 @@
+@using System.Globalization
+
+<!DOCTYPE html>
+<html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <ResourcePreloader />
+    <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["PromptPlatform.Web.styles.css"]" />
+    <ImportMap />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <script>
+        (() => {
+            const fromStorage = localStorage.getItem("prompt-theme");
+            const fallback = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            document.documentElement.setAttribute("data-bs-theme", fromStorage || fallback);
+
+            const currentLanguage = (document.documentElement.lang || "de").slice(0, 2).toLowerCase();
+            const savedLanguage = localStorage.getItem("prompt-language");
+            const pathname = (window.location.pathname || "").toLowerCase();
+            const pathLanguage = pathname === "/de" || pathname.startsWith("/de/")
+                ? "de"
+                : ((pathname === "/en" || pathname.startsWith("/en/")) ? "en" : null);
+
+            if (pathLanguage) {
+                localStorage.setItem("prompt-language", pathLanguage);
+                return;
+            }
+
+            if (!savedLanguage || (savedLanguage !== "de" && savedLanguage !== "en")) {
+                localStorage.setItem("prompt-language", currentLanguage);
+                return;
+            }
+
+            if (savedLanguage !== currentLanguage && !window.location.pathname.startsWith("/culture/set")) {
+                const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+                const target = `/culture/set?culture=${encodeURIComponent(savedLanguage)}&returnUrl=${encodeURIComponent(returnUrl || "/")}`;
+                window.location.replace(target);
+            }
+        })();
+    </script>
+    <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: true)" />
+</head>
+
+<body>
+    <Routes @rendermode="new InteractiveServerRenderMode(prerender: true)" />
+    <ReconnectModal />
+    <script src="@Assets["lib/bootstrap/dist/js/bootstrap.bundle.min.js"]"></script>
+    <script src="@Assets["js/theme.js"]"></script>
+    <script src="@Assets["js/language.js"]"></script>
+    <script src="@Assets["js/storage.js"]"></script>
+    <script src="@Assets["js/ui.js"]"></script>
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+
+</html>

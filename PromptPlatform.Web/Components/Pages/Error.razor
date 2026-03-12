@@ -1,0 +1,37 @@
+@page "/error"
+@inject IStringLocalizer<SharedResource> L
+@using System.Diagnostics
+@using System.Globalization
+
+<PageTitle>@L["PageTitle_Error"]</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+</HeadContent>
+
+<section class="py-4">
+    <h1 class="text-danger h2">@L["Error_Title"]</h1>
+    <p class="text-secondary">@L["Error_Subtitle"]</p>
+
+    @if (ShowRequestId)
+    {
+        <p><strong>@L["Error_RequestId"]</strong> <code>@RequestId</code></p>
+    }
+
+    <a href="@HomePath" class="btn btn-primary">@L["Error_Action"]</a>
+</section>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId { get; set; }
+    private bool ShowRequestId => !string.IsNullOrWhiteSpace(RequestId);
+    private string HomePath => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "/de"
+        : "/en";
+
+    protected override void OnInitialized()
+    {
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+    }
+}

@@ -1,0 +1,31 @@
+@page "/not-found"
+@inject IStringLocalizer<SharedResource> L
+@using Microsoft.AspNetCore.Http
+
+<PageTitle>@L["PageTitle_NotFound"]</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+</HeadContent>
+
+<section class="py-5 text-center">
+    <h1 class="display-6 fw-bold mb-3">@L["NotFound_Title"]</h1>
+    <p class="text-secondary mb-4">@L["NotFound_Subtitle"]</p>
+    <a class="btn btn-primary" href="@HomePath">@L["NotFound_Action"]</a>
+</section>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string HomePath => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "/de"
+        : "/en";
+
+    protected override void OnParametersSet()
+    {
+        if (HttpContext is not null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+        }
+    }
+}

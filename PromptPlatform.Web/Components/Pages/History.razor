@@ -1,0 +1,180 @@
+@page "/history"
+@page "/de/history"
+@page "/en/history"
+@implements IDisposable
+@using System.Globalization
+@inject IStringLocalizer<SharedResource> L
+@inject IUserLibraryService UserLibraryService
+@inject NavigationManager Navigation
+
+<PageTitle>@L["PageTitle_History"]</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+</HeadContent>
+
+<section class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+    <div>
+        <h1 class="h3 mb-2">@L["History_Title"]</h1>
+        <p class="text-secondary mb-0">@L["History_Subtitle"]</p>
+    </div>
+    @if (UserLibraryService.IsHistoryEnabled)
+    {
+        <button class="btn btn-outline-danger btn-sm" @onclick="ClearHistoryAsync" disabled="@(UserLibraryService.History.Count == 0)">@L["History_Clear"]</button>
+    }
+</section>
+
+@if (!UserLibraryService.IsHistoryEnabled)
+{
+    <div class="alert alert-secondary">
+        <div class="fw-semibold mb-1">@HistoryDisabledTitle</div>
+        <div>@HistoryDisabledDescription</div>
+        <a class="btn btn-sm btn-primary mt-3" href="@FavoritesPath">@HistoryDisabledCta</a>
+    </div>
+}
+else if (UserLibraryService.History.Count == 0)
+{
+    <div class="alert alert-secondary">@L["History_Empty"]</div>
+}
+else
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-6">
+                    <label class="form-label">@L["History_Filter_Category"]</label>
+                    <select class="form-select" @bind="CategoryFilter">
+                        <option value="all">@L["History_Filter_All"]</option>
+                        @foreach (var category in AvailableCategories)
+                        {
+                            <option value="@category">@GetCategoryLabel(category)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-6 text-lg-end text-secondary small fw-semibold">
+                    @L["History_Count", FilteredHistory.Count]
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var item in FilteredHistory)
+        {
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 mb-2">
+                            <div>
+                                <h3 class="h5 mb-1">@item.Title</h3>
+                                <div class="small text-secondary">@item.Source · @item.CreatedAtUtc.ToLocalTime().ToString("g")</div>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="badge text-bg-light border">@L[$"RecordType_{item.Type}"]</span>
+                                <span class="badge text-bg-light border">@GetCategoryLabel(item.Category)</span>
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ReloadEntry(item)">@L["History_Action_Reload"]</button>
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => ToggleFavoriteAsync(item)">
+                                    @(UserLibraryService.IsFavorite(item.Prompt) ? L["Action_Unfavorite"] : L["Action_Favorite"])
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveHistoryAsync(item.Id)">@L["Action_Delete"]</button>
+                            </div>
+                        </div>
+                        <pre class="history-prompt mb-0">@item.Prompt</pre>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private string CategoryFilter { get; set; } = "all";
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "de"
+        : "en";
+    private bool IsGerman => CurrentLanguage == "de";
+    private string FavoritesPath => AppRoutes.FavoritesPathForCulture(CurrentLanguage);
+    private string HistoryDisabledTitle => IsGerman ? "Verlauf ist deaktiviert" : "History is disabled";
+    private string HistoryDisabledDescription => IsGerman
+        ? "Die Verlaufsspeicherung ist aktuell ausgeschaltet."
+        : "History storage is currently turned off.";
+    private string HistoryDisabledCta => IsGerman ? "Zu Favoriten" : "Open favorites";
+
+    private List<PromptHistoryEntry> FilteredHistory => UserLibraryService.History
+        .Where(MatchesFilter)
+        .OrderByDescending(x => x.CreatedAtUtc)
+        .Take(80)
+        .ToList();
+
+    private IReadOnlyList<string> AvailableCategories => UserLibraryService.History
+        .Select(x => x.Category)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => GetCategoryLabel(x), StringComparer.CurrentCultureIgnoreCase)
+        .ToList();
+
+    protected override void OnInitialized()
+    {
+        UserLibraryService.Changed += OnLibraryChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UserLibraryService.InitializeAsync();
+        }
+    }
+
+    private bool MatchesFilter(PromptHistoryEntry item)
+    {
+        if (CategoryFilter.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return item.Category.Equals(CategoryFilter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Task RemoveHistoryAsync(Guid id) => UserLibraryService.RemoveHistoryAsync(id);
+
+    private Task ClearHistoryAsync() => UserLibraryService.ClearHistoryAsync();
+
+    private Task ToggleFavoriteAsync(PromptHistoryEntry item)
+        => UserLibraryService.ToggleFavoriteAsync(item.Title, item.Prompt, item.Source, item.Category);
+
+    private void ReloadEntry(PromptHistoryEntry item)
+    {
+        var fallbackRoute = item.Type == PromptRecordType.Optimized
+            ? AppRoutes.OptimizerPathForCulture(CurrentLanguage)
+            : AppRoutes.GeneratorPathForCulture(CurrentLanguage);
+
+        var route = string.IsNullOrWhiteSpace(item.Route)
+            ? fallbackRoute
+            : item.Route.Trim();
+
+        if (!route.StartsWith("/", StringComparison.Ordinal))
+        {
+            route = route switch
+            {
+                AppRoutes.Generator => AppRoutes.GeneratorPathForCulture(CurrentLanguage),
+                AppRoutes.Optimizer => AppRoutes.OptimizerPathForCulture(CurrentLanguage),
+                AppRoutes.Presets => AppRoutes.PresetsPathForCulture(CurrentLanguage),
+                AppRoutes.History => AppRoutes.HistoryPathForCulture(CurrentLanguage),
+                AppRoutes.Favorites => AppRoutes.FavoritesPathForCulture(CurrentLanguage),
+                _ => $"/{route.TrimStart('/')}"
+            };
+        }
+
+        Navigation.NavigateTo($"{route}?history={item.Id}");
+    }
+
+    private string GetCategoryLabel(string category)
+        => CategoryLabelResolver.Resolve(category, L);
+
+    private void OnLibraryChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        UserLibraryService.Changed -= OnLibraryChanged;
+    }
+}

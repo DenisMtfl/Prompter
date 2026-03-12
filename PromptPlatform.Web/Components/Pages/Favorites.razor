@@ -1,0 +1,122 @@
+@page "/favorites"
+@page "/de/favorites"
+@page "/en/favorites"
+@implements IDisposable
+@inject IStringLocalizer<SharedResource> L
+@inject IUserLibraryService UserLibraryService
+@inject IJSRuntime JsRuntime
+
+<PageTitle>@L["PageTitle_Favorites"]</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+</HeadContent>
+
+<section class="mb-4">
+    <h1 class="h3 mb-2">@L["Favorites_Title"]</h1>
+    <p class="text-secondary mb-0">@L["Favorites_Subtitle"]</p>
+</section>
+
+@if (UserLibraryService.Favorites.Count == 0)
+{
+    <div class="alert alert-secondary">@L["Favorites_Empty"]</div>
+}
+else
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-6">
+                    <label class="form-label">@L["Favorites_Filter_Category"]</label>
+                    <select class="form-select" @bind="CategoryFilter">
+                        <option value="all">@L["Favorites_Filter_All"]</option>
+                        @foreach (var category in AvailableCategories)
+                        {
+                            <option value="@category">@GetCategoryLabel(category)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-6 text-lg-end text-secondary small fw-semibold">
+                    @L["Favorites_Count", FilteredFavorites.Count]
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var favorite in FilteredFavorites)
+        {
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 mb-2">
+                            <div>
+                                <h3 class="h5 mb-1">@favorite.Title</h3>
+                                <div class="small text-secondary">@favorite.Source · @favorite.CreatedAtUtc.ToLocalTime().ToString("g")</div>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="badge text-bg-light border">@GetCategoryLabel(favorite.Category)</span>
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => CopyAsync(favorite.Prompt)">@L["Action_Copy"]</button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => UserLibraryService.RemoveFavoriteAsync(favorite.Id)">@L["Action_Delete"]</button>
+                            </div>
+                        </div>
+                        <pre class="history-prompt mb-0">@favorite.Prompt</pre>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private string CategoryFilter { get; set; } = "all";
+
+    private List<FavoritePrompt> FilteredFavorites => UserLibraryService.Favorites
+        .Where(MatchesFilter)
+        .OrderByDescending(x => x.CreatedAtUtc)
+        .ToList();
+
+    private IReadOnlyList<string> AvailableCategories => UserLibraryService.Favorites
+        .Select(x => x.Category)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => GetCategoryLabel(x), StringComparer.CurrentCultureIgnoreCase)
+        .ToList();
+
+    protected override void OnInitialized()
+    {
+        UserLibraryService.Changed += OnLibraryChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UserLibraryService.InitializeAsync();
+        }
+    }
+
+    private bool MatchesFilter(FavoritePrompt item)
+    {
+        if (CategoryFilter.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return item.Category.Equals(CategoryFilter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task CopyAsync(string value)
+    {
+        await JsRuntime.InvokeVoidAsync("promptUi.copyText", value);
+    }
+
+    private string GetCategoryLabel(string category)
+        => CategoryLabelResolver.Resolve(category, L);
+
+    private void OnLibraryChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        UserLibraryService.Changed -= OnLibraryChanged;
+    }
+}

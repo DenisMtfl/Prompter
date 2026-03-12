@@ -1,0 +1,51 @@
+.app-navbar {
+    background: var(--app-navbar-bg);
+    backdrop-filter: saturate(140%) blur(8px);
+}
+
+.app-navbar .navbar-brand {
+    color: var(--app-navbar-brand);
+    letter-spacing: 0.02em;
+}
+
+.app-navbar .navbar-brand:hover {
+    color: var(--app-navbar-brand);
+}
+
+.app-navbar .nav-link {
+    color: var(--app-navbar-link);
+    border-radius: 0.6rem;
+    padding: 0.45rem 0.75rem;
+}
+
+.app-navbar .nav-link.active {
+    background: var(--app-navbar-link-active-bg);
+    color: var(--app-navbar-link-active-color);
+}
+
+.app-navbar .nav-link:hover {
+    color: var(--app-navbar-link-hover);
+    background: var(--app-navbar-link-hover-bg);
+}
+
+.app-navbar .navbar-toggler {
+    border-color: var(--app-border-soft);
+}
+
+.app-navbar .navbar-toggler-icon {
+    filter: var(--app-navbar-toggler-filter);
+}
+
+@media (max-width: 991.98px) {
+    .app-navbar .navbar-collapse {
+        padding-top: 0.75rem;
+    }
+
+    .app-navbar .navbar-actions {
+        width: 100%;
+        justify-content: flex-start;
+        border-top: 1px dashed var(--app-border-soft);
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+    }
+}
