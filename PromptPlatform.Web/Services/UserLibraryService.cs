@@ -8,6 +8,7 @@ namespace PromptPlatform.Web.Services;
 public sealed class UserLibraryService(IJSRuntime jsRuntime) : IUserLibraryService
 {
     private static readonly bool HistoryEnabled = false;
+    private static readonly bool FavoritesEnabled = false;
     private const string HistoryStorageKey = "promptplatform.history";
     private const string FavoritesStorageKey = "promptplatform.favorites";
 
@@ -51,7 +52,16 @@ public sealed class UserLibraryService(IJSRuntime jsRuntime) : IUserLibraryServi
                 await RemoveFromStorageAsync(HistoryStorageKey);
             }
 
-            _favorites = await ReadFromStorageAsync<List<FavoritePrompt>>(FavoritesStorageKey) ?? [];
+            if (FavoritesEnabled)
+            {
+                _favorites = await ReadFromStorageAsync<List<FavoritePrompt>>(FavoritesStorageKey) ?? [];
+            }
+            else
+            {
+                _favorites = [];
+                await RemoveFromStorageAsync(FavoritesStorageKey);
+            }
+
             _initialized = true;
             NotifyChanged();
         }
@@ -82,6 +92,11 @@ public sealed class UserLibraryService(IJSRuntime jsRuntime) : IUserLibraryServi
 
     public async Task ToggleFavoriteAsync(string title, string prompt, string source, string category)
     {
+        if (!FavoritesEnabled)
+        {
+            return;
+        }
+
         await EnsureInitializedAsync();
 
         var normalized = PromptTextUtility.NormalizeWhitespace(prompt);
@@ -115,6 +130,11 @@ public sealed class UserLibraryService(IJSRuntime jsRuntime) : IUserLibraryServi
 
     public bool IsFavorite(string prompt)
     {
+        if (!FavoritesEnabled)
+        {
+            return false;
+        }
+
         var normalized = PromptTextUtility.NormalizeWhitespace(prompt);
         if (string.IsNullOrWhiteSpace(normalized))
         {
@@ -151,6 +171,11 @@ public sealed class UserLibraryService(IJSRuntime jsRuntime) : IUserLibraryServi
 
     public async Task RemoveFavoriteAsync(Guid id)
     {
+        if (!FavoritesEnabled)
+        {
+            return;
+        }
+
         await EnsureInitializedAsync();
 
         _favorites.RemoveAll(x => x.Id == id);
@@ -187,7 +212,10 @@ public sealed class UserLibraryService(IJSRuntime jsRuntime) : IUserLibraryServi
             await WriteToStorageAsync(HistoryStorageKey, _history);
         }
 
-        await WriteToStorageAsync(FavoritesStorageKey, _favorites);
+        if (FavoritesEnabled)
+        {
+            await WriteToStorageAsync(FavoritesStorageKey, _favorites);
+        }
     }
 
     private async Task<T?> ReadFromStorageAsync<T>(string key)

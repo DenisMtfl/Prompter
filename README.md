@@ -10,7 +10,6 @@ Skalierbare, mehrsprachige Webplattform für AI Prompt Engineering auf Basis von
 - SEO-Landingpages als datengetriebenes Cluster-System
 - Localization Deutsch/Englisch (`/de/...`, `/en/...`)
 - Theme-Switcher (Light/Dark)
-- Favorites im Browser (LocalStorage)
 - History aktuell bewusst deaktiviert
 
 ## Tech Stack
@@ -98,9 +97,8 @@ LocalStorage wird genutzt für:
 
 - Theme
 - Sprache
-- Favorites
 
-Hinweis: History ist derzeit bewusst deaktiviert.
+Hinweis: History und Favorites sind derzeit bewusst deaktiviert.
 
 ## Qualität
 
@@ -109,4 +107,3 @@ Standardcheck vor Push:
 ```bash
 dotnet build PromptPlatform.slnx
 ```
-

@@ -65,7 +65,7 @@
   <data name="Landing_QuickFacts_Title" xml:space="preserve"><value>Warum Teams PromptForge nutzen</value></data>
   <data name="Landing_QuickFacts_Item1" xml:space="preserve"><value>Strukturierte Prompt-Workflows für viele Domänen</value></data>
   <data name="Landing_QuickFacts_Item2" xml:space="preserve"><value>Integrierte Optimierung mit Qualitätsscore</value></data>
-  <data name="Landing_QuickFacts_Item3" xml:space="preserve"><value>Verlauf und Favoriten für wiederverwendbare Assets</value></data>
+  <data name="Landing_QuickFacts_Item3" xml:space="preserve"><value>Wiederverwendbare Presets und sofort einsetzbare Workflows</value></data>
 
   <data name="Landing_Audiences_Title" xml:space="preserve"><value>Für viele Zielgruppen gebaut</value></data>
   <data name="Landing_Audiences_Link" xml:space="preserve"><value>Alle Presets ansehen</value></data>
@@ -85,8 +85,8 @@
   <data name="Landing_Feature_Generator_Desc" xml:space="preserve"><value>Strukturierte Formulare und Presets für verlässliche Prompt-Ausgaben.</value></data>
   <data name="Landing_Feature_Optimizer_Title" xml:space="preserve"><value>Prompt-Optimizer</value></data>
   <data name="Landing_Feature_Optimizer_Desc" xml:space="preserve"><value>Verbessere Klarheit, Struktur, Spezifität und SEO-Qualität.</value></data>
-  <data name="Landing_Feature_Library_Title" xml:space="preserve"><value>Verlauf und Favoriten</value></data>
-  <data name="Landing_Feature_Library_Desc" xml:space="preserve"><value>Speichere erfolgreiche Prompts und baue deine Wissensbasis auf.</value></data>
+  <data name="Landing_Feature_Library_Title" xml:space="preserve"><value>Preset-Bibliothek</value></data>
+  <data name="Landing_Feature_Library_Desc" xml:space="preserve"><value>Durchsuche hochwertige Presets und starte direkt im Generator.</value></data>
 
   <data name="Landing_Workflow_Title" xml:space="preserve"><value>Workflow in drei Schritten</value></data>
   <data name="Landing_Workflow_Step1" xml:space="preserve"><value>Zielgruppe, Preset und Ausgabesprache wählen.</value></data>

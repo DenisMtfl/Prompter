@@ -72,7 +72,17 @@
                         <div class="alert alert-warning py-2 mt-3">@ValidationError</div>
                     }
 
-                    <button type="submit" class="btn btn-primary mt-3 w-100">@L["Optimizer_Action"]</button>
+                    <button type="submit" class="btn btn-primary mt-3 w-100" disabled="@IsOptimizing">
+                        @if (IsOptimizing)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            @OptimizerProcessingButtonLabel
+                        }
+                        else
+                        {
+                            @L["Optimizer_Action"]
+                        }
+                    </button>
                 </form>
 
                 <section class="mt-4 generator-context-links" aria-labelledby="optimizer-context-links-title">
@@ -100,13 +110,19 @@
                     <h2 class="h4 mb-0">@L["Optimizer_Result_Title"]</h2>
                     <div class="d-flex gap-2">
                         <button class="btn btn-sm btn-outline-secondary" @onclick="CopyAsync" disabled="@(Result is null)">@L["Action_Copy"]</button>
-                        <button class="btn btn-sm btn-outline-primary" @onclick="ToggleFavoriteAsync" disabled="@(Result is null)">
-                            @(Result is not null && UserLibraryService.IsFavorite(Result.OptimizedPrompt) ? L["Action_Unfavorite"] : L["Action_Favorite"])
-                        </button>
                     </div>
                 </div>
 
-                @if (Result is null)
+                @if (IsOptimizing)
+                {
+                    <div class="placeholder-card">
+                        <div class="d-flex align-items-center gap-2 text-secondary">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>@OptimizerProcessingHint</span>
+                        </div>
+                    </div>
+                }
+                else if (Result is null)
                 {
                     <div class="placeholder-card">
                         <p class="text-secondary mb-0">@L["Optimizer_Result_Empty"]</p>
@@ -146,6 +162,7 @@
     private PromptOptimizationRequest Request { get; set; } = new();
     private PromptOptimizationResult? Result { get; set; }
     private string ValidationError { get; set; } = string.Empty;
+    private bool IsOptimizing { get; set; }
     private Guid? LastLoadedHistoryId { get; set; }
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -159,6 +176,8 @@
         : "Direct access to matching landing pages and presets for your optimizer context.";
     private string ContextPresetsCta => IsGerman ? "Preset-Bibliothek" : "Preset library";
     private string ContextGeneratorCta => IsGerman ? "Zum Generator" : "Open generator";
+    private string OptimizerProcessingButtonLabel => IsGerman ? "KI optimiert Prompt..." : "AI is optimizing...";
+    private string OptimizerProcessingHint => IsGerman ? "Die KI verbessert gerade Zieldefinition, Struktur und Ausgabeformat." : "AI is currently improving goal definition, structure, and output format.";
     private string OptimizerMetaDescription => CurrentLanguage.Equals("de", StringComparison.OrdinalIgnoreCase)
         ? "Optimiere bestehende Prompts mit klarerer Zieldefinition, Struktur und kontextabhängigen Qualitätsregeln."
         : "Optimize existing prompts with clearer goals, stronger structure, and context-aware quality rules.";
@@ -209,38 +228,38 @@
     {
         ValidationError = string.Empty;
 
+        if (IsOptimizing)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(Request.InputPrompt))
         {
             ValidationError = L["Optimizer_Validation_Input"];
             return;
         }
 
-        Result = PromptOptimizerService.Optimize(Request);
-
-        await UserLibraryService.AddHistoryAsync(new PromptHistoryEntry
+        IsOptimizing = true;
+        try
         {
-            Type = PromptRecordType.Optimized,
-            Title = L["Optimizer_Result_Title"],
-            Prompt = Result.OptimizedPrompt,
-            Source = L["Source_Optimizer"],
-            Category = Request.Context.ToString(),
-            Route = AppRoutes.Optimizer,
-            RequestPayloadJson = JsonSerializer.Serialize(Request, JsonOptions)
-        });
-    }
+            await AiProcessingDelay.SimulateAsync();
+            Result = PromptOptimizerService.Optimize(Request);
 
-    private async Task ToggleFavoriteAsync()
-    {
-        if (Result is null)
-        {
-            return;
+            await UserLibraryService.AddHistoryAsync(new PromptHistoryEntry
+            {
+                Type = PromptRecordType.Optimized,
+                Title = L["Optimizer_Result_Title"],
+                Prompt = Result.OptimizedPrompt,
+                Source = L["Source_Optimizer"],
+                Category = Request.Context.ToString(),
+                Route = AppRoutes.Optimizer,
+                RequestPayloadJson = JsonSerializer.Serialize(Request, JsonOptions)
+            });
         }
-
-        await UserLibraryService.ToggleFavoriteAsync(
-            L["Optimizer_Result_Title"],
-            Result.OptimizedPrompt,
-            L["Source_Optimizer"],
-            Request.Context.ToString());
+        finally
+        {
+            IsOptimizing = false;
+        }
     }
 
     private async Task CopyAsync()

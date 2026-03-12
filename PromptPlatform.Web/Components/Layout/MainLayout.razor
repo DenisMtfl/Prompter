@@ -1,5 +1,6 @@
 @implements IDisposable
 @inherits LayoutComponentBase
+@using System.Globalization
 @inject IStringLocalizer<SharedResource> L
 @inject IUserLibraryService UserLibraryService
 @inject IThemeService ThemeService
@@ -16,7 +17,10 @@
     <footer class="app-footer border-top mt-auto">
         <div class="container py-3 d-flex flex-column flex-md-row justify-content-between gap-2">
             <span>@L["Footer_Copyright", DateTime.UtcNow.Year]</span>
-            <span>@L["Footer_Tagline"]</span>
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <span>@L["Footer_Tagline"]</span>
+                <a class="footer-link text-decoration-none" href="@FaqPath">FAQ</a>
+            </div>
         </div>
     </footer>
 </div>
@@ -28,6 +32,12 @@
 </div>
 
 @code {
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "de"
+        : "en";
+
+    private string FaqPath => AppRoutes.FaqPathForCulture(CurrentLanguage);
+
     protected override void OnInitialized()
     {
         ThemeService.Changed += OnStateChanged;

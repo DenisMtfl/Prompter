@@ -4,6 +4,8 @@
 @using System.Text.Json
 @inject IStringLocalizer<SharedResource> L
 @inject ISeoLandingPageService SeoLandingPageService
+@inject IPresetService PresetService
+@inject IExperimentService ExperimentService
 @inject NavigationManager Navigation
 
 <PageTitle>@L["PageTitle_Landing"]</PageTitle>
@@ -33,9 +35,20 @@
                 <span class="badge text-bg-primary mb-3">@L["Landing_HeroBadge"]</span>
                 <h1 class="display-5 fw-bold mb-3">@L["Landing_HeroTitle"]</h1>
                 <p class="lead mb-4">@L["Landing_HeroSubtitle"]</p>
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <span class="landing-count-badge">@HeroPresetCountLabel</span>
+                </div>
                 <div class="d-flex flex-wrap gap-2">
-                    <a class="btn btn-primary btn-lg" href="@GeneratorPath">@L["Landing_CtaPrimary"]</a>
-                    <a class="btn btn-outline-secondary btn-lg" href="@PresetsPath">@L["Landing_CtaSecondary"]</a>
+                    <a class="btn btn-primary btn-lg"
+                       href="@GeneratorPath"
+                       data-track="landing.cta.primary"
+                       data-track-context="@CurrentLanguage"
+                       data-exp-key="@HeroExperimentKey"
+                       data-exp-variant="@HeroExperimentVariant">@PrimaryCtaLabel</a>
+                    <a class="btn btn-outline-secondary btn-lg"
+                       href="@PresetsPath"
+                       data-track="landing.cta.secondary"
+                       data-track-context="@CurrentLanguage">@L["Landing_CtaSecondary"]</a>
                 </div>
             </div>
             <div class="col-lg-4">
@@ -59,7 +72,10 @@
                 <h2 id="cluster-title" class="h3 mb-1">@ClusterTitle</h2>
                 <p class="text-secondary mb-0">@ClusterSubtitle</p>
             </div>
-            <a class="link-secondary text-decoration-none" href="@PresetsPath">@ClusterAction</a>
+            <a class="link-secondary text-decoration-none"
+               href="@PresetsPath"
+               data-track="landing.cluster.browse"
+               data-track-context="@CurrentLanguage">@ClusterAction</a>
         </div>
 
         <div class="row g-3">
@@ -71,8 +87,14 @@
                             <h3 class="h5">@clusterPage.Title</h3>
                             <p class="text-secondary small">@clusterPage.Description</p>
                             <div class="mt-auto d-flex gap-2 flex-wrap">
-                                <a class="btn btn-sm btn-outline-secondary" href="@clusterPage.Path">@ClusterPageButton</a>
-                                <a class="btn btn-sm btn-primary" href="@($"{PresetsPath}?category={clusterPage.Category}")">@ClusterPresetsButton</a>
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   href="@clusterPage.Path"
+                                   data-track="landing.cluster.page"
+                                   data-track-context="@clusterPage.Key">@ClusterPageButton</a>
+                                <a class="btn btn-sm btn-primary"
+                                   href="@($"{PresetsPath}?category={clusterPage.Category}")"
+                                   data-track="landing.cluster.presets"
+                                   data-track-context="@clusterPage.Category">@ClusterPresetsButton</a>
                             </div>
                         </div>
                     </div>
@@ -119,6 +141,25 @@
             </div>
         </div>
     </section>
+
+    <section class="landing-section mt-4">
+        <div class="card border-0 shadow-sm workflow-card">
+            <div class="card-body p-4 p-lg-5">
+                <h2 class="h3 mb-2">@FaqSectionTitle</h2>
+                <p class="text-secondary mb-3">@FaqSectionSubtitle</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-secondary"
+                       href="@FaqPath"
+                       data-track="landing.faq.open"
+                       data-track-context="@CurrentLanguage">@FaqSectionCta</a>
+                    <a class="btn btn-outline-secondary"
+                       href="@OptimizerPath"
+                       data-track="landing.optimizer.open"
+                       data-track-context="@CurrentLanguage">@OptimizerSectionCta</a>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 
 @code {
@@ -145,11 +186,28 @@
     private string ClusterPageButton => IsGerman ? "Landingpage" : "Landing page";
     private string ClusterPresetsButton => IsGerman ? "Presets" : "Presets";
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
+    private string OptimizerPath => AppRoutes.OptimizerPathForCulture(CurrentLanguage);
     private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
+    private string FaqPath => AppRoutes.FaqPathForCulture(CurrentLanguage);
+    private string FaqSectionTitle => IsGerman ? "Häufige Fragen und Produktwissen" : "Frequently asked questions and product guidance";
+    private string FaqSectionSubtitle => IsGerman
+        ? "Alle Details zu Prompt-Qualität, Preset-Nutzung, SEO-Struktur und Skalierung findest du in der ausführlichen FAQ."
+        : "Find detailed guidance on prompt quality, preset usage, SEO structure, and scalability in the full FAQ.";
+    private string FaqSectionCta => IsGerman ? "FAQ öffnen" : "Open FAQ";
+    private string OptimizerSectionCta => IsGerman ? "Optimizer öffnen" : "Open optimizer";
+    private string HeroExperimentKey => "landing_primary_cta";
+    private string HeroExperimentVariant { get; set; } = "A";
+    private string PrimaryCtaLabel => HeroExperimentVariant == "B"
+        ? (IsGerman ? "Jetzt Prompt erstellen" : "Create prompt now")
+        : L["Landing_CtaPrimary"];
     private string HomeTitle => L["PageTitle_Landing"];
     private string HomeMetaDescription => IsGerman
         ? "PromptForge: KI-Prompt-Generator, Optimizer und Preset-Bibliothek mit skalierbaren SEO-Themenclustern."
         : "PromptForge: AI prompt generator, optimizer, and preset library with scalable SEO topic clusters.";
+    private int TotalPresetCount { get; set; }
+    private string HeroPresetCountLabel => IsGerman
+        ? $"{TotalPresetCount.ToString("N0", CultureInfo.CurrentCulture)} Presets verfügbar"
+        : $"{TotalPresetCount.ToString("N0", CultureInfo.CurrentCulture)} presets available";
     private string CanonicalUrl => ToAbsolute(IsGerman ? "/de" : "/en");
     private string GermanHomeUrl => ToAbsolute("/de");
     private string EnglishHomeUrl => ToAbsolute("/en");
@@ -178,9 +236,11 @@
         }
     });
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        HeroExperimentVariant = ExperimentService.ResolveVariant(HeroExperimentKey);
         ClusterPages = SeoLandingPageService.GetClusterPages(CurrentLanguage);
+        TotalPresetCount = (await PresetService.GetAllAsync()).Count;
     }
 
     private string ToAbsolute(string relativePath)

@@ -1,12 +1,13 @@
 @page "/presets"
 @page "/de/presets"
 @page "/en/presets"
+@implements IAsyncDisposable
 @using System.Globalization
 @using System.Text.Json
 @inject IStringLocalizer<SharedResource> L
 @inject IPresetService PresetService
-@inject IUserLibraryService UserLibraryService
 @inject ISeoLandingPageService SeoLandingPageService
+@inject IJSRuntime JsRuntime
 @inject NavigationManager Navigation
 
 <PageTitle>@L["PageTitle_Presets"]</PageTitle>
@@ -30,7 +31,13 @@
 </HeadContent>
 
 <section class="mb-4">
-    <h1 class="h3 mb-2">@L["Presets_Title"]</h1>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <h1 class="h3 mb-0">@L["Presets_Title"]</h1>
+        @if (TotalPresetLibraryCount > 0)
+        {
+            <span class="preset-library-count-badge">@PresetLibraryCountLabel</span>
+        }
+    </div>
     <p class="text-secondary mb-0">@L["Presets_Subtitle"]</p>
 </section>
 
@@ -39,12 +46,18 @@
         <div class="card-body">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                 <h2 id="preset-cluster-nav" class="h5 mb-0">@ClusterNavigationTitle</h2>
-                <a class="link-secondary text-decoration-none fw-semibold" href="@GeneratorPath">@ClusterNavigationCta</a>
+                <a class="link-secondary text-decoration-none fw-semibold"
+                   href="@GeneratorPath"
+                   data-track="presets.cluster.generator"
+                   data-track-context="@CurrentLanguage">@ClusterNavigationCta</a>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 @foreach (var clusterPage in ClusterPages)
                 {
-                    <a class="btn btn-sm btn-outline-secondary" href="@clusterPage.Path">@clusterPage.Title</a>
+                    <a class="btn btn-sm btn-outline-secondary"
+                       href="@clusterPage.Path"
+                       data-track="presets.cluster.page"
+                       data-track-context="@clusterPage.Category">@clusterPage.Title</a>
                 }
             </div>
         </div>
@@ -56,7 +69,7 @@
         <div class="row g-3">
             <div class="col-xl-4">
                 <label class="form-label">@L["Presets_Search"]</label>
-                <input class="form-control" @bind="SearchText" placeholder="@SearchPlaceholder" />
+                <input class="form-control" @bind="SearchText" @bind:after="OnFilterChanged" placeholder="@SearchPlaceholder" />
             </div>
             <div class="col-sm-6 col-xl-2">
                 <label class="form-label">@MainCategoryLabel</label>
@@ -70,7 +83,7 @@
             </div>
             <div class="col-sm-6 col-xl-2">
                 <label class="form-label">@SubcategoryLabel</label>
-                <select class="form-select" @bind="SubcategoryFilter">
+                <select class="form-select" @bind="SubcategoryFilter" @bind:after="OnFilterChanged">
                     <option value="all">@AllLabel</option>
                     @foreach (var subcategory in AvailableSubcategories)
                     {
@@ -80,7 +93,7 @@
             </div>
             <div class="col-sm-6 col-xl-2">
                 <label class="form-label">@PlatformLabel</label>
-                <select class="form-select" @bind="PlatformFilter">
+                <select class="form-select" @bind="PlatformFilter" @bind:after="OnFilterChanged">
                     <option value="all">@AllLabel</option>
                     @foreach (var platform in AvailablePlatforms)
                     {
@@ -88,20 +101,12 @@
                     }
                 </select>
             </div>
-            <div class="col-sm-6 col-xl-2">
-                <label class="form-label">@LanguageLabel</label>
-                <select class="form-select" @bind="LanguageFilter" @bind:after="OnLanguageChanged">
-                    <option value="all">@AllLanguagesLabel</option>
-                    <option value="de">@L["Language_German"]</option>
-                    <option value="en">@L["Language_English"]</option>
-                </select>
-            </div>
         </div>
 
         <div class="row g-3 mt-1 align-items-end">
             <div class="col-sm-6 col-xl-3">
                 <label class="form-label">@SortLabel</label>
-                <select class="form-select" @bind="SortFilter">
+                <select class="form-select" @bind="SortFilter" @bind:after="OnFilterChanged">
                     <option value="relevance">@SortRelevanceLabel</option>
                     <option value="popularity">@SortPopularityLabel</option>
                     <option value="title">@SortTitleLabel</option>
@@ -109,7 +114,7 @@
             </div>
             <div class="col-xl-9">
                 <div class="w-100 text-xl-end text-secondary small fw-semibold pt-2">
-                    @L["Presets_Count", FilteredPresets.Count]
+                    @L["Presets_Count", TotalFilteredPresetCount]
                 </div>
             </div>
         </div>
@@ -117,7 +122,7 @@
 </div>
 
 <div class="row g-3 preset-grid">
-    @if (FilteredPresets.Count == 0)
+    @if (TotalFilteredPresetCount == 0)
     {
         <div class="col-12">
             <div class="alert alert-secondary">@L["Presets_Empty"]</div>
@@ -125,7 +130,7 @@
     }
     else
     {
-        @foreach (var preset in FilteredPresets)
+        @foreach (var preset in VisiblePresets)
         {
             var landingPath = GetCategoryLandingPath(preset.Category);
             var title = GetTitle(preset);
@@ -166,14 +171,16 @@
                         <pre class="history-prompt preset-example mb-3">@GetExamplePrompt(preset)</pre>
 
                         <div class="d-flex gap-2 mt-auto flex-wrap">
-                            <a class="btn btn-primary btn-sm" href="@($"{GeneratorPath}?preset={preset.Id}")">@UsePresetLabel</a>
-                            <button class="btn btn-outline-primary btn-sm" @onclick="() => TogglePresetFavoriteAsync(preset)">
-                                @(UserLibraryService.IsFavorite(GetExamplePrompt(preset)) ? L["Action_Unfavorite"] : L["Action_Favorite"])
-                            </button>
-
+                            <a class="btn btn-primary btn-sm"
+                               href="@($"{GeneratorPath}?preset={preset.Id}")"
+                               data-track="presets.use"
+                               data-track-context="@preset.Category">@UsePresetLabel</a>
                             @if (!string.IsNullOrWhiteSpace(landingPath))
                             {
-                                <a class="btn btn-outline-secondary btn-sm" href="@landingPath">@CategoryLandingLabel</a>
+                                <a class="btn btn-outline-secondary btn-sm"
+                                   href="@landingPath"
+                                   data-track="presets.open_landing"
+                                   data-track-context="@preset.Category">@CategoryLandingLabel</a>
                             }
                         </div>
                     </div>
@@ -182,6 +189,17 @@
         }
     }
 </div>
+
+@if (HasMorePresetsToLoad)
+{
+    <div class="d-flex justify-content-center py-4">
+        @if (IsLoadingMorePresets)
+        {
+            <div class="preset-load-status">@LoadingMoreLabel</div>
+        }
+    </div>
+    <div @ref="PresetLoadSentinel" class="preset-scroll-sentinel" aria-hidden="true"></div>
+}
 
 @code {
     [SupplyParameterFromQuery(Name = "category")]
@@ -194,22 +212,28 @@
     private string CategoryFilter { get; set; } = "all";
     private string SubcategoryFilter { get; set; } = "all";
     private string PlatformFilter { get; set; } = "all";
-    private string LanguageFilter { get; set; } = "all";
     private string SortFilter { get; set; } = "relevance";
 
     private string? LastAppliedCategoryQuery { get; set; }
+    private string LastFilterSignature { get; set; } = string.Empty;
+    private IReadOnlyList<PromptPreset> CachedFilteredPresets { get; set; } = [];
+    private int VisiblePresetCount { get; set; } = InitialPresetBatchSize;
+    private ElementReference PresetLoadSentinel;
+    private DotNetObjectReference<Presets>? DotNetReference { get; set; }
+    private bool IsObserverAttached { get; set; }
+    private bool ObserverRefreshPending { get; set; } = true;
+    private bool IsLoadingMorePresets { get; set; }
+
+    private const int InitialPresetBatchSize = 36;
+    private const int PresetBatchSize = 24;
+    private const string PresetScrollObserverKey = "presets-grid";
 
     private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
         ? "de"
         : "en";
 
     private bool IsGerman => CurrentLanguage == "de";
-    private string ActiveContentLanguage => LanguageFilter switch
-    {
-        "de" => "de",
-        "en" => "en",
-        _ => CurrentLanguage
-    };
+    private string ActiveContentLanguage => CurrentLanguage;
 
     private string ClusterNavigationTitle => IsGerman ? "Themencluster und Landingpages" : "Topic clusters and landing pages";
     private string ClusterNavigationCta => IsGerman ? "Direkt zum Generator" : "Open generator";
@@ -217,17 +241,16 @@
     private string MainCategoryLabel => IsGerman ? "Hauptbereich" : "Main area";
     private string SubcategoryLabel => IsGerman ? "Unterkategorie" : "Subcategory";
     private string PlatformLabel => IsGerman ? "Plattform" : "Platform";
-    private string LanguageLabel => IsGerman ? "Sprache" : "Language";
     private string SortLabel => IsGerman ? "Sortierung" : "Sort";
     private string SortRelevanceLabel => IsGerman ? "Relevanz" : "Relevance";
     private string SortPopularityLabel => IsGerman ? "Beliebtheit" : "Popularity";
     private string SortTitleLabel => IsGerman ? "Titel" : "Title";
     private string AllLabel => IsGerman ? "Alle" : "All";
-    private string AllLanguagesLabel => IsGerman ? "Alle Sprachen" : "All languages";
     private string UsePresetLabel => IsGerman ? "Preset nutzen" : "Use preset";
     private string CategoryLandingLabel => IsGerman ? "Zur Landingpage" : "Open landing page";
     private string ExampleInputLabel => IsGerman ? "Beispiel-Eingabe" : "Example input";
     private string ComplexityLabel => IsGerman ? "Komplexität" : "Complexity";
+    private string LoadingMoreLabel => IsGerman ? "Weitere Presets werden geladen..." : "Loading more presets...";
     private string PresetsMetaDescription => IsGerman
         ? "Durchsuchbare Preset-Bibliothek mit Filtern nach Bereich, Plattform und Unterkategorie inklusive direkter Generator-Übernahme."
         : "Searchable preset library with filters by domain, platform, and subcategory plus direct generator handoff.";
@@ -269,48 +292,23 @@
         .OrderBy(x => x, StringComparer.CurrentCultureIgnoreCase)
         .ToList();
 
-    private IReadOnlyList<string> AvailablePlatforms => PresetsCollection
-        .Where(MatchesCategory)
-        .Select(x => x.DefaultPlatform)
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .OrderBy(x => x, StringComparer.CurrentCultureIgnoreCase)
-        .ToList();
-
-    private List<PromptPreset> FilteredPresets
-    {
-        get
-        {
-            var query = SearchText.Trim();
-
-            var scored = PresetsCollection
+    private IReadOnlyList<string> AvailablePlatforms
+        => AiProviderCatalog.BuildPresetFilterOptions(
+            PresetsCollection
                 .Where(MatchesCategory)
-                .Where(MatchesSubcategory)
-                .Where(MatchesPlatform)
-                .Select(x => new ScoredPreset(x, ComputeRelevanceScore(x, query)))
-                .Where(x => string.IsNullOrWhiteSpace(query) || x.Score > 0)
-                .ToList();
+                .Select(x => x.DefaultPlatform));
 
-            return SortFilter switch
-            {
-                "popularity" => scored
-                    .OrderByDescending(x => x.Preset.PopularityScore)
-                    .ThenByDescending(x => x.Score)
-                    .ThenBy(x => x.Preset.GetTitle(ActiveContentLanguage), StringComparer.CurrentCultureIgnoreCase)
-                    .Select(x => x.Preset)
-                    .ToList(),
-                "title" => scored
-                    .OrderBy(x => x.Preset.GetTitle(ActiveContentLanguage), StringComparer.CurrentCultureIgnoreCase)
-                    .Select(x => x.Preset)
-                    .ToList(),
-                _ => scored
-                    .OrderByDescending(x => x.Score)
-                    .ThenByDescending(x => x.Preset.PopularityScore)
-                    .ThenBy(x => x.Preset.GetTitle(ActiveContentLanguage), StringComparer.CurrentCultureIgnoreCase)
-                    .Select(x => x.Preset)
-                    .ToList()
-            };
-        }
-    }
+    private int TotalFilteredPresetCount => GetFilteredPresets().Count;
+    private int TotalPresetLibraryCount => PresetsCollection.Count;
+    private bool HasMorePresetsToLoad => VisiblePresetCount < TotalFilteredPresetCount;
+    private string PresetLibraryCountLabel => IsGerman
+        ? $"{TotalPresetLibraryCount.ToString("N0", CultureInfo.CurrentCulture)} Presets gesamt"
+        : $"{TotalPresetLibraryCount.ToString("N0", CultureInfo.CurrentCulture)} total presets";
+
+    private IReadOnlyList<PromptPreset> VisiblePresets
+        => GetFilteredPresets()
+            .Take(Math.Min(VisiblePresetCount, TotalFilteredPresetCount))
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -318,12 +316,28 @@
         ClusterPages = SeoLandingPageService.GetClusterPages(CurrentLanguage);
         ApplyCategoryQuery();
         NormalizeFilterValues();
+        InvalidatePresetWindow();
     }
 
     protected override void OnParametersSet()
     {
         ApplyCategoryQuery();
         NormalizeFilterValues();
+        InvalidatePresetWindow();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            DotNetReference = DotNetObjectReference.Create(this);
+        }
+
+        if (firstRender || ObserverRefreshPending)
+        {
+            ObserverRefreshPending = false;
+            await RefreshPresetScrollObserverAsync();
+        }
     }
 
     private void OnCategoryChanged()
@@ -331,12 +345,13 @@
         SubcategoryFilter = "all";
         PlatformFilter = "all";
         NormalizeFilterValues();
+        InvalidatePresetWindow();
     }
 
-    private void OnLanguageChanged()
+    private void OnFilterChanged()
     {
-        SubcategoryFilter = "all";
         NormalizeFilterValues();
+        InvalidatePresetWindow();
     }
 
     private void ApplyCategoryQuery()
@@ -375,6 +390,24 @@
         }
     }
 
+    [JSInvokable]
+    public async Task OnPresetScrollThresholdReached()
+    {
+        if (IsLoadingMorePresets || !HasMorePresetsToLoad)
+        {
+            return;
+        }
+
+        IsLoadingMorePresets = true;
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Delay(60);
+        VisiblePresetCount = Math.Min(TotalFilteredPresetCount, VisiblePresetCount + PresetBatchSize);
+        IsLoadingMorePresets = false;
+        ObserverRefreshPending = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
     private bool MatchesCategory(PromptPreset preset)
         => CategoryFilter.Equals("all", StringComparison.OrdinalIgnoreCase)
            || preset.Category.ToString().Equals(CategoryFilter, StringComparison.OrdinalIgnoreCase);
@@ -401,23 +434,12 @@
             return 1;
         }
 
-        var score = 0;
-
-        if (LanguageFilter.Equals("de", StringComparison.OrdinalIgnoreCase))
-        {
-            score += ScoreForLanguage(query, preset.TitleDe, preset.DescriptionDe, preset.SubcategoryDe, preset.TagsDe);
-            return score;
-        }
-
-        if (LanguageFilter.Equals("en", StringComparison.OrdinalIgnoreCase))
-        {
-            score += ScoreForLanguage(query, preset.TitleEn, preset.DescriptionEn, preset.SubcategoryEn, preset.TagsEn);
-            return score;
-        }
-
-        score += ScoreForLanguage(query, preset.TitleDe, preset.DescriptionDe, preset.SubcategoryDe, preset.TagsDe);
-        score += ScoreForLanguage(query, preset.TitleEn, preset.DescriptionEn, preset.SubcategoryEn, preset.TagsEn);
-        return score;
+        return ScoreForLanguage(
+            query,
+            preset.GetTitle(ActiveContentLanguage),
+            preset.GetDescription(ActiveContentLanguage),
+            preset.GetSubcategory(ActiveContentLanguage),
+            preset.GetTags(ActiveContentLanguage));
     }
 
     private static int ScoreForLanguage(string query, string title, string description, string subcategory, IReadOnlyList<string> tags)
@@ -458,17 +480,111 @@
     private string GetExampleInput(PromptPreset preset) => preset.GetExampleInput(ActiveContentLanguage);
     private string GetExamplePrompt(PromptPreset preset) => preset.GetExamplePrompt(ActiveContentLanguage);
 
-    private async Task TogglePresetFavoriteAsync(PromptPreset preset)
-    {
-        var title = GetTitle(preset);
-        var preview = GetExamplePrompt(preset);
-        await UserLibraryService.ToggleFavoriteAsync(title, preview, L["Source_Preset"], preset.Category.ToString());
-    }
-
     private string ToAbsolute(string relativePath)
     {
         var normalized = string.IsNullOrWhiteSpace(relativePath) ? "/" : relativePath;
         return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
+    }
+
+    private IReadOnlyList<PromptPreset> GetFilteredPresets()
+    {
+        var signature = BuildFilterSignature();
+        if (signature.Equals(LastFilterSignature, StringComparison.Ordinal))
+        {
+            return CachedFilteredPresets;
+        }
+
+        LastFilterSignature = signature;
+        CachedFilteredPresets = BuildFilteredPresets();
+        return CachedFilteredPresets;
+    }
+
+    private IReadOnlyList<PromptPreset> BuildFilteredPresets()
+    {
+        var query = SearchText.Trim();
+
+        var scored = PresetsCollection
+            .Where(MatchesCategory)
+            .Where(MatchesSubcategory)
+            .Where(MatchesPlatform)
+            .Select(x => new ScoredPreset(x, ComputeRelevanceScore(x, query)))
+            .Where(x => string.IsNullOrWhiteSpace(query) || x.Score > 0)
+            .ToList();
+
+        return SortFilter switch
+        {
+            "popularity" => scored
+                .OrderByDescending(x => x.Preset.PopularityScore)
+                .ThenByDescending(x => x.Score)
+                .ThenBy(x => x.Preset.GetTitle(ActiveContentLanguage), StringComparer.CurrentCultureIgnoreCase)
+                .Select(x => x.Preset)
+                .ToList(),
+            "title" => scored
+                .OrderBy(x => x.Preset.GetTitle(ActiveContentLanguage), StringComparer.CurrentCultureIgnoreCase)
+                .Select(x => x.Preset)
+                .ToList(),
+            _ => scored
+                .OrderByDescending(x => x.Score)
+                .ThenByDescending(x => x.Preset.PopularityScore)
+                .ThenBy(x => x.Preset.GetTitle(ActiveContentLanguage), StringComparer.CurrentCultureIgnoreCase)
+                .Select(x => x.Preset)
+                .ToList()
+        };
+    }
+
+    private string BuildFilterSignature()
+        => string.Join('|',
+            CurrentLanguage,
+            SearchText.Trim(),
+            CategoryFilter,
+            SubcategoryFilter,
+            PlatformFilter,
+            SortFilter);
+
+    private void InvalidatePresetWindow()
+    {
+        LastFilterSignature = string.Empty;
+        CachedFilteredPresets = [];
+        VisiblePresetCount = InitialPresetBatchSize;
+        ObserverRefreshPending = true;
+    }
+
+    private async Task RefreshPresetScrollObserverAsync()
+    {
+        if (DotNetReference is null)
+        {
+            return;
+        }
+
+        if (HasMorePresetsToLoad)
+        {
+            await JsRuntime.InvokeVoidAsync("promptUiInfiniteScroll.observe", PresetScrollObserverKey, PresetLoadSentinel, DotNetReference);
+            IsObserverAttached = true;
+            return;
+        }
+
+        if (IsObserverAttached)
+        {
+            await JsRuntime.InvokeVoidAsync("promptUiInfiniteScroll.unobserve", PresetScrollObserverKey);
+            IsObserverAttached = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (IsObserverAttached)
+        {
+            try
+            {
+                await JsRuntime.InvokeVoidAsync("promptUiInfiniteScroll.unobserve", PresetScrollObserverKey);
+            }
+            catch
+            {
+                // Ignore dispose-time JS failures.
+            }
+        }
+
+        DotNetReference?.Dispose();
     }
 
     private sealed record ScoredPreset(PromptPreset Preset, int Score);

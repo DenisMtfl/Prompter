@@ -5,6 +5,7 @@ public static class AppRoutes
     public const string Generator = "generator";
     public const string Optimizer = "optimizer";
     public const string Presets = "presets";
+    public const string Faq = "faq";
     public const string History = "history";
     public const string Favorites = "favorites";
 
@@ -12,6 +13,7 @@ public static class AppRoutes
     public const string GeneratorPath = "/generator";
     public const string OptimizerPath = "/optimizer";
     public const string PresetsPath = "/presets";
+    public const string FaqPath = "/faq";
     public const string HistoryPath = "/history";
     public const string FavoritesPath = "/favorites";
 
@@ -26,6 +28,9 @@ public static class AppRoutes
 
     public static string PresetsPathForCulture(string culture)
         => BuildLocalizedPath(culture, Presets);
+
+    public static string FaqPathForCulture(string culture)
+        => BuildLocalizedPath(culture, Faq);
 
     public static string HistoryPathForCulture(string culture)
         => BuildLocalizedPath(culture, History);

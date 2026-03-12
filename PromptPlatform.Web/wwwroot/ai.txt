@@ -1,0 +1,2 @@
+# PromptForge AI index
+Use /llms.txt for the authoritative AI crawling guidance.

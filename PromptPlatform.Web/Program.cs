@@ -1,8 +1,17 @@
 using System.Globalization;
-using System.Text;
+using System.IO.Compression;
+using System.Threading.RateLimiting;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
+using PromptPlatform.Web.Health;
+using PromptPlatform.Web.Models;
+using PromptPlatform.Web.Monitoring;
+using PromptPlatform.Web.Middleware;
 using PromptPlatform.Web.Components;
 using PromptPlatform.Web.Localization;
 using PromptPlatform.Web.Services;
@@ -23,6 +32,99 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.ApplyCurrentCultureToResponseHeaders = true;
     options.RequestCultureProviders.Insert(0, new PathSegmentRequestCultureProvider(supportedCultureCodes));
 });
+builder.Services.Configure<HealthThresholdOptions>(builder.Configuration.GetSection("HealthThresholds"));
+builder.Services.Configure<WebVitalsOptions>(builder.Configuration.GetSection("WebVitals"));
+builder.Services.Configure<GrowthAnalyticsOptions>(builder.Configuration.GetSection("GrowthAnalytics"));
+
+builder.Services.AddHttpLogging(options =>
+{
+    options.LoggingFields = HttpLoggingFields.RequestMethod
+                            | HttpLoggingFields.RequestPath
+                            | HttpLoggingFields.ResponseStatusCode
+                            | HttpLoggingFields.Duration;
+});
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+});
+
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+builder.Services.AddResponseCaching();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = static (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.Headers["Retry-After"] = "60";
+        return ValueTask.CompletedTask;
+    };
+
+    options.AddPolicy("seo-assets", httpContext =>
+    {
+        var key = GetRateLimitKey(httpContext);
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 60,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+
+    options.AddPolicy("culture-switch", httpContext =>
+    {
+        var key = GetRateLimitKey(httpContext);
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 20,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+
+    options.AddPolicy("rum-ingest", httpContext =>
+    {
+        var key = GetRateLimitKey(httpContext);
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 120,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+
+    options.AddPolicy("growth-ingest", httpContext =>
+    {
+        var key = GetRateLimitKey(httpContext);
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 180,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+});
+
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy("Application is running."), tags: ["live"])
+    .AddCheck<SeoCatalogHealthCheck>("seo_catalog", tags: ["ready"])
+    .AddCheck<PresetCatalogHealthCheck>("preset_catalog", tags: ["ready"]);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -34,6 +136,11 @@ builder.Services.AddScoped<IUserLibraryService, UserLibraryService>();
 builder.Services.AddScoped<IThemeService, ThemeService>();
 builder.Services.AddSingleton<ISeoLandingContentRepository, SeoLandingContentRepository>();
 builder.Services.AddScoped<ISeoLandingPageService, SeoLandingPageService>();
+builder.Services.AddSingleton<IWebVitalsTelemetryService, WebVitalsTelemetryService>();
+builder.Services.AddSingleton<IGrowthAnalyticsService, GrowthAnalyticsService>();
+builder.Services.AddSingleton<IContentOpsService, ContentOpsService>();
+builder.Services.AddScoped<IExperimentService, ExperimentService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -43,8 +150,25 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.Use(async (context, next) =>
+{
+    if (TryBuildCanonicalRedirectTarget(context, supportedCultureCodes, out var redirectTarget))
+    {
+        context.Response.Redirect(redirectTarget, permanent: true);
+        return;
+    }
+
+    await next();
+});
+
 var localizationOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
 app.UseRequestLocalization(localizationOptions);
+
+app.UseHttpLogging();
+app.UseResponseCompression();
+app.UseResponseCaching();
+app.UseSecurityHeaders();
+app.UseRateLimiter();
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
@@ -60,8 +184,29 @@ app.Use(async (context, next) =>
             return Task.CompletedTask;
         }, context);
     }
+    else if (ShouldNoIndexQueryVariant(context.Request.Path, context.Request.Query))
+    {
+        context.Response.OnStarting(static state =>
+        {
+            var httpContext = (HttpContext)state;
+            httpContext.Response.Headers["X-Robots-Tag"] = "noindex, follow, noarchive";
+            return Task.CompletedTask;
+        }, context);
+    }
 
     await next();
+});
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live"),
+    ResponseWriter = WriteHealthResponse
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = WriteHealthResponse
 });
 
 app.MapGet("/culture/set", (HttpContext context, string culture, string? returnUrl, ISeoLandingContentRepository seoContentRepository) =>
@@ -85,104 +230,66 @@ app.MapGet("/culture/set", (HttpContext context, string culture, string? returnU
     var target = ResolveLocalizedReturnUrl(returnUrl, normalizedCulture, seoContentRepository);
 
     return Results.LocalRedirect(target);
-});
+}).RequireRateLimiting("culture-switch");
 
-app.MapMethods("/robots.txt", ["GET", "HEAD"], (HttpContext context) =>
+app.MapPost("/analytics/events", (HttpContext context, GrowthEventIngestRequest payload, IGrowthAnalyticsService analytics, IOptions<GrowthAnalyticsOptions> options) =>
 {
-    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host.Value}".TrimEnd('/');
-    var privatePaths = new[]
+    if (!options.Value.IngestionEnabled)
     {
-        "/de/history",
-        "/en/history",
-        "/history",
-        "/de/favorites",
-        "/en/favorites",
-        "/favorites",
-        "/culture/"
-    };
-
-    var aiAgents = new[]
-    {
-        "GPTBot",
-        "ChatGPT-User",
-        "OAI-SearchBot",
-        "Google-Extended",
-        "Googlebot",
-        "Bingbot",
-        "DuckAssistBot",
-        "PerplexityBot",
-        "ClaudeBot",
-        "Claude-SearchBot",
-        "CCBot",
-        "Applebot"
-    };
-
-    var builder = new StringBuilder();
-    builder.AppendLine("User-agent: *");
-    foreach (var path in privatePaths)
-    {
-        builder.AppendLine($"Disallow: {path}");
+        context.Response.Headers["Cache-Control"] = "no-store";
+        return Results.NoContent();
     }
 
-    builder.AppendLine("Allow: /");
-    builder.AppendLine();
+    analytics.Ingest(payload, GetRateLimitKey(context));
+    context.Response.Headers["Cache-Control"] = "no-store";
+    return Results.Accepted();
+}).RequireRateLimiting("growth-ingest");
 
-    foreach (var agent in aiAgents)
+app.MapPost("/rum/vitals", (HttpContext context, WebVitalsIngestRequest payload, IWebVitalsTelemetryService telemetry, IOptions<WebVitalsOptions> options) =>
+{
+    if (!options.Value.IngestionEnabled)
     {
-        builder.AppendLine($"User-agent: {agent}");
-        foreach (var path in privatePaths)
-        {
-            builder.AppendLine($"Disallow: {path}");
-        }
-
-        builder.AppendLine("Allow: /");
-        builder.AppendLine();
+        context.Response.Headers["Cache-Control"] = "no-store";
+        return Results.NoContent();
     }
 
-    builder.AppendLine($"Sitemap: {baseUrl}/sitemap.xml");
-    builder.AppendLine($"# LLM index: {baseUrl}/llms.txt");
-    builder.AppendLine($"Host: {context.Request.Host.Value}");
+    telemetry.Ingest(payload, GetRateLimitKey(context));
+    context.Response.Headers["Cache-Control"] = "no-store";
+    return Results.Accepted();
+}).RequireRateLimiting("rum-ingest");
 
-    var content = builder.ToString().Trim();
-    return Results.Text(content, "text/plain; charset=utf-8");
-});
-
-app.MapMethods("/llms.txt", ["GET", "HEAD"], (HttpContext context) =>
+app.MapGet("/monitor/web-vitals", (HttpContext context, IWebVitalsTelemetryService telemetry, IOptions<WebVitalsOptions> options) =>
 {
-    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host.Value}".TrimEnd('/');
-    var content = $"""
-    # PromptForge
+    if (!options.Value.DashboardEnabled)
+    {
+        return Results.NotFound();
+    }
 
-    > PromptForge ist eine mehrsprachige Plattform (DE/EN) für Prompt-Generator, Prompt-Optimizer und Preset-Bibliothek.
+    context.Response.Headers["Cache-Control"] = "no-store";
+    return Results.Json(telemetry.Snapshot());
+}).RequireRateLimiting("seo-assets");
 
-    ## Empfohlene Einstiegspunkte
-    - {baseUrl}/de
-    - {baseUrl}/en
-    - {baseUrl}/de/presets
-    - {baseUrl}/de/generator
-    - {baseUrl}/de/optimizer
-    - {baseUrl}/en/presets
-    - {baseUrl}/en/generator
-    - {baseUrl}/en/optimizer
-
-    ## SEO Landingpages (DE/EN)
-    - Sitemap: {baseUrl}/sitemap.xml
-    - Landing pages are grouped in topic clusters and linked via related pages/presets.
-
-    ## Hinweise für KI-Roboter
-    - Bevorzugte Sprache: entsprechend URL-Präfix `/de/` oder `/en/`.
-    - Kanonische URLs und hreflang-Alternates beachten.
-    - Seiten mit persönlichem Verlauf/Favoriten nicht indexieren.
-    """;
-
-    return Results.Text(content, "text/plain; charset=utf-8");
-});
-
-app.MapMethods("/ai.txt", ["GET", "HEAD"], (HttpContext context) =>
+app.MapGet("/monitor/growth", (HttpContext context, IGrowthAnalyticsService analytics, IOptions<GrowthAnalyticsOptions> options) =>
 {
-    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host.Value}".TrimEnd('/');
-    return Results.Redirect($"{baseUrl}/llms.txt", permanent: true);
-});
+    if (!options.Value.DashboardEnabled)
+    {
+        return Results.NotFound();
+    }
+
+    context.Response.Headers["Cache-Control"] = "no-store";
+    return Results.Json(analytics.Snapshot());
+}).RequireRateLimiting("seo-assets");
+
+app.MapGet("/monitor/content-ops", (HttpContext context, IContentOpsService contentOps, IOptions<GrowthAnalyticsOptions> options) =>
+{
+    if (!options.Value.DashboardEnabled)
+    {
+        return Results.NotFound();
+    }
+
+    context.Response.Headers["Cache-Control"] = "no-store";
+    return Results.Json(contentOps.Snapshot());
+}).RequireRateLimiting("seo-assets");
 
 app.MapMethods("/sitemap.xml", ["GET", "HEAD"], (HttpContext context) =>
 {
@@ -195,8 +302,9 @@ app.MapMethods("/sitemap.xml", ["GET", "HEAD"], (HttpContext context) =>
         "/sitemaps/landingpages.xml"
     ]);
 
+    ApplyPublicCacheHeaders(context, TimeSpan.FromHours(6));
     return Results.Text(index.ToString(), "application/xml; charset=utf-8");
-});
+}).RequireRateLimiting("seo-assets");
 
 app.MapMethods("/sitemaps/core.xml", ["GET", "HEAD"], (HttpContext context) =>
 {
@@ -206,7 +314,8 @@ app.MapMethods("/sitemaps/core.xml", ["GET", "HEAD"], (HttpContext context) =>
         (De: "/de", En: "/en", ChangeFreq: "daily", Priority: "1.0"),
         (De: AppRoutes.GeneratorPathForCulture("de"), En: AppRoutes.GeneratorPathForCulture("en"), ChangeFreq: "daily", Priority: "0.9"),
         (De: AppRoutes.OptimizerPathForCulture("de"), En: AppRoutes.OptimizerPathForCulture("en"), ChangeFreq: "daily", Priority: "0.8"),
-        (De: AppRoutes.PresetsPathForCulture("de"), En: AppRoutes.PresetsPathForCulture("en"), ChangeFreq: "daily", Priority: "0.9")
+        (De: AppRoutes.PresetsPathForCulture("de"), En: AppRoutes.PresetsPathForCulture("en"), ChangeFreq: "daily", Priority: "0.9"),
+        (De: AppRoutes.FaqPathForCulture("de"), En: AppRoutes.FaqPathForCulture("en"), ChangeFreq: "weekly", Priority: "0.7")
     };
 
     var entries = localizedCorePairs
@@ -219,8 +328,9 @@ app.MapMethods("/sitemaps/core.xml", ["GET", "HEAD"], (HttpContext context) =>
         .ToList();
 
     var sitemap = BuildUrlSet(baseUrl, entries, DateTime.UtcNow.ToString("yyyy-MM-dd"));
+    ApplyPublicCacheHeaders(context, TimeSpan.FromHours(6));
     return Results.Text(sitemap.ToString(), "application/xml; charset=utf-8");
-});
+}).RequireRateLimiting("seo-assets");
 
 app.MapMethods("/sitemaps/landingpages.xml", ["GET", "HEAD"], (HttpContext context, ISeoLandingContentRepository seoContentRepository) =>
 {
@@ -236,8 +346,9 @@ app.MapMethods("/sitemaps/landingpages.xml", ["GET", "HEAD"], (HttpContext conte
         .ToList();
 
     var sitemap = BuildUrlSet(baseUrl, entries, DateTime.UtcNow.ToString("yyyy-MM-dd"));
+    ApplyPublicCacheHeaders(context, TimeSpan.FromHours(6));
     return Results.Text(sitemap.ToString(), "application/xml; charset=utf-8");
-});
+}).RequireRateLimiting("seo-assets");
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
@@ -279,6 +390,7 @@ static string ResolveLocalizedReturnUrl(string? returnUrl, string targetCulture,
                 AppRoutes.Generator => AppRoutes.GeneratorPathForCulture(targetCulture),
                 AppRoutes.Optimizer => AppRoutes.OptimizerPathForCulture(targetCulture),
                 AppRoutes.Presets => AppRoutes.PresetsPathForCulture(targetCulture),
+                AppRoutes.Faq => AppRoutes.FaqPathForCulture(targetCulture),
                 AppRoutes.History => AppRoutes.HistoryPathForCulture(targetCulture),
                 AppRoutes.Favorites => AppRoutes.FavoritesPathForCulture(targetCulture),
                 _ => null
@@ -317,7 +429,216 @@ static bool IsPrivateNoIndexPath(PathString path)
     }
 
     return value.StartsWith("/culture/", StringComparison.Ordinal)
+           || value.StartsWith("/health", StringComparison.Ordinal)
+           || value.StartsWith("/monitor", StringComparison.Ordinal)
+           || value.StartsWith("/rum", StringComparison.Ordinal)
+           || value.StartsWith("/analytics", StringComparison.Ordinal)
            || value is "/history" or "/favorites" or "/de/history" or "/en/history" or "/de/favorites" or "/en/favorites";
+}
+
+static bool ShouldNoIndexQueryVariant(PathString path, IQueryCollection query)
+{
+    if (query.Count == 0)
+    {
+        return false;
+    }
+
+    var normalizedPath = path.Value?.ToLowerInvariant() ?? string.Empty;
+    if (string.IsNullOrWhiteSpace(normalizedPath))
+    {
+        return false;
+    }
+
+    // Keep crawl budget focused on canonical content pages instead of query variants.
+    var knownKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "category",
+        "search",
+        "subcategory",
+        "platform",
+        "sort",
+        "preset",
+        "history",
+        "check",
+        "verify",
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content",
+        "gclid",
+        "fbclid"
+    };
+
+    var hasKnownQuery = query.Keys.Any(knownKeys.Contains);
+    if (!hasKnownQuery)
+    {
+        return false;
+    }
+
+    return normalizedPath is "/de/presets" or "/en/presets"
+        or "/de/generator" or "/en/generator"
+        or "/de/optimizer" or "/en/optimizer"
+        or "/de/faq" or "/en/faq";
+}
+
+static bool TryBuildCanonicalRedirectTarget(HttpContext context, IReadOnlyList<string> supportedCultureCodes, out string target)
+{
+    target = string.Empty;
+
+    if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method))
+    {
+        return false;
+    }
+
+    var rawPath = context.Request.Path.Value ?? string.Empty;
+    if (string.IsNullOrWhiteSpace(rawPath))
+    {
+        return false;
+    }
+
+    if (IsInfrastructurePath(rawPath) || Path.HasExtension(rawPath))
+    {
+        return false;
+    }
+
+    var normalizedPath = NormalizePath(rawPath);
+    var changed = !normalizedPath.Equals(rawPath, StringComparison.Ordinal);
+
+    if (normalizedPath is "/" or "/generator" or "/optimizer" or "/presets" or "/faq")
+    {
+        var culture = ResolvePreferredCulture(context, supportedCultureCodes);
+        normalizedPath = normalizedPath switch
+        {
+            "/" => AppRoutes.HomePathForCulture(culture),
+            "/generator" => AppRoutes.GeneratorPathForCulture(culture),
+            "/optimizer" => AppRoutes.OptimizerPathForCulture(culture),
+            "/presets" => AppRoutes.PresetsPathForCulture(culture),
+            "/faq" => AppRoutes.FaqPathForCulture(culture),
+            _ => normalizedPath
+        };
+
+        changed = true;
+    }
+
+    if (!changed)
+    {
+        return false;
+    }
+
+    target = $"{normalizedPath}{context.Request.QueryString}";
+    return true;
+}
+
+static string ResolvePreferredCulture(HttpContext context, IReadOnlyList<string> supportedCultureCodes)
+{
+    var cookieName = CookieRequestCultureProvider.DefaultCookieName;
+    if (context.Request.Cookies.TryGetValue(cookieName, out var cultureCookie) && !string.IsNullOrWhiteSpace(cultureCookie))
+    {
+        var parsed = CookieRequestCultureProvider.ParseCookieValue(cultureCookie);
+        var cookieCulture = parsed?.UICultures.FirstOrDefault().Value
+                            ?? parsed?.Cultures.FirstOrDefault().Value;
+
+        if (!string.IsNullOrWhiteSpace(cookieCulture) && supportedCultureCodes.Contains(cookieCulture, StringComparer.OrdinalIgnoreCase))
+        {
+            return cookieCulture.ToLowerInvariant();
+        }
+    }
+
+    var acceptLanguage = context.Request.Headers.AcceptLanguage.ToString();
+    if (!string.IsNullOrWhiteSpace(acceptLanguage))
+    {
+        var preferred = acceptLanguage
+            .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty)
+            .Select(x => x.Length >= 2 ? x[..2].ToLowerInvariant() : string.Empty)
+            .FirstOrDefault(x => supportedCultureCodes.Contains(x, StringComparer.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(preferred))
+        {
+            return preferred;
+        }
+    }
+
+    return "de";
+}
+
+static string NormalizePath(string path)
+{
+    var normalized = path.Trim();
+    while (normalized.Contains("//", StringComparison.Ordinal))
+    {
+        normalized = normalized.Replace("//", "/", StringComparison.Ordinal);
+    }
+
+    if (normalized.Length > 1 && normalized.EndsWith("/", StringComparison.Ordinal))
+    {
+        normalized = normalized.TrimEnd('/');
+    }
+
+    return normalized.ToLowerInvariant();
+}
+
+static bool IsInfrastructurePath(string path)
+{
+    var normalized = path.ToLowerInvariant();
+    return normalized.StartsWith("/_framework", StringComparison.Ordinal)
+           || normalized.StartsWith("/_blazor", StringComparison.Ordinal)
+           || normalized.StartsWith("/lib/", StringComparison.Ordinal)
+           || normalized.StartsWith("/css/", StringComparison.Ordinal)
+           || normalized.StartsWith("/js/", StringComparison.Ordinal)
+           || normalized.StartsWith("/health", StringComparison.Ordinal)
+           || normalized.StartsWith("/monitor", StringComparison.Ordinal)
+           || normalized.StartsWith("/rum", StringComparison.Ordinal)
+           || normalized.StartsWith("/analytics", StringComparison.Ordinal)
+           || normalized.StartsWith("/culture/", StringComparison.Ordinal)
+           || normalized.StartsWith("/sitemap", StringComparison.Ordinal)
+           || normalized is "/robots.txt" or "/llms.txt" or "/ai.txt";
+}
+
+static string GetRateLimitKey(HttpContext context)
+{
+    var forwarded = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+    if (!string.IsNullOrWhiteSpace(forwarded))
+    {
+        var first = forwarded.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(first))
+        {
+            return first;
+        }
+    }
+
+    return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+}
+
+static void ApplyPublicCacheHeaders(HttpContext context, TimeSpan duration)
+{
+    var seconds = Math.Max(60, (int)duration.TotalSeconds);
+    context.Response.Headers["Cache-Control"] = $"public, max-age={seconds}, stale-while-revalidate=86400";
+    context.Response.Headers["Vary"] = "Accept-Encoding";
+}
+
+static Task WriteHealthResponse(HttpContext context, HealthReport report)
+{
+    context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+    context.Response.ContentType = "application/json; charset=utf-8";
+
+    var payload = new
+    {
+        status = report.Status.ToString(),
+        totalDurationMs = report.TotalDuration.TotalMilliseconds,
+        checks = report.Entries.ToDictionary(
+            x => x.Key,
+            x => new
+            {
+                status = x.Value.Status.ToString(),
+                description = x.Value.Description,
+                durationMs = x.Value.Duration.TotalMilliseconds,
+                data = x.Value.Data
+            })
+    };
+
+    return context.Response.WriteAsJsonAsync(payload);
 }
 
 static XDocument BuildSitemapIndex(string baseUrl, string lastModified, IReadOnlyList<string> sitemapPaths)

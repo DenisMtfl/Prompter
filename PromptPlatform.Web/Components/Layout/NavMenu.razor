@@ -3,6 +3,7 @@
 @inject IStringLocalizer<SharedResource> L
 @inject IThemeService ThemeService
 @inject IUserLibraryService UserLibraryService
+@inject IPresetService PresetService
 
 <header class="app-navbar sticky-top border-bottom">
     <nav class="navbar navbar-expand-lg">
@@ -25,7 +26,16 @@
                         <NavLink class="nav-link" href="@OptimizerPath">@L["Nav_Optimizer"]</NavLink>
                     </li>
                     <li class="nav-item">
-                        <NavLink class="nav-link" href="@PresetsPath">@L["Nav_Presets"]</NavLink>
+                        <NavLink class="nav-link d-inline-flex align-items-center" href="@PresetsPath" data-track="nav.presets" data-track-context="@CurrentLanguage">
+                            <span>@L["Nav_Presets"]</span>
+                            @if (PresetCount > 0)
+                            {
+                                <span class="preset-count-pill">@PresetCountLabel</span>
+                            }
+                        </NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="@FaqPath" data-track="nav.faq" data-track-context="@CurrentLanguage">@FaqLabel</NavLink>
                     </li>
                     @if (UserLibraryService.IsHistoryEnabled)
                     {
@@ -33,9 +43,6 @@
                             <NavLink class="nav-link" href="@HistoryPath">@L["Nav_History"]</NavLink>
                         </li>
                     }
-                    <li class="nav-item">
-                        <NavLink class="nav-link" href="@FavoritesPath">@L["Nav_Favorites"]</NavLink>
-                    </li>
                 </ul>
 
                 <div class="d-flex align-items-center gap-2 navbar-actions">
@@ -59,12 +66,20 @@
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string OptimizerPath => AppRoutes.OptimizerPathForCulture(CurrentLanguage);
     private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
+    private string FaqPath => AppRoutes.FaqPathForCulture(CurrentLanguage);
     private string HistoryPath => AppRoutes.HistoryPathForCulture(CurrentLanguage);
-    private string FavoritesPath => AppRoutes.FavoritesPathForCulture(CurrentLanguage);
+    private string FaqLabel => CurrentLanguage == "de" ? "FAQ" : "FAQ";
+    private int PresetCount { get; set; }
+    private string PresetCountLabel => PresetCount.ToString("N0", CultureInfo.CurrentCulture);
 
     protected override void OnInitialized()
     {
         ThemeService.Changed += OnThemeChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PresetCount = (await PresetService.GetAllAsync()).Count;
     }
 
     private async Task ToggleTheme()

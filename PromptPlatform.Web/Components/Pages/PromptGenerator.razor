@@ -55,7 +55,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">@L["Generator_Field_MainCategory"]</label>
-                            <select class="form-select" @bind="Request.MainCategory">
+                            <select class="form-select" @bind="Request.MainCategory" @bind:after="OnMainCategoryChanged">
                                 @foreach (var category in Enum.GetValues<MainCategory>())
                                 {
                                     <option value="@category">@L[$"MainCategory_{category}"]</option>
@@ -64,7 +64,20 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">@L["Generator_Field_Subcategory"]</label>
-                            <input class="form-control" @bind="Request.Subcategory" placeholder="@L["Generator_Field_Subcategory_Placeholder"]" />
+                            <select class="form-select" @bind="SelectedSubcategoryOption" @bind:after="OnSubcategoryOptionChanged">
+                                @foreach (var option in AvailableSubcategoryOptions)
+                                {
+                                    <option value="@option">@option</option>
+                                }
+                                <option value="@CustomSubcategoryOptionValue">@CustomSubcategoryOptionLabel</option>
+                            </select>
+                            @if (IsCustomSubcategorySelected)
+                            {
+                                <input class="form-control mt-2"
+                                       @bind="Request.Subcategory"
+                                       placeholder="@L["Generator_Field_Subcategory_Placeholder"]"
+                                       aria-label="@CustomSubcategoryLabel" />
+                            }
                         </div>
                     </div>
 
@@ -72,7 +85,7 @@
                         <div class="col-md-6">
                             <label class="form-label">@L["Generator_Field_Platform"]</label>
                             <select class="form-select" @bind="SelectedPlatformOption" @bind:after="OnPlatformOptionChanged">
-                                @foreach (var provider in TopAiProviders)
+                                @foreach (var provider in AiProviderCatalog.TopProviders)
                                 {
                                     <option value="@provider">@provider</option>
                                 }
@@ -89,7 +102,20 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">@L["Generator_Field_TargetAudience"]</label>
-                            <input class="form-control" @bind="Request.TargetAudience" placeholder="@L["Generator_Field_TargetAudience_Placeholder"]" />
+                            <select class="form-select" @bind="SelectedTargetAudienceOption" @bind:after="OnTargetAudienceOptionChanged">
+                                @foreach (var audience in AvailableTargetAudienceOptions)
+                                {
+                                    <option value="@audience">@audience</option>
+                                }
+                                <option value="@CustomTargetAudienceOptionValue">@CustomTargetAudienceOptionLabel</option>
+                            </select>
+                            @if (IsCustomTargetAudienceSelected)
+                            {
+                                <input class="form-control mt-2"
+                                       @bind="Request.TargetAudience"
+                                       placeholder="@L["Generator_Field_TargetAudience_Placeholder"]"
+                                       aria-label="@CustomTargetAudienceLabel" />
+                            }
                         </div>
                     </div>
 
@@ -144,7 +170,20 @@
 
                     <div class="mb-3 mt-3">
                         <label class="form-label">@L["Generator_Field_RolePerspective"]</label>
-                        <input class="form-control" @bind="Request.RolePerspective" placeholder="@L["Generator_Field_RolePerspective_Placeholder"]" />
+                        <select class="form-select" @bind="SelectedRoleOption" @bind:after="OnRoleOptionChanged">
+                            @foreach (var role in AvailableRoleOptions)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                            <option value="@CustomRoleOptionValue">@CustomRoleOptionLabel</option>
+                        </select>
+                        @if (IsCustomRoleSelected)
+                        {
+                            <input class="form-control mt-2"
+                                   @bind="Request.RolePerspective"
+                                   placeholder="@L["Generator_Field_RolePerspective_Placeholder"]"
+                                   aria-label="@CustomRoleLabel" />
+                        }
                     </div>
 
                     <div class="mb-3">
@@ -157,7 +196,21 @@
                         <div class="alert alert-warning py-2">@ValidationError</div>
                     }
 
-                    <button type="submit" class="btn btn-primary mt-2 w-100" disabled="@IsGenerating">@L["Generator_Action"]</button>
+                    <button type="submit"
+                            class="btn btn-primary mt-2 w-100"
+                            data-track="generator.submit"
+                            data-track-context="@Request.MainCategory"
+                            disabled="@IsGenerating">
+                        @if (IsGenerating)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            @GeneratorProcessingButtonLabel
+                        }
+                        else
+                        {
+                            @L["Generator_Action"]
+                        }
+                    </button>
                 </form>
 
                 <section class="mt-4 generator-context-links" aria-labelledby="generator-context-links-title">
@@ -167,16 +220,25 @@
                     <div class="d-flex flex-wrap gap-2">
                         @foreach (var link in GeneratorContextPages)
                         {
-                            <a class="btn btn-sm btn-outline-secondary generator-topic-link" href="@link.Path">@link.Title</a>
+                            <a class="btn btn-sm btn-outline-secondary generator-topic-link"
+                               href="@link.Path"
+                               data-track="generator.context.page"
+                               data-track-context="@link.Category">@link.Title</a>
                         }
                     </div>
 
                     <div class="d-flex flex-wrap gap-2 mt-3">
                         @if (!string.IsNullOrWhiteSpace(CurrentCategoryLandingPath))
                         {
-                            <a class="btn btn-sm btn-outline-primary" href="@CurrentCategoryLandingPath">@CurrentCategoryLandingLabel</a>
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="@CurrentCategoryLandingPath"
+                               data-track="generator.open_landing"
+                               data-track-context="@Request.MainCategory">@CurrentCategoryLandingLabel</a>
                         }
-                        <a class="btn btn-sm btn-outline-secondary" href="@CurrentCategoryPresetsPath">@CurrentCategoryPresetsLabel</a>
+                        <a class="btn btn-sm btn-outline-secondary"
+                           href="@CurrentCategoryPresetsPath"
+                           data-track="generator.open_presets"
+                           data-track-context="@Request.MainCategory">@CurrentCategoryPresetsLabel</a>
                     </div>
                 </section>
             </div>
@@ -193,13 +255,19 @@
                     </div>
                     <div class="d-flex gap-2">
                         <button class="btn btn-sm btn-outline-secondary" @onclick="CopyAsync" disabled="@string.IsNullOrWhiteSpace(GeneratedPrompt)">@L["Action_Copy"]</button>
-                        <button class="btn btn-sm btn-outline-primary" @onclick="ToggleFavoriteAsync" disabled="@string.IsNullOrWhiteSpace(GeneratedPrompt)">
-                            @(UserLibraryService.IsFavorite(GeneratedPrompt) ? L["Action_Unfavorite"] : L["Action_Favorite"])
-                        </button>
                     </div>
                 </div>
 
-                @if (string.IsNullOrWhiteSpace(GeneratedPrompt))
+                @if (IsGenerating)
+                {
+                    <div class="placeholder-card mt-2">
+                        <div class="d-flex align-items-center gap-2 text-secondary">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>@GeneratorProcessingHint</span>
+                        </div>
+                    </div>
+                }
+                else if (string.IsNullOrWhiteSpace(GeneratedPrompt))
                 {
                     <div class="placeholder-card mt-2">
                         <p class="text-secondary mb-0">@L["Generator_Output_Empty"]</p>
@@ -232,22 +300,15 @@
     private string? LastLoadedPresetId { get; set; }
     private Guid? LastLoadedHistoryId { get; set; }
     private string SelectedPlatformOption { get; set; } = "ChatGPT";
+    private string SelectedSubcategoryOption { get; set; } = string.Empty;
+    private string SelectedTargetAudienceOption { get; set; } = string.Empty;
+    private string SelectedRoleOption { get; set; } = string.Empty;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private const string CustomPlatformOptionValue = "__custom_platform__";
-    private static readonly IReadOnlyList<string> TopAiProviders =
-    [
-        "ChatGPT",
-        "Claude",
-        "Gemini",
-        "Microsoft Copilot",
-        "Perplexity",
-        "Grok",
-        "Meta AI",
-        "Mistral Le Chat",
-        "DeepSeek",
-        "Qwen"
-    ];
+    private const string CustomSubcategoryOptionValue = "__custom_subcategory__";
+    private const string CustomTargetAudienceOptionValue = "__custom_target_audience__";
+    private const string CustomRoleOptionValue = "__custom_role__";
 
     private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
         ? "de"
@@ -266,6 +327,21 @@
         ? "z. B. LinkedIn, YouTube, Midjourney, LMS"
         : "e.g. LinkedIn, YouTube, Midjourney, LMS";
     private bool IsCustomPlatformSelected => SelectedPlatformOption.Equals(CustomPlatformOptionValue, StringComparison.Ordinal);
+    private string CustomSubcategoryOptionLabel => IsGerman ? "Eigene Unterkategorie (manuell)" : "Custom subcategory (manual)";
+    private string CustomSubcategoryLabel => IsGerman ? "Benutzerdefinierte Unterkategorie" : "Custom subcategory";
+    private bool IsCustomSubcategorySelected => SelectedSubcategoryOption.Equals(CustomSubcategoryOptionValue, StringComparison.Ordinal);
+    private string CustomTargetAudienceOptionLabel => IsGerman ? "Eigene Zielgruppe (manuell)" : "Custom target audience (manual)";
+    private string CustomTargetAudienceLabel => IsGerman ? "Benutzerdefinierte Zielgruppe" : "Custom target audience";
+    private bool IsCustomTargetAudienceSelected => SelectedTargetAudienceOption.Equals(CustomTargetAudienceOptionValue, StringComparison.Ordinal);
+    private string CustomRoleOptionLabel => IsGerman ? "Eigene Rolle (manuell)" : "Custom role (manual)";
+    private string CustomRoleLabel => IsGerman ? "Benutzerdefinierte Rolle" : "Custom role";
+    private bool IsCustomRoleSelected => SelectedRoleOption.Equals(CustomRoleOptionValue, StringComparison.Ordinal);
+    private string GeneratorProcessingButtonLabel => IsGerman ? "KI erstellt Prompt..." : "AI is generating...";
+    private string GeneratorProcessingHint => IsGerman ? "Die KI analysiert deine Eingaben und erstellt die optimale Struktur." : "AI is analyzing your input and building the optimal structure.";
+
+    private IReadOnlyList<string> AvailableSubcategoryOptions => GetSubcategoryOptions(Request.MainCategory);
+    private IReadOnlyList<string> AvailableTargetAudienceOptions => GetTargetAudienceOptions(Request.MainCategory);
+    private IReadOnlyList<string> AvailableRoleOptions => GetRoleOptions(Request.MainCategory);
 
     private IReadOnlyList<SeoLandingPageLinkViewModel> GeneratorContextPages
         => SeoLandingPageService.GetGeneratorContextPages(CurrentLanguage, Request.MainCategory, maxItems: 4);
@@ -312,12 +388,12 @@
         await UserLibraryService.InitializeAsync();
         PresetsCollection = await PresetService.GetAllAsync();
 
-        Request.Platform = "ChatGPT";
-        Request.TargetAudience = L["Generator_Default_TargetAudience"];
-        Request.RolePerspective = L["Generator_Default_Role"];
-        Request.Subcategory = L["Generator_Default_Subcategory"];
+        Request.Platform = AiProviderCatalog.TopProviders[0];
+        Request.Subcategory = GetSubcategoryOptions(Request.MainCategory)[0];
+        Request.TargetAudience = GetTargetAudienceOptions(Request.MainCategory)[0];
+        Request.RolePerspective = GetRoleOptions(Request.MainCategory)[0];
         Request.Language = CurrentLanguage;
-        SyncPlatformSelection();
+        SyncAllSelections();
 
         var loadedHistory = await LoadHistoryFromQueryAsync();
         if (!loadedHistory)
@@ -376,7 +452,7 @@
         LastLoadedPresetId = null;
         LastLoadedHistoryId = historyEntry.Id;
         ValidationError = string.Empty;
-        SyncPlatformSelection();
+        SyncAllSelections();
         return true;
     }
 
@@ -425,7 +501,7 @@
         Request.ComplexityLevel = preset.DefaultComplexityLevel;
         Request.RolePerspective = preset.GetDefaultRole(language);
         Request.ExtraInstructions = preset.GetDefaultExtraInstructions(language);
-        SyncPlatformSelection();
+        SyncAllSelections();
     }
 
     private async Task GenerateAsync()
@@ -447,6 +523,7 @@
 
         try
         {
+            await AiProcessingDelay.SimulateAsync();
             GeneratedPrompt = PromptGenerationService.Generate(Request);
             GeneratedTitle = string.IsNullOrWhiteSpace(Request.Topic)
                 ? L["Generator_Output_Title"]
@@ -469,17 +546,6 @@
         }
     }
 
-    private async Task ToggleFavoriteAsync()
-    {
-        if (string.IsNullOrWhiteSpace(GeneratedPrompt))
-        {
-            return;
-        }
-
-        var title = string.IsNullOrWhiteSpace(GeneratedTitle) ? L["Generator_Output_Title"] : GeneratedTitle;
-        await UserLibraryService.ToggleFavoriteAsync(title, GeneratedPrompt, L["Source_Generator"], Request.MainCategory.ToString());
-    }
-
     private async Task CopyAsync()
     {
         if (string.IsNullOrWhiteSpace(GeneratedPrompt))
@@ -500,16 +566,61 @@
         Request.Platform = SelectedPlatformOption;
     }
 
+    private void OnMainCategoryChanged()
+    {
+        SyncSubcategorySelection(forceDefaultIfOutOfScope: true);
+        SyncTargetAudienceSelection();
+        SyncRoleSelection();
+    }
+
+    private void OnSubcategoryOptionChanged()
+    {
+        if (SelectedSubcategoryOption.Equals(CustomSubcategoryOptionValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Request.Subcategory = SelectedSubcategoryOption;
+    }
+
+    private void OnTargetAudienceOptionChanged()
+    {
+        if (SelectedTargetAudienceOption.Equals(CustomTargetAudienceOptionValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Request.TargetAudience = SelectedTargetAudienceOption;
+    }
+
+    private void OnRoleOptionChanged()
+    {
+        if (SelectedRoleOption.Equals(CustomRoleOptionValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Request.RolePerspective = SelectedRoleOption;
+    }
+
+    private void SyncAllSelections()
+    {
+        SyncPlatformSelection();
+        SyncSubcategorySelection();
+        SyncTargetAudienceSelection();
+        SyncRoleSelection();
+    }
+
     private void SyncPlatformSelection()
     {
         if (string.IsNullOrWhiteSpace(Request.Platform))
         {
-            Request.Platform = TopAiProviders[0];
-            SelectedPlatformOption = TopAiProviders[0];
+            Request.Platform = AiProviderCatalog.TopProviders[0];
+            SelectedPlatformOption = AiProviderCatalog.TopProviders[0];
             return;
         }
 
-        var match = TopAiProviders.FirstOrDefault(x => x.Equals(Request.Platform, StringComparison.OrdinalIgnoreCase));
+        var match = AiProviderCatalog.TopProviders.FirstOrDefault(x => x.Equals(Request.Platform, StringComparison.OrdinalIgnoreCase));
         if (match is null)
         {
             SelectedPlatformOption = CustomPlatformOptionValue;
@@ -518,6 +629,169 @@
 
         SelectedPlatformOption = match;
         Request.Platform = match;
+    }
+
+    private void SyncSubcategorySelection(bool forceDefaultIfOutOfScope = false)
+    {
+        if (string.IsNullOrWhiteSpace(Request.Subcategory))
+        {
+            Request.Subcategory = AvailableSubcategoryOptions[0];
+            SelectedSubcategoryOption = AvailableSubcategoryOptions[0];
+            return;
+        }
+
+        var match = AvailableSubcategoryOptions.FirstOrDefault(x => x.Equals(Request.Subcategory, StringComparison.CurrentCultureIgnoreCase));
+        if (match is null)
+        {
+            if (forceDefaultIfOutOfScope && !SelectedSubcategoryOption.Equals(CustomSubcategoryOptionValue, StringComparison.Ordinal))
+            {
+                Request.Subcategory = AvailableSubcategoryOptions[0];
+                SelectedSubcategoryOption = AvailableSubcategoryOptions[0];
+                return;
+            }
+
+            SelectedSubcategoryOption = CustomSubcategoryOptionValue;
+            return;
+        }
+
+        SelectedSubcategoryOption = match;
+        Request.Subcategory = match;
+    }
+
+    private void SyncTargetAudienceSelection()
+    {
+        if (string.IsNullOrWhiteSpace(Request.TargetAudience))
+        {
+            Request.TargetAudience = AvailableTargetAudienceOptions[0];
+            SelectedTargetAudienceOption = AvailableTargetAudienceOptions[0];
+            return;
+        }
+
+        var match = AvailableTargetAudienceOptions.FirstOrDefault(x => x.Equals(Request.TargetAudience, StringComparison.CurrentCultureIgnoreCase));
+        if (match is null)
+        {
+            SelectedTargetAudienceOption = CustomTargetAudienceOptionValue;
+            return;
+        }
+
+        SelectedTargetAudienceOption = match;
+        Request.TargetAudience = match;
+    }
+
+    private void SyncRoleSelection()
+    {
+        if (string.IsNullOrWhiteSpace(Request.RolePerspective))
+        {
+            Request.RolePerspective = AvailableRoleOptions[0];
+            SelectedRoleOption = AvailableRoleOptions[0];
+            return;
+        }
+
+        var match = AvailableRoleOptions.FirstOrDefault(x => x.Equals(Request.RolePerspective, StringComparison.CurrentCultureIgnoreCase));
+        if (match is null)
+        {
+            SelectedRoleOption = CustomRoleOptionValue;
+            return;
+        }
+
+        SelectedRoleOption = match;
+        Request.RolePerspective = match;
+    }
+
+    private IReadOnlyList<string> GetSubcategoryOptions(MainCategory category)
+    {
+        if (IsGerman)
+        {
+            return category switch
+            {
+                MainCategory.Business => ["Strategie", "Operations", "Vertrieb", "Reporting", "Pricing"],
+                MainCategory.Influencer => ["Content Strategie", "Hooks", "Community", "Video Storytelling", "Monetarisierung"],
+                MainCategory.Politics => ["Policy Analyse", "Debatte", "Positionspapier", "Kommunikation", "Wahlanalyse"],
+                MainCategory.School => ["Referat", "Lernzettel", "Prüfungsvorbereitung", "Mathematik", "Schreiben"],
+                MainCategory.University => ["Forschungsdesign", "Literaturarbeit", "Methodik", "Seminararbeit", "Zitation"],
+                MainCategory.Job => ["Bewerbung", "Interview", "Onboarding", "Karrierewechsel", "Leadership"],
+                MainCategory.Coding => ["API Design", "Refactoring", "Testing", "Code Review", "Architektur"],
+                MainCategory.ImageGeneration => ["Portrait", "Produktvisual", "Storyboard", "Environment", "Character Design"],
+                _ => ["Allgemeiner Anwendungsfall"]
+            };
+        }
+
+        return category switch
+        {
+            MainCategory.Business => ["Strategy", "Operations", "Sales", "Reporting", "Pricing"],
+            MainCategory.Influencer => ["Content Strategy", "Hooks", "Community", "Video Storytelling", "Monetization"],
+            MainCategory.Politics => ["Policy Analysis", "Debate", "Position Paper", "Communication", "Election Analysis"],
+            MainCategory.School => ["Presentation", "Study Notes", "Exam Prep", "Math", "Writing"],
+            MainCategory.University => ["Research Design", "Literature Review", "Methodology", "Term Paper", "Citation"],
+            MainCategory.Job => ["Application", "Interview", "Onboarding", "Career Change", "Leadership"],
+            MainCategory.Coding => ["API Design", "Refactoring", "Testing", "Code Review", "Architecture"],
+            MainCategory.ImageGeneration => ["Portrait", "Product Visual", "Storyboard", "Environment", "Character Design"],
+            _ => ["General Use Case"]
+        };
+    }
+
+    private IReadOnlyList<string> GetTargetAudienceOptions(MainCategory category)
+    {
+        if (IsGerman)
+        {
+            return category switch
+            {
+                MainCategory.Business => ["Geschäftsführung und Team Leads", "Produktverantwortliche", "B2B Entscheider", "Projektteams"],
+                MainCategory.Influencer => ["Creator Audience 18-35", "Social-Media-Follower", "Community Mitglieder", "Brand Partner"],
+                MainCategory.Politics => ["Bürgerinnen und Bürger", "Medien", "Politische Stakeholder", "Verwaltung"],
+                MainCategory.School => ["Schülerinnen und Schüler", "Lehrkräfte", "Lerngruppen", "Eltern"],
+                MainCategory.University => ["Studierende", "Dozierende", "Forschungsteams", "Akademische Betreuende"],
+                MainCategory.Job => ["Recruiter", "Hiring Manager", "Berufstätige", "Team Leads"],
+                MainCategory.Coding => ["Software Engineers", "Tech Leads", "Plattform-Teams", "QA Teams"],
+                MainCategory.ImageGeneration => ["Designer", "Kreativteams", "Content Creator", "Marketing Teams"],
+                _ => ["Fachpublikum und Entscheidungsträger"]
+            };
+        }
+
+        return category switch
+        {
+            MainCategory.Business => ["Executives and team leads", "Product owners", "B2B decision-makers", "Project teams"],
+            MainCategory.Influencer => ["Creator audience 18-35", "Social media followers", "Community members", "Brand partners"],
+            MainCategory.Politics => ["Citizens", "Media", "Political stakeholders", "Public administration"],
+            MainCategory.School => ["Students", "Teachers", "Learning groups", "Parents"],
+            MainCategory.University => ["Students", "Lecturers", "Research teams", "Academic supervisors"],
+            MainCategory.Job => ["Recruiters", "Hiring managers", "Professionals", "Team leads"],
+            MainCategory.Coding => ["Software engineers", "Tech leads", "Platform teams", "QA teams"],
+            MainCategory.ImageGeneration => ["Designers", "Creative teams", "Content creators", "Marketing teams"],
+            _ => ["Professionals and decision-makers"]
+        };
+    }
+
+    private IReadOnlyList<string> GetRoleOptions(MainCategory category)
+    {
+        if (IsGerman)
+        {
+            return category switch
+            {
+                MainCategory.Business => ["Senior Business Strategist", "Operations Manager", "Go-to-Market Lead", "Chief of Staff"],
+                MainCategory.Influencer => ["Creative Social Media Director", "Content Strategist", "Community Growth Lead", "Brand Partnership Manager"],
+                MainCategory.Politics => ["Policy Communication Advisor", "Politik-Analyst", "Öffentlichkeitsreferent", "Debattenmoderator"],
+                MainCategory.School => ["Didaktischer Lerncoach", "Fachlehrkraft", "Prüfungstrainer", "Lernbegleiter"],
+                MainCategory.University => ["Academic Research Assistant", "Wissenschaftlicher Tutor", "Methodik-Coach", "Thesis Supervisor"],
+                MainCategory.Job => ["Career Coach", "Interview Trainer", "HR Advisor", "Leadership Mentor"],
+                MainCategory.Coding => ["Senior Software Architect", "Tech Lead Engineer", "Principal Developer", "QA Automation Lead"],
+                MainCategory.ImageGeneration => ["Visual Prompt Designer", "Art Director", "Concept Artist", "Creative Producer"],
+                _ => ["Senior Fachexperte"]
+            };
+        }
+
+        return category switch
+        {
+            MainCategory.Business => ["Senior Business Strategist", "Operations Manager", "Go-to-Market Lead", "Chief of Staff"],
+            MainCategory.Influencer => ["Creative Social Media Director", "Content Strategist", "Community Growth Lead", "Brand Partnership Manager"],
+            MainCategory.Politics => ["Policy Communication Advisor", "Policy Analyst", "Public Affairs Lead", "Debate Moderator"],
+            MainCategory.School => ["Didactic Learning Coach", "Subject Teacher", "Exam Trainer", "Learning Facilitator"],
+            MainCategory.University => ["Academic Research Assistant", "Research Tutor", "Methodology Coach", "Thesis Supervisor"],
+            MainCategory.Job => ["Career Coach", "Interview Trainer", "HR Advisor", "Leadership Mentor"],
+            MainCategory.Coding => ["Senior Software Architect", "Tech Lead Engineer", "Principal Developer", "QA Automation Lead"],
+            MainCategory.ImageGeneration => ["Visual Prompt Designer", "Art Director", "Concept Artist", "Creative Producer"],
+            _ => ["Senior Domain Expert"]
+        };
     }
 
     private static MainCategory ParseMainCategory(string category)

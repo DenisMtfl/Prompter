@@ -28,7 +28,7 @@
     <div class="alert alert-secondary">
         <div class="fw-semibold mb-1">@HistoryDisabledTitle</div>
         <div>@HistoryDisabledDescription</div>
-        <a class="btn btn-sm btn-primary mt-3" href="@FavoritesPath">@HistoryDisabledCta</a>
+        <a class="btn btn-sm btn-primary mt-3" href="@GeneratorPath">@HistoryDisabledCta</a>
     </div>
 }
 else if (UserLibraryService.History.Count == 0)
@@ -72,9 +72,6 @@ else
                                 <span class="badge text-bg-light border">@L[$"RecordType_{item.Type}"]</span>
                                 <span class="badge text-bg-light border">@GetCategoryLabel(item.Category)</span>
                                 <button class="btn btn-sm btn-outline-secondary" @onclick="() => ReloadEntry(item)">@L["History_Action_Reload"]</button>
-                                <button class="btn btn-sm btn-outline-primary" @onclick="() => ToggleFavoriteAsync(item)">
-                                    @(UserLibraryService.IsFavorite(item.Prompt) ? L["Action_Unfavorite"] : L["Action_Favorite"])
-                                </button>
                                 <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveHistoryAsync(item.Id)">@L["Action_Delete"]</button>
                             </div>
                         </div>
@@ -92,12 +89,12 @@ else
         ? "de"
         : "en";
     private bool IsGerman => CurrentLanguage == "de";
-    private string FavoritesPath => AppRoutes.FavoritesPathForCulture(CurrentLanguage);
+    private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string HistoryDisabledTitle => IsGerman ? "Verlauf ist deaktiviert" : "History is disabled";
     private string HistoryDisabledDescription => IsGerman
         ? "Die Verlaufsspeicherung ist aktuell ausgeschaltet."
         : "History storage is currently turned off.";
-    private string HistoryDisabledCta => IsGerman ? "Zu Favoriten" : "Open favorites";
+    private string HistoryDisabledCta => IsGerman ? "Zum Generator" : "Open generator";
 
     private List<PromptHistoryEntry> FilteredHistory => UserLibraryService.History
         .Where(MatchesFilter)
@@ -139,9 +136,6 @@ else
 
     private Task ClearHistoryAsync() => UserLibraryService.ClearHistoryAsync();
 
-    private Task ToggleFavoriteAsync(PromptHistoryEntry item)
-        => UserLibraryService.ToggleFavoriteAsync(item.Title, item.Prompt, item.Source, item.Category);
-
     private void ReloadEntry(PromptHistoryEntry item)
     {
         var fallbackRoute = item.Type == PromptRecordType.Optimized
@@ -160,7 +154,6 @@ else
                 AppRoutes.Optimizer => AppRoutes.OptimizerPathForCulture(CurrentLanguage),
                 AppRoutes.Presets => AppRoutes.PresetsPathForCulture(CurrentLanguage),
                 AppRoutes.History => AppRoutes.HistoryPathForCulture(CurrentLanguage),
-                AppRoutes.Favorites => AppRoutes.FavoritesPathForCulture(CurrentLanguage),
                 _ => $"/{route.TrimStart('/')}"
             };
         }

@@ -28,6 +28,22 @@
     background: var(--app-navbar-link-hover-bg);
 }
 
+.app-navbar .preset-count-pill {
+    margin-left: 0.45rem;
+    padding: 0.08rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--app-navbar-link-active-color);
+    background: var(--app-navbar-link-active-bg);
+}
+
+.app-navbar .nav-link.active .preset-count-pill {
+    background: rgba(255, 255, 255, 0.18);
+    color: inherit;
+}
+
 .app-navbar .navbar-toggler {
     border-color: var(--app-border-soft);
 }

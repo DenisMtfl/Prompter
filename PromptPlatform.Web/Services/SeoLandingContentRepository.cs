@@ -5,6 +5,8 @@ namespace PromptPlatform.Web.Services;
 
 public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
 {
+    private const int MinimumLandingPagePairs = 400;
+
     private static readonly IReadOnlyList<PageVariant> Variants =
     [
         new(
@@ -62,7 +64,203 @@ public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
             BenefitAddonDe: "Höhere Ergebnisqualität bei komplexen fachlichen Anforderungen",
             BenefitAddonEn: "Higher output quality for complex domain requirements",
             PromptHintDe: "Berücksichtige Trade-offs, Risiken und Qualitätskriterien.",
-            PromptHintEn: "Account for trade-offs, risks, and quality criteria.")
+            PromptHintEn: "Account for trade-offs, risks, and quality criteria."),
+        new(
+            Key: "quickstart",
+            SlugSuffixDe: "schnellstart",
+            SlugSuffixEn: "quickstart",
+            HeadlineTailDe: "für schnellen Einstieg",
+            HeadlineTailEn: "for quick start execution",
+            IntroTailDe: "Die Inhalte priorisieren sofort anwendbare Schritte und reduzieren Setup-Aufwand auf das Wesentliche.",
+            IntroTailEn: "The content prioritizes immediate action and reduces setup effort to the essentials.",
+            MetaTailDe: "Schnellstart-Anleitung mit klarer Schrittlogik",
+            MetaTailEn: "Quickstart guide with clear step logic",
+            BenefitAddonDe: "Sofort nutzbare Struktur für schnelle Ergebnisse",
+            BenefitAddonEn: "Immediately usable structure for fast outcomes",
+            PromptHintDe: "Starte mit den wichtigsten drei Schritten.",
+            PromptHintEn: "Start with the three most impactful steps."),
+        new(
+            Key: "checklist",
+            SlugSuffixDe: "checkliste",
+            SlugSuffixEn: "checklist",
+            HeadlineTailDe: "mit klarer Checkliste",
+            HeadlineTailEn: "with practical checklist guidance",
+            IntroTailDe: "Diese Variante übersetzt das Thema in eine priorisierte Do/Don't-Checkliste für saubere Umsetzung.",
+            IntroTailEn: "This variant translates the topic into a prioritized do/don't checklist for clean execution.",
+            MetaTailDe: "Checklisten-basierte Prompt-Umsetzung",
+            MetaTailEn: "Checklist-based prompt execution",
+            BenefitAddonDe: "Höhere Umsetzungssicherheit durch klare Prüfpunkte",
+            BenefitAddonEn: "Higher execution reliability through explicit checkpoints",
+            PromptHintDe: "Gib ein priorisiertes Do/Don't-Set aus.",
+            PromptHintEn: "Return a prioritized do/don't set."),
+        new(
+            Key: "examples",
+            SlugSuffixDe: "beispiele",
+            SlugSuffixEn: "examples",
+            HeadlineTailDe: "mit konkreten Beispielen",
+            HeadlineTailEn: "with concrete real-world examples",
+            IntroTailDe: "Der Fokus liegt auf praxisnahen Beispielmustern, die schnell an eigene Use Cases angepasst werden können.",
+            IntroTailEn: "The focus is on practical examples that can quickly be adapted to real use cases.",
+            MetaTailDe: "Praxisbeispiele und übertragbare Prompt-Muster",
+            MetaTailEn: "Practical examples and transferable prompt patterns",
+            BenefitAddonDe: "Schneller Transfer durch direkt übernehmbare Beispielstrukturen",
+            BenefitAddonEn: "Faster transfer through directly reusable example structures",
+            PromptHintDe: "Liefere 2 bis 3 konkrete Praxisbeispiele mit.",
+            PromptHintEn: "Include 2 to 3 concrete practical examples."),
+        new(
+            Key: "kpi",
+            SlugSuffixDe: "kpi",
+            SlugSuffixEn: "kpi",
+            HeadlineTailDe: "mit KPI- und Zielmetriken",
+            HeadlineTailEn: "with KPI and goal metrics focus",
+            IntroTailDe: "Die Struktur richtet sich auf messbare Wirkung aus und verknüpft Prompts mit klaren Erfolgsmetriken.",
+            IntroTailEn: "The structure focuses on measurable impact and links prompts to explicit success metrics.",
+            MetaTailDe: "Metrik-orientierte Prompt-Strategie",
+            MetaTailEn: "Metric-oriented prompt strategy",
+            BenefitAddonDe: "Bessere Steuerung durch klare Messgrößen",
+            BenefitAddonEn: "Better steering via explicit performance metrics",
+            PromptHintDe: "Definiere konkrete KPIs und Erfolgsschwellen.",
+            PromptHintEn: "Define concrete KPIs and success thresholds."),
+        new(
+            Key: "automation",
+            SlugSuffixDe: "automatisierung",
+            SlugSuffixEn: "automation",
+            HeadlineTailDe: "für Automatisierung und Skalierung",
+            HeadlineTailEn: "for automation and scale",
+            IntroTailDe: "Diese Variante organisiert Inputs, Regeln und Outputs so, dass Prozesse leichter automatisierbar werden.",
+            IntroTailEn: "This variant structures inputs, rules, and outputs so processes become easier to automate.",
+            MetaTailDe: "Automationsfähige Prompt-Architektur",
+            MetaTailEn: "Automation-ready prompt architecture",
+            BenefitAddonDe: "Skalierbarere Prozesse durch regelbasierte Struktur",
+            BenefitAddonEn: "More scalable processes through rule-based structure",
+            PromptHintDe: "Strukturiere Trigger, Regeln und Ausnahmefälle mit.",
+            PromptHintEn: "Include triggers, rules, and edge-case handling."),
+        new(
+            Key: "playbook",
+            SlugSuffixDe: "playbook",
+            SlugSuffixEn: "playbook",
+            HeadlineTailDe: "als vollständiges Playbook",
+            HeadlineTailEn: "as a complete execution playbook",
+            IntroTailDe: "Das Format bündelt Planung, Umsetzung und Review in einem klaren End-to-End Playbook.",
+            IntroTailEn: "This format combines planning, execution, and review in a clear end-to-end playbook.",
+            MetaTailDe: "Playbook für konsistente Umsetzung",
+            MetaTailEn: "Playbook for consistent execution",
+            BenefitAddonDe: "Klare End-to-End-Logik für Teams und Solo-Workflows",
+            BenefitAddonEn: "Clear end-to-end logic for teams and solo workflows",
+            PromptHintDe: "Liefere ein vollständiges Ablauf-Playbook.",
+            PromptHintEn: "Deliver a complete execution playbook."),
+        new(
+            Key: "team",
+            SlugSuffixDe: "team",
+            SlugSuffixEn: "team",
+            HeadlineTailDe: "für Team-Alignment",
+            HeadlineTailEn: "for cross-team alignment",
+            IntroTailDe: "Die Inhalte setzen auf Rollenklärung, Übergaben und gemeinsame Qualitätsstandards im Teamkontext.",
+            IntroTailEn: "The content emphasizes role clarity, handoffs, and shared quality standards in team contexts.",
+            MetaTailDe: "Prompt-Framework für Teamzusammenarbeit",
+            MetaTailEn: "Prompt framework for team collaboration",
+            BenefitAddonDe: "Weniger Reibung durch klare Rollen und Übergaben",
+            BenefitAddonEn: "Lower friction through clear roles and handoffs",
+            PromptHintDe: "Berücksichtige Rollen, Verantwortliche und Handover.",
+            PromptHintEn: "Account for roles, ownership, and handover."),
+        new(
+            Key: "mistakes",
+            SlugSuffixDe: "fehler-vermeiden",
+            SlugSuffixEn: "avoid-mistakes",
+            HeadlineTailDe: "zur Fehlervermeidung",
+            HeadlineTailEn: "to prevent common mistakes",
+            IntroTailDe: "Diese Seite fokussiert typische Fehlerbilder, Warnsignale und präventive Qualitätssicherung.",
+            IntroTailEn: "This page focuses on common failure patterns, warning signals, and preventive quality checks.",
+            MetaTailDe: "Fehler vermeiden mit klaren Qualitätsregeln",
+            MetaTailEn: "Avoid mistakes using explicit quality rules",
+            BenefitAddonDe: "Weniger Iterationsverlust durch frühe Fehlererkennung",
+            BenefitAddonEn: "Less iteration waste through early mistake detection",
+            PromptHintDe: "Nenne häufige Fehler und Gegenmaßnahmen explizit.",
+            PromptHintEn: "Explicitly list common mistakes and countermeasures."),
+        new(
+            Key: "faq",
+            SlugSuffixDe: "faq",
+            SlugSuffixEn: "faq",
+            HeadlineTailDe: "mit FAQ-Fokus",
+            HeadlineTailEn: "with practical FAQ focus",
+            IntroTailDe: "Der Aufbau beantwortet typische Rückfragen direkt und beschleunigt die Umsetzung in realen Szenarien.",
+            IntroTailEn: "The structure answers common follow-up questions and speeds up execution in real scenarios.",
+            MetaTailDe: "FAQ-basierte Prompt-Hilfe",
+            MetaTailEn: "FAQ-based prompt guidance",
+            BenefitAddonDe: "Schnellere Klarheit durch vorweggenommene Rückfragen",
+            BenefitAddonEn: "Faster clarity through pre-answered follow-up questions",
+            PromptHintDe: "Ergänze kurze FAQ-Antworten für typische Rückfragen.",
+            PromptHintEn: "Add short FAQ answers for common follow-up questions."),
+        new(
+            Key: "industry",
+            SlugSuffixDe: "branchen",
+            SlugSuffixEn: "industry",
+            HeadlineTailDe: "für branchenspezifische Anforderungen",
+            HeadlineTailEn: "for industry-specific requirements",
+            IntroTailDe: "Diese Variante übersetzt den Kernansatz in branchenspezifische Rahmenbedingungen und Fachkontexte.",
+            IntroTailEn: "This variant translates the core approach into industry-specific constraints and domain contexts.",
+            MetaTailDe: "Branchenspezifische Prompt-Strategien",
+            MetaTailEn: "Industry-specific prompt strategies",
+            BenefitAddonDe: "Höhere Relevanz durch fachkontext-spezifische Ausrichtung",
+            BenefitAddonEn: "Higher relevance through domain-specific framing",
+            PromptHintDe: "Passe Beispiele auf mindestens zwei Branchenkontexte an.",
+            PromptHintEn: "Adapt examples to at least two industry contexts."),
+        new(
+            Key: "implementation",
+            SlugSuffixDe: "umsetzung",
+            SlugSuffixEn: "implementation",
+            HeadlineTailDe: "für direkte Umsetzung",
+            HeadlineTailEn: "for direct implementation",
+            IntroTailDe: "Der Schwerpunkt liegt auf konkreten Schritten, Verantwortlichkeiten und sofortigem Transfer in die Praxis.",
+            IntroTailEn: "The focus is on concrete steps, ownership, and immediate transfer into execution.",
+            MetaTailDe: "Umsetzungsorientierte Prompt-Anleitung",
+            MetaTailEn: "Implementation-focused prompt guide",
+            BenefitAddonDe: "Direkter Transfer ohne zusätzliche Übersetzungsarbeit",
+            BenefitAddonEn: "Direct transfer without additional interpretation effort",
+            PromptHintDe: "Liefere sofort ausführbare Schritte mit Reihenfolge.",
+            PromptHintEn: "Provide immediately executable steps in sequence."),
+        new(
+            Key: "benchmark",
+            SlugSuffixDe: "benchmark",
+            SlugSuffixEn: "benchmark",
+            HeadlineTailDe: "mit Benchmark-Perspektive",
+            HeadlineTailEn: "with benchmarking perspective",
+            IntroTailDe: "Diese Variante vergleicht Ansätze gegen Benchmarks und zeigt Verbesserungspotenziale transparent auf.",
+            IntroTailEn: "This variant compares approaches against benchmarks and highlights improvement potential.",
+            MetaTailDe: "Benchmark-basierte Prompt-Optimierung",
+            MetaTailEn: "Benchmark-based prompt optimization",
+            BenefitAddonDe: "Bessere Entscheidungen durch externe Vergleichsperspektive",
+            BenefitAddonEn: "Better decisions through external comparison perspective",
+            PromptHintDe: "Vergleiche den Ansatz gegen Benchmark-Kriterien.",
+            PromptHintEn: "Compare the approach against benchmark criteria."),
+        new(
+            Key: "governance",
+            SlugSuffixDe: "governance",
+            SlugSuffixEn: "governance",
+            HeadlineTailDe: "mit Governance- und Compliance-Fokus",
+            HeadlineTailEn: "with governance and compliance focus",
+            IntroTailDe: "Das Format integriert Regeln, Freigaben und Nachvollziehbarkeit für regulierte oder sensible Kontexte.",
+            IntroTailEn: "The format integrates rules, approvals, and traceability for regulated or sensitive contexts.",
+            MetaTailDe: "Governance-sichere Prompt-Architektur",
+            MetaTailEn: "Governance-safe prompt architecture",
+            BenefitAddonDe: "Mehr Sicherheit durch klare Leitplanken und Freigabelogik",
+            BenefitAddonEn: "Higher safety through clear guardrails and approval logic",
+            PromptHintDe: "Dokumentiere Regeln, Annahmen und Freigabekriterien.",
+            PromptHintEn: "Document rules, assumptions, and approval criteria."),
+        new(
+            Key: "localization",
+            SlugSuffixDe: "lokalisierung",
+            SlugSuffixEn: "localization",
+            HeadlineTailDe: "für lokalisierte DE/EN-Ausgaben",
+            HeadlineTailEn: "for localized DE/EN outputs",
+            IntroTailDe: "Diese Seite fokussiert sprachsensible Formulierungen und konsistente Bedeutung in Deutsch und Englisch.",
+            IntroTailEn: "This page focuses on language-sensitive phrasing and consistent meaning across German and English.",
+            MetaTailDe: "Mehrsprachige Prompt-Strategien für DE/EN",
+            MetaTailEn: "Multilingual prompt strategies for DE/EN",
+            BenefitAddonDe: "Höhere sprachliche Qualität bei internationaler Nutzung",
+            BenefitAddonEn: "Higher linguistic quality for international usage",
+            PromptHintDe: "Liefere den Output konsistent in Deutsch und Englisch.",
+            PromptHintEn: "Return the output consistently in German and English.")
     ];
 
     private static readonly IReadOnlyList<ThemeDefinition> Themes = BuildThemes();
@@ -211,9 +409,12 @@ public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
             }
         }
 
-        return pages
+        var sorted = pages
             .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        ValidateLandingPageQuality(sorted);
+        return sorted;
     }
 
     private static IReadOnlyList<string> BuildRelatedPageKeys(ThemeDefinition theme, int variantIndex)
@@ -260,6 +461,67 @@ public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
 
     private static string BuildPageKey(string themeKey, string variantKey)
         => $"{themeKey}-{variantKey}";
+
+    private static void ValidateLandingPageQuality(IReadOnlyList<SeoLandingPageContent> pages)
+    {
+        if (pages.Count < MinimumLandingPagePairs)
+        {
+            throw new InvalidOperationException($"Landing page quality gate failed: expected at least {MinimumLandingPagePairs} page pairs, got {pages.Count}.");
+        }
+
+        var duplicateKey = pages
+            .GroupBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(x => x.Count() > 1);
+
+        if (duplicateKey is not null)
+        {
+            throw new InvalidOperationException($"Duplicate landing page key detected: {duplicateKey.Key}");
+        }
+
+        var duplicateSlugDe = pages
+            .Select(x => x.SlugDe)
+            .GroupBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(x => x.Count() > 1);
+
+        if (duplicateSlugDe is not null)
+        {
+            throw new InvalidOperationException($"Duplicate landing page slug (de) detected: {duplicateSlugDe.Key}");
+        }
+
+        var duplicateSlugEn = pages
+            .Select(x => x.SlugEn)
+            .GroupBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(x => x.Count() > 1);
+
+        if (duplicateSlugEn is not null)
+        {
+            throw new InvalidOperationException($"Duplicate landing page slug (en) detected: {duplicateSlugEn.Key}");
+        }
+
+        var thinPage = pages.FirstOrDefault(x =>
+            x.BenefitItems.Count < 4 ||
+            x.UseCases.Count < 4 ||
+            x.ExamplePrompts.Count < 3 ||
+            x.RelatedPageKeys.Count < 2 ||
+            string.IsNullOrWhiteSpace(x.MetaDescription.De) ||
+            string.IsNullOrWhiteSpace(x.MetaDescription.En));
+
+        if (thinPage is not null)
+        {
+            throw new InvalidOperationException($"Thin landing page content detected: {thinPage.Key}");
+        }
+
+        var weakCategoryCoverage = pages
+            .GroupBy(x => x.Category)
+            .Where(x => x.Count() < 16)
+            .ToList();
+
+        if (weakCategoryCoverage.Count > 0)
+        {
+            var summary = string.Join(", ", weakCategoryCoverage.Select(x => $"{x.Key}:{x.Count()}"));
+            throw new InvalidOperationException($"Landing page category coverage too low: {summary}");
+        }
+    }
 
     private static IReadOnlyList<SeoLocalizedText> ToLocalizedList(IReadOnlyList<string> de, IReadOnlyList<string> en)
     {

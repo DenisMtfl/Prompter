@@ -65,7 +65,7 @@
   <data name="Landing_QuickFacts_Title" xml:space="preserve"><value>Why teams choose PromptForge</value></data>
   <data name="Landing_QuickFacts_Item1" xml:space="preserve"><value>Structured prompt workflows for many domains</value></data>
   <data name="Landing_QuickFacts_Item2" xml:space="preserve"><value>Built-in optimization with quality scoring</value></data>
-  <data name="Landing_QuickFacts_Item3" xml:space="preserve"><value>History and favorites with reusable assets</value></data>
+  <data name="Landing_QuickFacts_Item3" xml:space="preserve"><value>Reusable presets and instant-start workflows</value></data>
 
   <data name="Landing_Audiences_Title" xml:space="preserve"><value>Built for multiple audiences</value></data>
   <data name="Landing_Audiences_Link" xml:space="preserve"><value>Explore all presets</value></data>
@@ -85,8 +85,8 @@
   <data name="Landing_Feature_Generator_Desc" xml:space="preserve"><value>Structured forms and presets for reliable prompt output.</value></data>
   <data name="Landing_Feature_Optimizer_Title" xml:space="preserve"><value>Prompt Optimizer</value></data>
   <data name="Landing_Feature_Optimizer_Desc" xml:space="preserve"><value>Improve clarity, structure, specificity, and SEO quality.</value></data>
-  <data name="Landing_Feature_Library_Title" xml:space="preserve"><value>History and Favorites</value></data>
-  <data name="Landing_Feature_Library_Desc" xml:space="preserve"><value>Store successful prompts and build your reusable knowledge base.</value></data>
+  <data name="Landing_Feature_Library_Title" xml:space="preserve"><value>Preset Library</value></data>
+  <data name="Landing_Feature_Library_Desc" xml:space="preserve"><value>Browse high-quality presets and launch directly in the generator.</value></data>
 
   <data name="Landing_Workflow_Title" xml:space="preserve"><value>Workflow in three steps</value></data>
   <data name="Landing_Workflow_Step1" xml:space="preserve"><value>Select audience, preset, and output language.</value></data>

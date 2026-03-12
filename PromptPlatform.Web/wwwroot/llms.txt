@@ -1,0 +1,40 @@
+# PromptForge
+
+> PromptForge is a bilingual prompt platform (German/English) with generator, optimizer, preset library, and topic landing pages.
+
+## Primary entry points
+- /de
+- /en
+- /de/generator
+- /en/generator
+- /de/presets
+- /en/presets
+- /de/optimizer
+- /en/optimizer
+- /de/faq
+- /en/faq
+
+## Content architecture
+- Landing pages are organized as topic clusters.
+- Each landing page links to related pages and relevant presets.
+- Presets are language-specific and can be loaded directly into the generator.
+
+## Crawl and indexing guidance
+- Respect canonical and hreflang links on localized pages.
+- Prefer exact language path prefixes: /de/* and /en/*.
+- Do not index private utility endpoints.
+
+## Do not index
+- /de/history
+- /en/history
+- /history
+- /de/favorites
+- /en/favorites
+- /favorites
+- /health/*
+- /monitor/*
+- /rum/*
+- /analytics/*
+
+## Sitemap
+- /sitemap.xml

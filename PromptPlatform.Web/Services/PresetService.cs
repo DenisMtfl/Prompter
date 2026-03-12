@@ -1,12 +1,32 @@
 using PromptPlatform.Web.Enums;
 using PromptPlatform.Web.Models;
+using PromptPlatform.Web.Utilities;
 
 namespace PromptPlatform.Web.Services;
 
 public sealed class PresetService : IPresetService
 {
+    private const int MinimumPresetCount = 2000;
+
     private static readonly IReadOnlyList<PresetMode> Modes =
     [
+        new(
+            Key: "quickstart",
+            TitleSuffixDe: "Quickstart",
+            TitleSuffixEn: "Quickstart",
+            DescriptionSuffixDe: "Kompakter Einstieg mit sofort einsetzbarer Struktur und klaren ersten Schritten.",
+            DescriptionSuffixEn: "Compact starter format with immediately usable structure and clear first steps.",
+            Complexity: ComplexityLevel.Basic,
+            Length: PromptLength.Short,
+            OutputFormat: OutputFormat.BulletPoints,
+            ToneOverride: PromptTone.Friendly,
+            ExecutionHintDe: "Starte mit den drei wichtigsten Schritten und liefere direkt ein nutzbares Ergebnis.",
+            ExecutionHintEn: "Start with the top three actions and return a directly usable result.",
+            InputIntentDe: "Sofort starten ohne lange Vorarbeit",
+            InputIntentEn: "Start immediately without heavy preparation",
+            TagsDe: ["quickstart", "einstieg", "sofort"],
+            TagsEn: ["quickstart", "starter", "immediate"],
+            PopularityBoost: 26),
         new(
             Key: "strategy",
             TitleSuffixDe: "Strategie Playbook",
@@ -59,6 +79,210 @@ public sealed class PresetService : IPresetService
             TagsEn: ["template", "quickstart", "format"],
             PopularityBoost: 22),
         new(
+            Key: "checklist",
+            TitleSuffixDe: "Checkliste",
+            TitleSuffixEn: "Checklist",
+            DescriptionSuffixDe: "Pragmatische Checkliste für saubere Umsetzung, Review und Qualitätskontrolle.",
+            DescriptionSuffixEn: "Pragmatic checklist for execution, review, and quality control.",
+            Complexity: ComplexityLevel.Intermediate,
+            Length: PromptLength.Short,
+            OutputFormat: OutputFormat.BulletPoints,
+            ToneOverride: PromptTone.Professional,
+            ExecutionHintDe: "Gib eine priorisierte Checkliste mit Do/Don't Kriterien aus.",
+            ExecutionHintEn: "Return a prioritized checklist with do/don't criteria.",
+            InputIntentDe: "Fehler vermeiden und Qualität absichern",
+            InputIntentEn: "Prevent mistakes and secure quality",
+            TagsDe: ["checkliste", "qualität", "review"],
+            TagsEn: ["checklist", "quality", "review"],
+            PopularityBoost: 24),
+        new(
+            Key: "briefing",
+            TitleSuffixDe: "Briefing Format",
+            TitleSuffixEn: "Briefing Format",
+            DescriptionSuffixDe: "Management-taugliches Briefing mit Kernbotschaften, Risiken und Handlungsempfehlung.",
+            DescriptionSuffixEn: "Management-ready briefing with core messages, risks, and action recommendation.",
+            Complexity: ComplexityLevel.Intermediate,
+            Length: PromptLength.Medium,
+            OutputFormat: OutputFormat.Narrative,
+            ToneOverride: PromptTone.Professional,
+            ExecutionHintDe: "Fasse Lagebild, Optionen und empfohlene Entscheidung prägnant zusammen.",
+            ExecutionHintEn: "Summarize current state, options, and recommended decision concisely.",
+            InputIntentDe: "Entscheidungsvorlage für Stakeholder",
+            InputIntentEn: "Decision-ready stakeholder briefing",
+            TagsDe: ["briefing", "stakeholder", "management"],
+            TagsEn: ["briefing", "stakeholder", "management"],
+            PopularityBoost: 17),
+        new(
+            Key: "persona-fit",
+            TitleSuffixDe: "Zielgruppen-Fit",
+            TitleSuffixEn: "Audience Fit",
+            DescriptionSuffixDe: "Preset mit starkem Zielgruppenfokus für relevante Sprache, Nutzen und Tonalität.",
+            DescriptionSuffixEn: "Audience-first preset optimized for relevance in language, value, and tone.",
+            Complexity: ComplexityLevel.Intermediate,
+            Length: PromptLength.Medium,
+            OutputFormat: OutputFormat.StepByStep,
+            ToneOverride: PromptTone.Persuasive,
+            ExecutionHintDe: "Passe Argumentation, Beispiele und Stil explizit auf die Zielgruppe an.",
+            ExecutionHintEn: "Adapt arguments, examples, and style explicitly to the audience.",
+            InputIntentDe: "Maximale Relevanz für eine klar definierte Zielgruppe",
+            InputIntentEn: "Maximum relevance for a clearly defined audience",
+            TagsDe: ["zielgruppe", "persona", "relevanz"],
+            TagsEn: ["audience", "persona", "relevance"],
+            PopularityBoost: 21),
+        new(
+            Key: "comparison",
+            TitleSuffixDe: "Optionen-Vergleich",
+            TitleSuffixEn: "Options Comparison",
+            DescriptionSuffixDe: "Vergleichsmodus mit klaren Kriterien, Trade-offs und Empfehlung.",
+            DescriptionSuffixEn: "Comparison mode with explicit criteria, trade-offs, and recommendation.",
+            Complexity: ComplexityLevel.Advanced,
+            Length: PromptLength.Medium,
+            OutputFormat: OutputFormat.Table,
+            ToneOverride: PromptTone.Analytical,
+            ExecutionHintDe: "Vergleiche mindestens drei Optionen anhand klarer Bewertungsdimensionen.",
+            ExecutionHintEn: "Compare at least three options using explicit evaluation dimensions.",
+            InputIntentDe: "Alternative Lösungswege strukturiert bewerten",
+            InputIntentEn: "Evaluate alternative solution paths systematically",
+            TagsDe: ["vergleich", "optionen", "tradeoffs"],
+            TagsEn: ["comparison", "options", "tradeoffs"],
+            PopularityBoost: 14),
+        new(
+            Key: "automation",
+            TitleSuffixDe: "Automation Blueprint",
+            TitleSuffixEn: "Automation Blueprint",
+            DescriptionSuffixDe: "Automationsfokus mit Triggern, Inputs, Entscheidungsregeln und Outputs.",
+            DescriptionSuffixEn: "Automation-focused mode with triggers, inputs, decision rules, and outputs.",
+            Complexity: ComplexityLevel.Advanced,
+            Length: PromptLength.Medium,
+            OutputFormat: OutputFormat.Json,
+            ToneOverride: PromptTone.Analytical,
+            ExecutionHintDe: "Definiere Trigger, Regeln, Ausnahmefälle und Monitoring strukturiert.",
+            ExecutionHintEn: "Define triggers, rules, edge cases, and monitoring in a structured format.",
+            InputIntentDe: "Wiederkehrende Aufgaben automatisierbar machen",
+            InputIntentEn: "Make recurring tasks automation-ready",
+            TagsDe: ["automation", "workflow", "regeln"],
+            TagsEn: ["automation", "workflow", "rules"],
+            PopularityBoost: 19),
+        new(
+            Key: "experiments",
+            TitleSuffixDe: "Experiment Design",
+            TitleSuffixEn: "Experiment Design",
+            DescriptionSuffixDe: "Experimenteller Modus mit Hypothesen, Messlogik und Auswertungskriterien.",
+            DescriptionSuffixEn: "Experimental mode with hypotheses, measurement design, and evaluation criteria.",
+            Complexity: ComplexityLevel.Advanced,
+            Length: PromptLength.Medium,
+            OutputFormat: OutputFormat.StepByStep,
+            ToneOverride: PromptTone.Analytical,
+            ExecutionHintDe: "Leite testbare Hypothesen, Metriken und Abbruchkriterien ab.",
+            ExecutionHintEn: "Derive testable hypotheses, metrics, and stop criteria.",
+            InputIntentDe: "Schnelles Lernen durch strukturierte Experimente",
+            InputIntentEn: "Fast learning through structured experimentation",
+            TagsDe: ["experiment", "hypothese", "metriken"],
+            TagsEn: ["experiment", "hypothesis", "metrics"],
+            PopularityBoost: 16),
+        new(
+            Key: "scenario",
+            TitleSuffixDe: "Szenario-Planung",
+            TitleSuffixEn: "Scenario Planning",
+            DescriptionSuffixDe: "Szenario-Modus für Best Case, Base Case und Risk Case mit Maßnahmen.",
+            DescriptionSuffixEn: "Scenario mode for best case, base case, and risk case including actions.",
+            Complexity: ComplexityLevel.Advanced,
+            Length: PromptLength.Long,
+            OutputFormat: OutputFormat.Table,
+            ToneOverride: PromptTone.Analytical,
+            ExecutionHintDe: "Erstelle mindestens drei Szenarien mit Frühindikatoren und Gegenmaßnahmen.",
+            ExecutionHintEn: "Create at least three scenarios with leading indicators and countermeasures.",
+            InputIntentDe: "Unsicherheit aktiv in Planungen integrieren",
+            InputIntentEn: "Integrate uncertainty into planning",
+            TagsDe: ["szenario", "risiko", "planung"],
+            TagsEn: ["scenario", "risk", "planning"],
+            PopularityBoost: 10),
+        new(
+            Key: "playbook90",
+            TitleSuffixDe: "90-Tage Playbook",
+            TitleSuffixEn: "90-Day Playbook",
+            DescriptionSuffixDe: "Zeitlich getaktetes Umsetzungs-Playbook mit Meilensteinen und Verantwortlichkeiten.",
+            DescriptionSuffixEn: "Time-boxed execution playbook with milestones and ownership.",
+            Complexity: ComplexityLevel.Intermediate,
+            Length: PromptLength.Medium,
+            OutputFormat: OutputFormat.StepByStep,
+            ToneOverride: PromptTone.Professional,
+            ExecutionHintDe: "Plane in 30/60/90-Tage-Phasen mit klaren Ergebnissen pro Phase.",
+            ExecutionHintEn: "Plan in 30/60/90-day phases with clear outputs per phase.",
+            InputIntentDe: "Roadmap mit klarer Taktung und Verantwortung",
+            InputIntentEn: "Roadmap with clear cadence and ownership",
+            TagsDe: ["90tage", "roadmap", "meilensteine"],
+            TagsEn: ["90day", "roadmap", "milestones"],
+            PopularityBoost: 23),
+        new(
+            Key: "quality-gate",
+            TitleSuffixDe: "Qualitäts-Gate",
+            TitleSuffixEn: "Quality Gate",
+            DescriptionSuffixDe: "Qualitätsmodus mit Abnahmekriterien, Prüffragen und Freigabeentscheidung.",
+            DescriptionSuffixEn: "Quality mode with acceptance criteria, control questions, and release decision.",
+            Complexity: ComplexityLevel.Expert,
+            Length: PromptLength.Medium,
+            OutputFormat: OutputFormat.Table,
+            ToneOverride: PromptTone.Analytical,
+            ExecutionHintDe: "Definiere harte Qualitätskriterien und ein klares Go/No-Go Ergebnis.",
+            ExecutionHintEn: "Define hard quality criteria and return a clear go/no-go result.",
+            InputIntentDe: "Abnahmefähigkeit und Qualitätsstandard sichern",
+            InputIntentEn: "Ensure release readiness and quality standard",
+            TagsDe: ["qualität", "abnahme", "gate"],
+            TagsEn: ["quality", "acceptance", "gate"],
+            PopularityBoost: 11),
+        new(
+            Key: "rapid-iteration",
+            TitleSuffixDe: "Rapid Iteration",
+            TitleSuffixEn: "Rapid Iteration",
+            DescriptionSuffixDe: "Iterativer Modus für schnelle Versionen, Feedbackschleifen und Optimierung.",
+            DescriptionSuffixEn: "Iterative mode for fast versions, feedback loops, and optimization.",
+            Complexity: ComplexityLevel.Basic,
+            Length: PromptLength.Short,
+            OutputFormat: OutputFormat.StepByStep,
+            ToneOverride: PromptTone.Friendly,
+            ExecutionHintDe: "Liefere drei schnelle Varianten und zeige klar, was jeweils verbessert wurde.",
+            ExecutionHintEn: "Deliver three fast variants and highlight what was improved in each.",
+            InputIntentDe: "Schnell zu einer starken Version gelangen",
+            InputIntentEn: "Reach a strong version quickly",
+            TagsDe: ["iteration", "feedback", "optimierung"],
+            TagsEn: ["iteration", "feedback", "optimization"],
+            PopularityBoost: 25),
+        new(
+            Key: "localization",
+            TitleSuffixDe: "Localization Kit",
+            TitleSuffixEn: "Localization Kit",
+            DescriptionSuffixDe: "Mehrsprachiger Modus mit sprachsensiblen Formulierungen und Kultur-Fit.",
+            DescriptionSuffixEn: "Multilingual mode with language-sensitive phrasing and cultural fit.",
+            Complexity: ComplexityLevel.Intermediate,
+            Length: PromptLength.Medium,
+            OutputFormat: OutputFormat.BulletPoints,
+            ToneOverride: PromptTone.Professional,
+            ExecutionHintDe: "Erstelle eine DE/EN-Ausgabe mit konsistenter Bedeutung und lokal passendem Stil.",
+            ExecutionHintEn: "Create DE/EN output with consistent meaning and locally fitting style.",
+            InputIntentDe: "Inhalte sauber für Deutsch und Englisch anpassen",
+            InputIntentEn: "Adapt content cleanly for German and English",
+            TagsDe: ["lokalisierung", "de", "en"],
+            TagsEn: ["localization", "de", "en"],
+            PopularityBoost: 15),
+        new(
+            Key: "compliance",
+            TitleSuffixDe: "Compliance Guard",
+            TitleSuffixEn: "Compliance Guard",
+            DescriptionSuffixDe: "Regelkonformer Modus mit klaren Grenzen, No-Go-Zonen und Prüfpunkten.",
+            DescriptionSuffixEn: "Compliance-first mode with explicit boundaries, no-go zones, and checks.",
+            Complexity: ComplexityLevel.Expert,
+            Length: PromptLength.Long,
+            OutputFormat: OutputFormat.StepByStep,
+            ToneOverride: PromptTone.Professional,
+            ExecutionHintDe: "Berücksichtige regulatorische Anforderungen, Risiken und dokumentiere Annahmen.",
+            ExecutionHintEn: "Account for regulatory requirements, risks, and explicitly document assumptions.",
+            InputIntentDe: "Regelkonforme und auditierbare Ergebnisse erzeugen",
+            InputIntentEn: "Produce compliant and auditable output",
+            TagsDe: ["compliance", "risiko", "audit"],
+            TagsEn: ["compliance", "risk", "audit"],
+            PopularityBoost: 9),
+        new(
             Key: "expert",
             TitleSuffixDe: "Expert Audit",
             TitleSuffixEn: "Expert Audit",
@@ -98,7 +322,7 @@ public sealed class PresetService : IPresetService
             {
                 foreach (var (mode, modeIndex) in Modes.Select((value, index) => (value, index)))
                 {
-                    var platform = topic.PlatformOverride ?? area.DefaultPlatform;
+                    var platform = ResolvePlatform(area, topic, mode);
                     var id = BuildPresetId(area.Category, topic.Key, mode.Key);
                     var popularity = 55 + mode.PopularityBoost + ((areaIndex * 11 + topicIndex * 7 + modeIndex * 5) % 34);
 
@@ -165,6 +389,61 @@ public sealed class PresetService : IPresetService
             }
         }
 
+        var sorted = presets
+            .OrderBy(x => x.Category)
+            .ThenByDescending(x => x.PopularityScore)
+            .ThenBy(x => x.Id, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        ValidatePresetQuality(sorted);
+        return sorted;
+    }
+
+    private static string BuildPresetId(PresetCategory category, string topicKey, string modeKey)
+        => $"{ToSlug(category.ToString())}-{topicKey}-{modeKey}";
+
+    private static string ResolvePlatform(AreaBlueprint area, TopicBlueprint topic, PresetMode mode)
+    {
+        if (!string.IsNullOrWhiteSpace(topic.PlatformOverride))
+        {
+            return topic.PlatformOverride;
+        }
+
+        if (!area.DefaultPlatform.Equals("ChatGPT", StringComparison.OrdinalIgnoreCase))
+        {
+            return area.DefaultPlatform;
+        }
+
+        var providerIndex = StableIndex($"{area.Category}|{topic.Key}|{mode.Key}", AiProviderCatalog.TopProviders.Count);
+        return AiProviderCatalog.TopProviders[providerIndex];
+    }
+
+    private static int StableIndex(string seed, int modulo)
+    {
+        if (modulo <= 0)
+        {
+            return 0;
+        }
+
+        unchecked
+        {
+            var hash = 23;
+            foreach (var c in seed)
+            {
+                hash = (hash * 31) + c;
+            }
+
+            return (int)((uint)hash % modulo);
+        }
+    }
+
+    private static void ValidatePresetQuality(IReadOnlyList<PromptPreset> presets)
+    {
+        if (presets.Count < MinimumPresetCount)
+        {
+            throw new InvalidOperationException($"Preset quality gate failed: expected at least {MinimumPresetCount} presets, got {presets.Count}.");
+        }
+
         var duplicateId = presets
             .GroupBy(x => x.Id, StringComparer.OrdinalIgnoreCase)
             .FirstOrDefault(x => x.Count() > 1);
@@ -174,15 +453,46 @@ public sealed class PresetService : IPresetService
             throw new InvalidOperationException($"Duplicate preset id detected: {duplicateId.Key}");
         }
 
-        return presets
-            .OrderBy(x => x.Category)
-            .ThenByDescending(x => x.PopularityScore)
-            .ThenBy(x => x.Id, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
+        var duplicateSlug = presets
+            .GroupBy(x => x.Slug, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(x => x.Count() > 1);
 
-    private static string BuildPresetId(PresetCategory category, string topicKey, string modeKey)
-        => $"{ToSlug(category.ToString())}-{topicKey}-{modeKey}";
+        if (duplicateSlug is not null)
+        {
+            throw new InvalidOperationException($"Duplicate preset slug detected: {duplicateSlug.Key}");
+        }
+
+        var duplicateLocalizedTitle = presets
+            .GroupBy(x => $"{x.Category}|{x.TitleDe.Trim()}", StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(x => x.Count() > 1);
+
+        if (duplicateLocalizedTitle is not null)
+        {
+            throw new InvalidOperationException($"Duplicate localized DE title detected in category: {duplicateLocalizedTitle.Key}");
+        }
+
+        var thinPreset = presets.FirstOrDefault(x =>
+            x.TagsDe.Count < 5 ||
+            x.TagsEn.Count < 5 ||
+            x.ExamplePromptDe.Length < 140 ||
+            x.ExamplePromptEn.Length < 140);
+
+        if (thinPreset is not null)
+        {
+            throw new InvalidOperationException($"Thin preset detected: {thinPreset.Id}");
+        }
+
+        var sparseCategories = presets
+            .GroupBy(x => x.Category)
+            .Where(x => x.Count() < 120)
+            .ToList();
+
+        if (sparseCategories.Count > 0)
+        {
+            var sparse = string.Join(", ", sparseCategories.Select(x => $"{x.Key}:{x.Count()}"));
+            throw new InvalidOperationException($"Preset category coverage too low: {sparse}");
+        }
+    }
 
     private static string BuildExampleInput(TopicBlueprint topic, PresetMode mode, AreaBlueprint area, bool german)
     {

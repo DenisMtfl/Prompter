@@ -1,0 +1,504 @@
+@page "/faq"
+@page "/de/faq"
+@page "/en/faq"
+@using System.Globalization
+@using System.Text.Json
+@inject NavigationManager Navigation
+@inject ISeoLandingPageService SeoLandingPageService
+
+<PageTitle>@PageTitle</PageTitle>
+<HeadContent>
+    <meta name="description" content="@MetaDescription" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@PageTitle" />
+    <meta property="og:description" content="@MetaDescription" />
+    <meta property="og:url" content="@CanonicalUrl" />
+    <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
+    <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@PageTitle" />
+    <meta name="twitter:description" content="@MetaDescription" />
+    <link rel="canonical" href="@CanonicalUrl" />
+    <link rel="alternate" hreflang="de" href="@GermanUrl" />
+    <link rel="alternate" hreflang="en" href="@EnglishUrl" />
+    <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
+    <script type="application/ld+json">@((MarkupString)FaqJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)BreadcrumbJsonLd)</script>
+</HeadContent>
+
+<article class="faq-page">
+    <section class="hero-section faq-hero rounded-4 p-4 p-lg-5 mb-4">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-8">
+                <span class="badge text-bg-primary mb-3">@HeroBadge</span>
+                <h1 class="display-6 fw-bold mb-3">@HeroTitle</h1>
+                <p class="lead mb-0">@HeroSubtitle</p>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm faq-hero-actions-card h-100">
+                    <div class="card-body d-grid gap-2">
+                        <a class="btn btn-primary" href="@GeneratorPath">@GeneratorCta</a>
+                        <a class="btn btn-outline-secondary" href="@PresetsPath">@PresetsCta</a>
+                        <a class="btn btn-outline-secondary" href="@OptimizerPath">@OptimizerCta</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-5">
+        <div class="card border-0 shadow-sm faq-nav-card">
+            <div class="card-body">
+                <h2 class="h4 mb-3">@QuickNavTitle</h2>
+                <div class="row g-2">
+                    @foreach (var faqSection in Sections)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <a class="btn btn-outline-secondary w-100 text-start faq-nav-link" href="@($"#faq-{faqSection.Key}")">@faqSection.Title.For(CurrentLanguage)</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @foreach (var faqSection in Sections)
+    {
+        var accordionId = $"faq-accordion-{faqSection.Key}";
+        <section id="@($"faq-{faqSection.Key}")" class="mb-5 faq-section">
+            <div class="mb-3">
+                <h2 class="h3 mb-2">@faqSection.Title.For(CurrentLanguage)</h2>
+                <p class="text-secondary mb-0">@faqSection.Intro.For(CurrentLanguage)</p>
+            </div>
+
+            <div class="accordion faq-accordion" id="@accordionId">
+                @for (var i = 0; i < faqSection.Items.Count; i++)
+                {
+                    var item = faqSection.Items[i];
+                    var headingId = $"{faqSection.Key}-heading-{i}";
+                    var collapseId = $"{faqSection.Key}-collapse-{i}";
+                    <div class="accordion-item">
+                        <h3 class="accordion-header" id="@headingId">
+                            <button class="accordion-button @(i == 0 ? string.Empty : "collapsed")"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="@($"#{collapseId}")"
+                                    aria-expanded="@(i == 0)"
+                                    aria-controls="@collapseId">
+                                @item.Question.For(CurrentLanguage)
+                            </button>
+                        </h3>
+                        <div id="@collapseId"
+                             class="accordion-collapse collapse @(i == 0 ? "show" : string.Empty)"
+                             aria-labelledby="@headingId"
+                             data-bs-parent="@($"#{accordionId}")">
+                            <div class="accordion-body text-secondary">
+                                @item.Answer.For(CurrentLanguage)
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="faq-related-section">
+        <div class="card border-0 shadow-sm faq-related-card">
+            <div class="card-body p-4 p-lg-5">
+                <h2 class="h3 mb-2">@RelatedTitle</h2>
+                <p class="text-secondary mb-3">@RelatedSubtitle</p>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    @foreach (var relatedPage in RelatedPages)
+                    {
+                        <a class="btn btn-sm btn-outline-secondary" href="@relatedPage.Path">@relatedPage.Title</a>
+                    }
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-primary btn-lg" href="@GeneratorPath">@GeneratorCta</a>
+                    <a class="btn btn-outline-secondary btn-lg" href="@PresetsPath">@PresetsCta</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</article>
+
+@code {
+    private IReadOnlyList<SeoLandingPageLinkViewModel> RelatedPages { get; set; } = [];
+
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "de"
+        : "en";
+
+    private bool IsGerman => CurrentLanguage == "de";
+    private string LocalizedFaqPath => AppRoutes.FaqPathForCulture(CurrentLanguage);
+    private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
+    private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
+    private string OptimizerPath => AppRoutes.OptimizerPathForCulture(CurrentLanguage);
+    private string CanonicalUrl => ToAbsolute(LocalizedFaqPath);
+    private string GermanUrl => ToAbsolute(AppRoutes.FaqPathForCulture("de"));
+    private string EnglishUrl => ToAbsolute(AppRoutes.FaqPathForCulture("en"));
+
+    private string PageTitle => IsGerman
+        ? "PromptForge - Häufige Fragen (FAQ)"
+        : "PromptForge - Frequently Asked Questions (FAQ)";
+
+    private string MetaDescription => IsGerman
+        ? "Detaillierte FAQ zu PromptForge: Generator, Optimizer, Presets, SEO-Landingpages, Lokalisierung, Datenschutz und Skalierung."
+        : "Detailed FAQ about PromptForge: generator, optimizer, presets, SEO landing pages, localization, privacy, and scalability.";
+
+    private string HeroBadge => IsGerman ? "Produkt- und Plattform-FAQ" : "Product and Platform FAQ";
+    private string HeroTitle => IsGerman
+        ? "Alles Wichtige zu PromptForge auf einen Blick"
+        : "Everything important about PromptForge in one place";
+    private string HeroSubtitle => IsGerman
+        ? "Diese FAQ beantwortet zentrale Fragen zu Funktionen, Qualität, SEO-Architektur, Datenhaltung und Erweiterbarkeit der Plattform."
+        : "This FAQ answers key questions about features, quality, SEO architecture, data handling, and platform extensibility.";
+    private string GeneratorCta => IsGerman ? "Generator öffnen" : "Open generator";
+    private string PresetsCta => IsGerman ? "Presets durchsuchen" : "Browse presets";
+    private string OptimizerCta => IsGerman ? "Optimizer öffnen" : "Open optimizer";
+    private string QuickNavTitle => IsGerman ? "Schnellnavigation nach Themen" : "Quick navigation by topic";
+    private string RelatedTitle => IsGerman ? "Verwandte Themen und Landingpages" : "Related topics and landing pages";
+    private string RelatedSubtitle => IsGerman
+        ? "Nutze diese Cluster-Seiten für vertiefende Anwendungsfälle, Presets und konkrete Prompt-Beispiele."
+        : "Use these cluster pages for deeper use cases, presets, and concrete prompt examples.";
+
+    private string FaqJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "FAQPage",
+        mainEntity = Sections
+            .SelectMany(section => section.Items)
+            .Select(item => new
+            {
+                @type = "Question",
+                name = item.Question.For(CurrentLanguage),
+                acceptedAnswer = new
+                {
+                    @type = "Answer",
+                    text = item.Answer.For(CurrentLanguage)
+                }
+            })
+            .ToArray()
+    });
+
+    private string BreadcrumbJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "BreadcrumbList",
+        itemListElement = new object[]
+        {
+            new
+            {
+                @type = "ListItem",
+                position = 1,
+                name = "PromptForge",
+                item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage))
+            },
+            new
+            {
+                @type = "ListItem",
+                position = 2,
+                name = IsGerman ? "FAQ" : "FAQ",
+                item = CanonicalUrl
+            }
+        }
+    });
+
+    private static readonly IReadOnlyList<FaqSection> Sections =
+    [
+        new(
+            "platform-basics",
+            new("Grundlagen der Plattform", "Platform fundamentals"),
+            new(
+                "Diese Fragen erklären den Kernnutzen, die Zielgruppen und die grundlegende Architektur von PromptForge.",
+                "These questions explain PromptForge core value, target audiences, and foundational architecture."),
+            [
+                new(
+                    new("Wofür ist PromptForge gedacht?", "What is PromptForge built for?"),
+                    new(
+                        "PromptForge ist eine universelle Prompt-Plattform für Business, Bildung, Marketing, Politik, Coding und weitere Bereiche. Sie kombiniert Generator, Optimizer und Preset-Bibliothek, damit Teams wiederholbar hochwertige Prompts erstellen können.",
+                        "PromptForge is a universal prompt platform for business, education, marketing, politics, coding, and more. It combines generator, optimizer, and preset library so teams can produce high-quality prompts consistently.")),
+                new(
+                    new("Welche Sprachen unterstützt die Plattform?", "Which languages does the platform support?"),
+                    new(
+                        "Die Oberfläche und die Inhalte sind für Deutsch und Englisch ausgelegt. Routing, Metadaten und Inhalte sind sprachbezogen aufgebaut (`/de/*` und `/en/*`) und können später um weitere Sprachen erweitert werden.",
+                        "The UI and content are built for German and English. Routing, metadata, and content are language-specific (`/de/*` and `/en/*`) and can later be extended to additional languages.")),
+                new(
+                    new("Wie ist die Plattform für Wachstum ausgelegt?", "How is the platform built for growth?"),
+                    new(
+                        "Die Architektur trennt Inhalt, Rendering und Routing, damit neue Presets, Kategorien und Landingpages datenbasiert ergänzt werden können. Dadurch sind große Bibliotheken mit hunderten bis tausenden Einträgen wartbar.",
+                        "The architecture separates content, rendering, and routing so new presets, categories, and landing pages can be added in a data-driven way. This keeps large libraries with hundreds or thousands of entries maintainable.")),
+                new(
+                    new("Ist PromptForge nur ein Tool oder auch eine Wissensstruktur?", "Is PromptForge only a tool or also a knowledge structure?"),
+                    new(
+                        "Beides. Neben den Werkzeugeingaben baut PromptForge Themencluster und FAQ-Strukturen auf, damit Nutzer schneller die passende Prompt-Strategie finden und Suchmaschinen die Inhalte klar einordnen können.",
+                        "Both. Beyond generation tooling, PromptForge builds topic clusters and FAQ structures so users can find suitable prompt strategies quickly and search engines can clearly understand the content.")),
+                new(
+                    new("Welche Rolle spielen Presets im Gesamtsystem?", "What role do presets play in the overall system?"),
+                    new(
+                        "Presets sind wiederverwendbare Startpunkte mit klarer Zielsetzung, Struktur und Qualitätsfokus. Sie reduzieren den Aufwand bei wiederkehrenden Aufgaben und verbessern die Konsistenz der Ergebnisse.",
+                        "Presets are reusable starting points with clear objectives, structure, and quality focus. They reduce effort for recurring tasks and improve output consistency."))
+            ]),
+        new(
+            "generator",
+            new("Prompt Generator", "Prompt generator"),
+            new(
+                "Hier geht es um die Eingabefelder, die Kategorienlogik und die Qualität der generierten Prompts.",
+                "This section covers input fields, category logic, and generated prompt quality."),
+            [
+                new(
+                    new("Wie unterscheidet sich der Prompt je nach Hauptkategorie?", "How does the prompt differ by main category?"),
+                    new(
+                        "Die Kategorie definiert Stil- und Qualitätsregeln, z. B. professionell für Business, kreativ für Influencer, neutral für Politik oder technisch präzise für Coding. Dadurch passen Tonalität und Struktur zum Einsatzzweck.",
+                        "The category defines style and quality rules, for example professional for business, creative for influencer workflows, neutral for politics, or technically precise for coding. This aligns tone and structure to the intended use case.")),
+                new(
+                    new("Kann ich bei Unterkategorie, Zielgruppe und Rolle eigene Werte eingeben?", "Can I enter custom values for subcategory, target audience, and role?"),
+                    new(
+                        "Ja. Für alle drei Felder gibt es Vorauswahlen plus einen manuellen Modus. So kannst du schnell starten und bei Bedarf präzise Spezialanforderungen ergänzen.",
+                        "Yes. All three fields provide curated options plus a manual mode. This lets you start quickly and add precise custom requirements when needed.")),
+                new(
+                    new("Warum gibt es ein Plattformfeld mit KI-Anbietern?", "Why is there a platform field with AI providers?"),
+                    new(
+                        "Das Plattformfeld steuert Hinweise zur Ausgabeform und kann den Prompt auf typische Verhaltensweisen einzelner Anbieter ausrichten. Dadurch entstehen praxisnähere Eingaben für reale Arbeitsabläufe.",
+                        "The platform field controls output guidance and can align prompts with typical behavior of specific providers. This produces more practical prompts for real-world workflows.")),
+                new(
+                    new("Welche Qualitätselemente enthält ein generierter Prompt?", "Which quality elements are included in a generated prompt?"),
+                    new(
+                        "Ein guter Prompt enthält mindestens Rolle, Zielbeschreibung, Arbeitsstruktur, Ausgabeformat, Qualitätsanforderungen und Plattformhinweise. PromptForge baut diese Elemente systematisch ein.",
+                        "A strong prompt includes at least role, objective, working structure, output format, quality requirements, and platform notes. PromptForge assembles these elements systematically.")),
+                new(
+                    new("Wie lade ich Presets direkt in den Generator?", "How do I load presets directly into the generator?"),
+                    new(
+                        "In der Preset-Bibliothek oder auf Landingpages kannst du ein Preset direkt öffnen. Der Generator übernimmt dann die relevanten Felder und du passt sie nur noch an deine konkrete Aufgabe an.",
+                        "From the preset library or landing pages, you can open any preset directly. The generator then pre-fills relevant fields and you only adjust the final details for your task."))
+            ]),
+        new(
+            "optimizer",
+            new("Prompt Optimizer", "Prompt optimizer"),
+            new(
+                "Der Optimizer verbessert bestehende Prompts mit Fokus auf Klarheit, Struktur und Zieltreffer.",
+                "The optimizer improves existing prompts with a focus on clarity, structure, and outcome alignment."),
+            [
+                new(
+                    new("Wann sollte ich den Optimizer statt des Generators nutzen?", "When should I use the optimizer instead of the generator?"),
+                    new(
+                        "Wenn bereits ein Ausgangsprompt existiert, ist der Optimizer ideal. Er schärft Zieldefinition, Rollenrahmen, Stil und Ausgabevorgaben, ohne dass du von null neu starten musst.",
+                        "If you already have a draft prompt, the optimizer is ideal. It sharpens objective definition, role framing, style, and output requirements without forcing you to start from scratch.")),
+                new(
+                    new("Wie arbeitet die kontextabhängige Optimierung?", "How does context-aware optimization work?"),
+                    new(
+                        "Je nach Kontext werden unterschiedliche Prioritäten gesetzt: Business wird strukturierter, Social Media kreativer, Politik neutraler, Studium akademischer und Coding technischer. So bleibt die Überarbeitung fachlich passend.",
+                        "Different contexts apply different priorities: business becomes more structured, social media more creative, politics more neutral, university more academic, and coding more technical. This keeps revisions domain-appropriate.")),
+                new(
+                    new("Kann ich sehen, warum ein Prompt besser geworden ist?", "Can I see why an optimized prompt is better?"),
+                    new(
+                        "Ja, optional werden die wichtigsten Verbesserungsgründe kompakt angezeigt, z. B. klarere Zielsetzung oder besseres Ausgabeformat. Das hilft bei Lernkurve und Qualitätskontrolle.",
+                        "Yes, you can optionally display short improvement reasons, such as clearer objective definition or better output formatting. This helps with learning and quality control.")),
+                new(
+                    new("Ist der Optimizer nur für lange Prompts sinnvoll?", "Is the optimizer only useful for long prompts?"),
+                    new(
+                        "Nein. Auch kurze Prompts profitieren stark, wenn Zielgruppe, Rolle oder Format fehlen. Der Optimizer reduziert Missverständnisse und erhöht die Relevanz selbst bei knappen Eingaben.",
+                        "No. Short prompts also benefit significantly when audience, role, or format are missing. The optimizer reduces ambiguity and increases relevance even for compact inputs.")),
+                new(
+                    new("Kann ich optimierte Prompts wieder in Workflows nutzen?", "Can I reuse optimized prompts in workflows?"),
+                    new(
+                        "Ja. Optimierte Ergebnisse können kopiert, erneut optimiert oder als Ausgangspunkt für weitere Generator-Läufe genutzt werden. So entstehen iterative Prompt-Workflows.",
+                        "Yes. Optimized outputs can be copied, refined again, or used as input for additional generator runs. This enables iterative prompt workflows."))
+            ]),
+        new(
+            "presets",
+            new("Preset-Bibliothek", "Preset library"),
+            new(
+                "Die Bibliothek ist auf schnelle Orientierung, Filterbarkeit und direkte Anwendung ausgelegt.",
+                "The library is designed for fast discovery, filtering, and direct application."),
+            [
+                new(
+                    new("Wie finde ich schnell passende Presets?", "How do I quickly find relevant presets?"),
+                    new(
+                        "Nutze Suche, Hauptbereich, Unterkategorie, Plattform und Sortierung gemeinsam. Dadurch schrumpft die Trefferliste auf wirklich passende Vorlagen mit hoher Relevanz.",
+                        "Use search, main area, subcategory, platform, and sorting together. This narrows results to highly relevant templates quickly.")),
+                new(
+                    new("Werden Presets sprachabhängig angezeigt?", "Are presets shown per selected language?"),
+                    new(
+                        "Ja, die Oberfläche und die Inhalte orientieren sich an der aktuell gewählten Sprache. Dadurch bleiben Titel, Beschreibung und Beispieltexte konsistent in Deutsch oder Englisch.",
+                        "Yes, the interface and content follow the currently selected language. Titles, descriptions, and example texts remain consistent in German or English.")),
+                new(
+                    new("Was bedeutet „Use this preset“ technisch?", "What does “Use this preset” do technically?"),
+                    new(
+                        "Der Link öffnet den Generator mit einer Preset-ID in der URL. Der Generator lädt daraufhin die passenden Standardwerte und reduziert den manuellen Eingabeaufwand.",
+                        "The link opens the generator with a preset ID in the URL. The generator then loads matching defaults and reduces manual setup effort.")),
+                new(
+                    new("Wie skaliert die Bibliothek auf sehr viele Einträge?", "How does the library scale to very large volumes?"),
+                    new(
+                        "Die Darstellung nutzt datenbasierte Modelle, Filterlogik und asynchrones Nachladen beim Scrollen. So bleiben Bedienung und Performance auch bei großen Mengen stabil.",
+                        "Rendering is based on data models, filtering logic, and async loading while scrolling. This keeps usability and performance stable even with very large libraries.")),
+                new(
+                    new("Gibt es verwandte Presets zu Themenseiten?", "Are there related presets for topic pages?"),
+                    new(
+                        "Ja, Landingpages zeigen kuratierte Preset-Auswahlen für den jeweiligen Kontext. Damit springst du von Information direkt in die praktische Umsetzung.",
+                        "Yes, landing pages provide curated preset selections for each context. This lets users move directly from information to execution."))
+            ]),
+        new(
+            "seo-landingpages",
+            new("SEO-Landingpages und Themencluster", "SEO landing pages and topic clusters"),
+            new(
+                "Dieser Bereich erklärt, wie die Content-Architektur organisches Wachstum unterstützt.",
+                "This section explains how the content architecture supports organic growth."),
+            [
+                new(
+                    new("Warum gibt es viele thematische Landingpages?", "Why are there many topic landing pages?"),
+                    new(
+                        "Jede Landingpage beantwortet einen klaren Suchintent und führt zu passenden Presets und Generator-Workflows. So entsteht ein sinnvoller Einstieg für unterschiedliche Zielgruppen.",
+                        "Each landing page addresses a clear search intent and leads to matching presets and generator workflows. This creates relevant entry points for different audiences.")),
+                new(
+                    new("Wie wird Duplicate Content vermieden?", "How is duplicate content avoided?"),
+                    new(
+                        "Die Inhalte sind datenbasiert, aber thematisch differenziert aufgebaut: unterschiedliche Nutzenblöcke, Use Cases, Beispiele und Verlinkungen. Zusätzlich helfen Canonical- und Hreflang-Signale bei sauberer Indexierung.",
+                        "Content is data-driven but thematically differentiated through distinct benefit blocks, use cases, examples, and linking. Canonical and hreflang signals additionally support clean indexing.")),
+                new(
+                    new("Welche interne Verlinkung ist geplant?", "What internal linking strategy is used?"),
+                    new(
+                        "Landingpages verlinken auf verwandte Seiten, Presets und den Generator; der Generator verlinkt zurück auf relevante Cluster. Diese Verbindung stärkt Nutzerführung und thematische Autorität.",
+                        "Landing pages link to related pages, presets, and the generator; the generator links back to relevant clusters. This improves user flow and topical authority.")),
+                new(
+                    new("Welche Rolle spielen Metadaten pro Seite?", "What is the role of per-page metadata?"),
+                    new(
+                        "Jede Seite hat eigenen Titel, Description, strukturierte Überschriften, Canonical und Alternates. Das verbessert Klickrate, Relevanz und Crawlbarkeit in beiden Sprachen.",
+                        "Each page has its own title, description, structured headings, canonical, and alternates. This improves click-through rate, relevance, and crawlability in both languages.")),
+                new(
+                    new("Wie können später 100+ weitere Seiten ergänzt werden?", "How can 100+ additional pages be added later?"),
+                    new(
+                        "Neue Seiten werden über Content-Objekte und Slugs ergänzt, nicht durch manuelles Razor-Kopieren. Dadurch bleibt die Wartung effizient und die Qualität kontrollierbar.",
+                        "New pages are added via content objects and slugs, not by manual Razor duplication. This keeps maintenance efficient and quality manageable."))
+            ]),
+        new(
+            "localization",
+            new("Lokalisierung und Sprachkonzept", "Localization and language model"),
+            new(
+                "Die Plattform ist für zweisprachige Nutzung in Inhalt, Navigation und SEO aufgebaut.",
+                "The platform is built for bilingual usage across content, navigation, and SEO."),
+            [
+                new(
+                    new("Wie funktioniert die Sprachnavigation?", "How does language navigation work?"),
+                    new(
+                        "Die Sprache wird über URL-Präfixe (`/de/` und `/en/`) gesteuert und in der Nutzerpräferenz gespeichert. Ein Wechsel berücksichtigt die aktuelle Seite und führt auf die passende Sprachvariante.",
+                        "Language is controlled via URL prefixes (`/de/` and `/en/`) and stored in user preference. Switching language preserves context and redirects to the matching localized page.")),
+                new(
+                    new("Warum sind sprachbezogene URLs wichtig?", "Why are language-specific URLs important?"),
+                    new(
+                        "Sie machen Inhalte für Nutzer und Suchmaschinen eindeutig. Gleichzeitig verbessern sie hreflang-Zuordnung, International SEO und das Vertrauen in die Seitenstruktur.",
+                        "They make content unambiguous for users and search engines. They also improve hreflang mapping, international SEO, and trust in site structure.")),
+                new(
+                    new("Werden deutsche Umlaute korrekt unterstützt?", "Are German umlauts supported correctly?"),
+                    new(
+                        "Ja, die Anwendung verwendet UTF-8 und kann deutsche Sonderzeichen wie ä, ö, ü und ß korrekt darstellen. Das gilt für UI, Inhalte und SEO-relevante Textfelder.",
+                        "Yes, the application uses UTF-8 and correctly handles German characters such as ä, ö, ü, and ß. This applies to UI, content, and SEO-relevant text fields.")),
+                new(
+                    new("Kann die Plattform später mehr Sprachen aufnehmen?", "Can the platform support more languages later?"),
+                    new(
+                        "Ja. Das Routing- und Content-Modell ist so aufgebaut, dass weitere Sprachräume mit überschaubarem Aufwand ergänzt werden können. Wichtig ist dabei die konsistente Pflege von Slugs, Metadaten und Übersetzungen.",
+                        "Yes. The routing and content model is built so additional language markets can be added with manageable effort. The key is consistent handling of slugs, metadata, and translations.")),
+                new(
+                    new("Wie bleiben Presets zwischen Sprachen konsistent?", "How do presets stay consistent across languages?"),
+                    new(
+                        "Presets verwenden pro Sprache eigene Titel, Beschreibungen und Beispiele bei identischer fachlicher Struktur. So bleiben Inhalte relevant, ohne den semantischen Kern zu verlieren.",
+                        "Presets use language-specific titles, descriptions, and examples while preserving the same functional structure. This keeps content relevant without losing semantic intent."))
+            ]),
+        new(
+            "privacy-storage",
+            new("Datenschutz, Speicherung und Sicherheit", "Privacy, storage, and security"),
+            new(
+                "Diese Fragen behandeln lokale Datenhaltung, Bots und technische Sicherheitsgrenzen.",
+                "These questions cover local storage, bot handling, and technical security boundaries."),
+            [
+                new(
+                    new("Wo werden persönliche Einstellungen gespeichert?", "Where are personal preferences stored?"),
+                    new(
+                        "Einstellungen wie Theme oder Sprache werden lokal im Browser gespeichert, damit die Nutzung schnell und personalisiert bleibt. Dabei werden keine sensiblen Kontodaten vorausgesetzt.",
+                        "Preferences such as theme and language are stored locally in the browser to keep usage fast and personalized. No sensitive account data is required for that behavior.")),
+                new(
+                    new("Wie wird mit Verlaufseinträgen umgegangen?", "How are history entries handled?"),
+                    new(
+                        "Verlaufseinträge können lokal gespeichert, gefiltert und gelöscht werden. Für SEO-relevante Bereiche werden private Seiten über Robots/X-Robots gezielt aus der Indexierung gehalten.",
+                        "History entries can be stored locally, filtered, and deleted. For SEO-sensitive areas, private pages are explicitly kept out of indexing via robots and X-Robots controls.")),
+                new(
+                    new("Wie schützt die Plattform technische Endpunkte?", "How does the platform protect technical endpoints?"),
+                    new(
+                        "Monitoring- und Ingest-Endpunkte sind nicht für Suchmaschinen gedacht und werden entsprechend ausgeschlossen. Zusätzlich begrenzen Rate-Limits missbräuchliche Lastspitzen.",
+                        "Monitoring and ingest endpoints are not intended for search indexing and are explicitly excluded. Rate limiting additionally protects against abusive traffic spikes.")),
+                new(
+                    new("Was macht `robots.txt` in diesem Kontext?", "What does `robots.txt` do in this context?"),
+                    new(
+                        "Die Datei steuert Crawl-Bereiche und hält technische oder personenbezogene Pfade aus der regulären Indexierung heraus. Zusammen mit Canonical/Hreflang ergibt sich eine klare SEO-Steuerung.",
+                        "`robots.txt` controls crawl areas and keeps technical or personal paths out of regular indexing. Combined with canonical/hreflang signals, this enables clear SEO governance.")),
+                new(
+                    new("Gibt es Hinweise speziell für KI-Crawler?", "Are there dedicated hints for AI crawlers?"),
+                    new(
+                        "Ja, über `llms.txt` und ergänzende Richtlinien werden empfohlene Einstiegspunkte und Ausschlüsse bereitgestellt. So erhalten KI-Systeme eine strukturierte Orientierung im Content-Bestand.",
+                        "Yes, `llms.txt` and related guidance provide recommended entry points and exclusions. This gives AI systems structured orientation across the content inventory."))
+            ]),
+        new(
+            "scalability",
+            new("Leistung, Skalierung und Betrieb", "Performance, scalability, and operations"),
+            new(
+                "Zum Abschluss: wie PromptForge technisch stabil bleibt, wenn Inhalte und Nutzerzahlen wachsen.",
+                "Finally: how PromptForge stays stable as content and traffic scale."),
+            [
+                new(
+                    new("Wie bleibt die Seite bei vielen Presets performant?", "How does the site stay performant with many presets?"),
+                    new(
+                        "Preset-Listen nutzen Filter-Caching und asynchrones Nachladen, statt alles auf einmal zu rendern. Das verbessert Time-to-Interactive und hält die Oberfläche mobil reaktionsfähig.",
+                        "Preset lists use filter caching and async incremental loading instead of rendering everything at once. This improves time-to-interactive and keeps mobile interactions responsive.")),
+                new(
+                    new("Welche Monitoring-Daten sind für Produktentscheidungen relevant?", "Which monitoring data is relevant for product decisions?"),
+                    new(
+                        "Wichtig sind Funnel-Ereignisse (Landing -> Presets -> Generator), CTA-Klicks, Web-Vitals und Content-Coverage. Damit lassen sich Engpässe in UX, SEO und Conversion gezielt beheben.",
+                        "Key signals are funnel events (landing -> presets -> generator), CTA clicks, web vitals, and content coverage. These reveal UX, SEO, and conversion bottlenecks clearly.")),
+                new(
+                    new("Wie unterstützt die Architektur A/B-Tests?", "How does the architecture support A/B tests?"),
+                    new(
+                        "Varianten können per Experiment-Key auf Seitenebene gesteuert und per Event-Tracking ausgewertet werden. So entstehen belastbare Entscheidungen für Copy, CTA und Seitenstruktur.",
+                        "Variants can be controlled per experiment key and evaluated through event tracking. This supports reliable decisions for copy, CTA behavior, and page structure.")),
+                new(
+                    new("Was ist der Vorteil datengetriebener Inhaltsmodelle?", "What is the benefit of data-driven content models?"),
+                    new(
+                        "Sie reduzieren manuelle Duplikation, minimieren Fehler und beschleunigen Erweiterungen. Neue Themen, Presets oder FAQ-Blöcke können mit konsistenter Struktur ergänzt werden.",
+                        "They reduce manual duplication, minimize errors, and accelerate expansion. New topics, presets, or FAQ blocks can be added with consistent structure.")),
+                new(
+                    new("Ist die Architektur für sehr große Reichweite vorbereitet?", "Is the architecture ready for very large reach?"),
+                    new(
+                        "Die Basis ist dafür ausgelegt: klare URL-Struktur, Themencluster, interne Verlinkung, Monitoring und skalierbare Content-Modelle. Für echtes Hyperwachstum sind zusätzlich Deployment-, Caching- und Observability-Strategien auf Infrastruktur-Ebene entscheidend.",
+                        "The foundation is designed for scale: clear URL architecture, topic clusters, internal linking, monitoring, and scalable content models. For hyper-growth, deployment, caching, and observability strategies at infrastructure level are additionally critical."))
+            ])
+    ];
+
+    protected override void OnInitialized()
+    {
+        RelatedPages = SeoLandingPageService.GetClusterPages(CurrentLanguage)
+            .Take(8)
+            .ToList();
+    }
+
+    private string ToAbsolute(string relativePath)
+    {
+        var normalized = string.IsNullOrWhiteSpace(relativePath) ? "/" : relativePath;
+        return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
+    }
+
+    private sealed record LocalizedText(string De, string En)
+    {
+        public string For(string language)
+            => language.Equals("de", StringComparison.OrdinalIgnoreCase) ? De : En;
+    }
+
+    private sealed record FaqItem(LocalizedText Question, LocalizedText Answer);
+
+    private sealed record FaqSection(
+        string Key,
+        LocalizedText Title,
+        LocalizedText Intro,
+        IReadOnlyList<FaqItem> Items);
+}

@@ -57,8 +57,14 @@ else
                 </div>
                 <div class="col-lg-3">
                     <div class="d-grid gap-2">
-                        <a class="btn btn-primary" href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")">@PageModel.CtaGeneratorLabel</a>
-                        <a class="btn btn-outline-secondary" href="@PageModel.PresetsCategoryPath">@PageModel.CtaPresetsLabel</a>
+                        <a class="btn btn-primary"
+                           href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")"
+                           data-track="seo.hero.generator"
+                           data-track-context="@PageModel.Category">@PageModel.CtaGeneratorLabel</a>
+                        <a class="btn btn-outline-secondary"
+                           href="@PageModel.PresetsCategoryPath"
+                           data-track="seo.hero.presets"
+                           data-track-context="@PageModel.Category">@PageModel.CtaPresetsLabel</a>
                     </div>
                 </div>
             </div>
@@ -100,7 +106,10 @@ else
         <section class="mb-5" aria-labelledby="seo-presets-title">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                 <h2 id="seo-presets-title" class="h3 mb-0">@PageModel.PresetExamplesTitle</h2>
-                <a class="link-secondary text-decoration-none fw-semibold" href="@PageModel.PresetsCategoryPath">@PageModel.ExploreCategoryPresetsLabel</a>
+                <a class="link-secondary text-decoration-none fw-semibold"
+                   href="@PageModel.PresetsCategoryPath"
+                   data-track="seo.presets.browse"
+                   data-track-context="@PageModel.Category">@PageModel.ExploreCategoryPresetsLabel</a>
             </div>
             <div class="row g-3">
                 @foreach (var preset in PageModel.PresetExamples)
@@ -110,7 +119,10 @@ else
                             <div class="card-body d-flex flex-column">
                                 <h3 class="h6">@preset.GetTitle(PageModel.Culture)</h3>
                                 <p class="text-secondary small">@preset.GetDescription(PageModel.Culture)</p>
-                                <a class="btn btn-sm btn-primary mt-auto" href="@($"{GeneratorPath}?preset={preset.Id}")">@L["Presets_Action_UseThis"]</a>
+                                <a class="btn btn-sm btn-primary mt-auto"
+                                   href="@($"{GeneratorPath}?preset={preset.Id}")"
+                                   data-track="seo.presets.use"
+                                   data-track-context="@PageModel.Category">@L["Presets_Action_UseThis"]</a>
                             </div>
                         </div>
                     </div>
@@ -146,7 +158,10 @@ else
                                 <div class="card-body d-flex flex-column">
                                     <h3 class="h6">@preset.GetTitle(PageModel.Culture)</h3>
                                     <p class="small text-secondary">@preset.GetDescription(PageModel.Culture)</p>
-                                    <a class="btn btn-sm btn-outline-primary mt-auto" href="@($"{GeneratorPath}?preset={preset.Id}")">@L["Presets_Action_UseThis"]</a>
+                                    <a class="btn btn-sm btn-outline-primary mt-auto"
+                                       href="@($"{GeneratorPath}?preset={preset.Id}")"
+                                       data-track="seo.related_presets.use"
+                                       data-track-context="@PageModel.Category">@L["Presets_Action_UseThis"]</a>
                                 </div>
                             </div>
                         </div>
@@ -167,7 +182,10 @@ else
                                 <div class="card-body d-flex flex-column">
                                     <h3 class="h6">@relatedPage.Title</h3>
                                     <p class="text-secondary small">@relatedPage.Description</p>
-                                    <a class="btn btn-sm btn-outline-secondary mt-auto" href="@relatedPage.Path">@PageModel.RelatedPagesCtaLabel</a>
+                                    <a class="btn btn-sm btn-outline-secondary mt-auto"
+                                       href="@relatedPage.Path"
+                                       data-track="seo.related_pages.open"
+                                       data-track-context="@relatedPage.Category">@PageModel.RelatedPagesCtaLabel</a>
                                 </div>
                             </div>
                         </div>
@@ -208,8 +226,14 @@ else
                     <h2 class="h3 mb-2">@PageModel.CtaTitle</h2>
                     <p class="text-secondary mb-4">@PageModel.CtaSubtitle</p>
                     <div class="d-flex flex-wrap gap-2">
-                        <a class="btn btn-primary btn-lg" href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")">@PageModel.CtaGeneratorLabel</a>
-                        <a class="btn btn-outline-secondary btn-lg" href="@PageModel.PresetsCategoryPath">@PageModel.CtaPresetsLabel</a>
+                        <a class="btn btn-primary btn-lg"
+                           href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")"
+                           data-track="seo.cta.generator"
+                           data-track-context="@PageModel.Category">@PageModel.CtaGeneratorLabel</a>
+                        <a class="btn btn-outline-secondary btn-lg"
+                           href="@PageModel.PresetsCategoryPath"
+                           data-track="seo.cta.presets"
+                           data-track-context="@PageModel.Category">@PageModel.CtaPresetsLabel</a>
                     </div>
                 </div>
             </div>
