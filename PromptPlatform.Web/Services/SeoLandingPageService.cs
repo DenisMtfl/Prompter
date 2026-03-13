@@ -21,6 +21,8 @@ public sealed class SeoLandingPageService(
 
         var presetExamples = allPresets
             .Where(x => x.Category == content.Category)
+            .OrderByDescending(x => x.PopularityScore)
+            .ThenBy(x => x.GetTitle(normalizedCulture), StringComparer.CurrentCultureIgnoreCase)
             .Take(5)
             .ToList();
 
@@ -33,6 +35,8 @@ public sealed class SeoLandingPageService(
 
         var relatedPresets = allPresets
             .Where(x => relatedCategories.Contains(x.Category))
+            .OrderByDescending(x => x.PopularityScore)
+            .ThenBy(x => x.GetTitle(normalizedCulture), StringComparer.CurrentCultureIgnoreCase)
             .Take(4)
             .ToList();
 

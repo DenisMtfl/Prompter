@@ -43,6 +43,7 @@ else
         <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
         <script type="application/ld+json">@((MarkupString)WebPageJsonLd)</script>
         <script type="application/ld+json">@((MarkupString)BreadcrumbJsonLd)</script>
+        <script type="application/ld+json">@((MarkupString)HowToJsonLd)</script>
         <script type="application/ld+json">@((MarkupString)RelatedContentJsonLd)</script>
         @if (PageModel.FaqItems.Count > 0)
         {
@@ -76,6 +77,30 @@ else
                            data-track="seo.hero.presets"
                            data-track-context="@PageModel.Category">@PageModel.CtaPresetsLabel</a>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-5" aria-labelledby="seo-workflow-title">
+            <div class="card border-0 shadow-sm seo-workflow-card">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <h2 id="seo-workflow-title" class="h3 mb-2">@LandingWorkflowTitle</h2>
+                            <p class="text-secondary mb-0">@LandingWorkflowIntro</p>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-primary" href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")">@PageModel.CtaGeneratorLabel</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="@OptimizerPath">@LandingWorkflowOptimizerLabel</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="@FaqPath">@LandingWorkflowFaqLabel</a>
+                        </div>
+                    </div>
+                    <ol class="mb-0">
+                        @foreach (var step in LandingWorkflowSteps.Select((text, index) => new { text, index }))
+                        {
+                            <li id="@($"landing-step-{step.index + 1}")" class="mb-2">@step.text</li>
+                        }
+                    </ol>
                 </div>
             </div>
         </section>
@@ -204,6 +229,31 @@ else
             </section>
         }
 
+        <section class="mb-5" aria-labelledby="seo-tool-links-title">
+            <div class="card border-0 shadow-sm seo-tool-links-card">
+                <div class="card-body p-4 p-lg-5">
+                    <h2 id="seo-tool-links-title" class="h3 mb-2">@ToolLinksTitle</h2>
+                    <p class="text-secondary mb-3">@ToolLinksIntro</p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <a class="btn btn-outline-primary" href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")">@PageModel.CtaGeneratorLabel</a>
+                        <a class="btn btn-outline-secondary" href="@PageModel.PresetsCategoryPath">@PageModel.CtaPresetsLabel</a>
+                        <a class="btn btn-outline-secondary" href="@OptimizerPath">@ToolLinksOptimizerLabel</a>
+                        <a class="btn btn-outline-secondary" href="@FaqPath">@ToolLinksFaqLabel</a>
+                    </div>
+                    @if (PageModel.RelatedPages.Count > 0)
+                    {
+                        <div class="small text-secondary mb-2 fw-semibold">@ToolLinksClusterLabel</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var relatedPage in PageModel.RelatedPages.Take(4))
+                            {
+                                <a class="btn btn-sm btn-outline-secondary" href="@relatedPage.Path">@relatedPage.Title</a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+
         @if (PageModel.FaqItems.Count > 0)
         {
             <section class="mb-5" aria-labelledby="seo-faq-title">
@@ -265,7 +315,35 @@ else
     private string EnglishUrl => ToAbsolute(PageModel?.AlternatePathEn ?? string.Empty);
     private string ActiveCulture => PageModel?.Culture ?? ResolveRouteCulture();
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(ActiveCulture);
+    private string OptimizerPath => AppRoutes.OptimizerPathForCulture(ActiveCulture);
+    private string FaqPath => AppRoutes.FaqPathForCulture(ActiveCulture);
     private string PresetsPath => AppRoutes.PresetsPathForCulture(ActiveCulture);
+    private string LandingWorkflowTitle => ActiveCulture == "de" ? "So nutzt du diese Landingpage effektiv" : "How to use this landing page effectively";
+    private string LandingWorkflowIntro => ActiveCulture == "de"
+        ? "Nutze die Themenseite als Einstieg, wechsle dann in Presets und Generator und verfeinere den finalen Prompt im Optimizer."
+        : "Use this topic page as your entry point, move into presets and the generator, and refine the final prompt in the optimizer.";
+    private IReadOnlyList<string> LandingWorkflowSteps => ActiveCulture == "de"
+        ?
+        [
+            $"Starte mit den Beispielen und Anwendungsfällen auf dieser Seite, um das Thema {PageModel?.Headline ?? string.Empty} schneller einzuordnen.",
+            "Öffne ein passendes Preset und übernimm es direkt in den Generator, um Ziel, Rolle und Ausgabeformat anzupassen.",
+            "Nutze danach den Prompt Optimizer, um Struktur, Klarheit und Qualitätsregeln weiter zu schärfen."
+        ]
+        :
+        [
+            $"Start with the examples and use cases on this page to understand the topic behind {PageModel?.Headline ?? string.Empty} more quickly.",
+            "Open a matching preset and move it into the generator to adjust objective, role, and output format.",
+            "Then use the prompt optimizer to further improve structure, clarity, and quality constraints."
+        ];
+    private string LandingWorkflowOptimizerLabel => ActiveCulture == "de" ? "Optimizer öffnen" : "Open optimizer";
+    private string LandingWorkflowFaqLabel => ActiveCulture == "de" ? "FAQ lesen" : "Read FAQ";
+    private string ToolLinksTitle => ActiveCulture == "de" ? "Nächste sinnvolle Schritte" : "Useful next steps";
+    private string ToolLinksIntro => ActiveCulture == "de"
+        ? "Diese internen Links helfen dir, vom informativen Einstieg direkt in passende Presets, Tools und angrenzende Themencluster zu wechseln."
+        : "These internal links help you move from this informational entry page directly into matching presets, tools, and adjacent topic clusters.";
+    private string ToolLinksOptimizerLabel => ActiveCulture == "de" ? "Prompt Optimizer" : "Prompt optimizer";
+    private string ToolLinksFaqLabel => ActiveCulture == "de" ? "FAQ" : "FAQ";
+    private string ToolLinksClusterLabel => ActiveCulture == "de" ? "Weitere thematisch passende Landingpages" : "More related landing pages";
     private string WebPageJsonLd => JsonSerializer.Serialize(new
     {
         @context = "https://schema.org",
@@ -302,6 +380,24 @@ else
                 item = CanonicalUrl
             }
         }
+    });
+    private string HowToJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "HowTo",
+        name = LandingWorkflowTitle,
+        description = LandingWorkflowIntro,
+        inLanguage = ActiveCulture,
+        step = LandingWorkflowSteps
+            .Select((step, index) => new
+            {
+                @type = "HowToStep",
+                position = index + 1,
+                name = step,
+                text = step,
+                url = CanonicalUrl + $"#landing-step-{index + 1}"
+            })
+            .ToArray()
     });
     private string FaqJsonLd => JsonSerializer.Serialize(new
     {
@@ -341,6 +437,18 @@ else
                     position = index + 1,
                     name = page.Title,
                     url = ToAbsolute(page.Path)
+                }).ToArray()) ?? Array.Empty<object>()
+            },
+            new
+            {
+                @type = "ItemList",
+                name = PageModel?.PresetExamplesTitle ?? string.Empty,
+                itemListElement = (PageModel?.PresetExamples.Select((preset, index) => new
+                {
+                    @type = "ListItem",
+                    position = index + 1,
+                    name = preset.GetTitle(ActiveCulture),
+                    url = ToAbsolute($"{GeneratorPath}?preset={preset.Id}")
                 }).ToArray()) ?? Array.Empty<object>()
             }
         }

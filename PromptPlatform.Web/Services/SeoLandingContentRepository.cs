@@ -462,10 +462,12 @@ public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
                     Category = theme.Category,
                     SlugDe = slugDe,
                     SlugEn = slugEn,
-                    MetaTitle = Txt($"{theme.NameDe}: {variant.MetaTailDe}", $"{theme.NameEn}: {variant.MetaTailEn}"),
+                    MetaTitle = Txt(
+                        $"{theme.NameDe}: {variant.MetaTailDe} | PromptForge",
+                        $"{theme.NameEn}: {variant.MetaTailEn} | PromptForge"),
                     MetaDescription = Txt(
-                        $"{theme.IntroDe} {variant.IntroTailDe}",
-                        $"{theme.IntroEn} {variant.IntroTailEn}"),
+                        $"{theme.IntroDe} {variant.IntroTailDe} Mit Presets, Beispielen und direktem Einstieg in den Prompt Generator.",
+                        $"{theme.IntroEn} {variant.IntroTailEn} Includes presets, examples, and direct access to the prompt generator."),
                     Headline = Txt(
                         $"{theme.NameDe} {variant.HeadlineTailDe}",
                         $"{theme.NameEn} {variant.HeadlineTailEn}"),
