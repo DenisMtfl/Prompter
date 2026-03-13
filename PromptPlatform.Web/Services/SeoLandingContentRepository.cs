@@ -260,7 +260,91 @@ public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
             BenefitAddonDe: "Höhere sprachliche Qualität bei internationaler Nutzung",
             BenefitAddonEn: "Higher linguistic quality for international usage",
             PromptHintDe: "Liefere den Output konsistent in Deutsch und Englisch.",
-            PromptHintEn: "Return the output consistently in German and English.")
+            PromptHintEn: "Return the output consistently in German and English."),
+        new(
+            Key: "strategy",
+            SlugSuffixDe: "strategie",
+            SlugSuffixEn: "strategy",
+            HeadlineTailDe: "mit strategischem Fokus",
+            HeadlineTailEn: "with strategic focus",
+            IntroTailDe: "Diese Variante priorisiert Zielbild, Prioritäten und mittel- bis langfristige Wirkung in einem klaren Rahmen.",
+            IntroTailEn: "This variant prioritizes target state, priorities, and mid-to-long-term impact in a clear framework.",
+            MetaTailDe: "Strategische Prompt-Rahmen mit klarer Priorisierung",
+            MetaTailEn: "Strategic prompt frameworks with clear prioritization",
+            BenefitAddonDe: "Bessere Ausrichtung auf Ziele, Prioritäten und Wirkung",
+            BenefitAddonEn: "Stronger alignment around goals, priorities, and impact",
+            PromptHintDe: "Leite strategische Prioritäten und nächste Schritte ab.",
+            PromptHintEn: "Derive strategic priorities and next actions."),
+        new(
+            Key: "comparison",
+            SlugSuffixDe: "vergleich",
+            SlugSuffixEn: "comparison",
+            HeadlineTailDe: "im direkten Vergleich",
+            HeadlineTailEn: "in direct comparison mode",
+            IntroTailDe: "Die Seite vergleicht Optionen, Muster oder Vorgehensweisen anhand klarer Kriterien und Trade-offs.",
+            IntroTailEn: "The page compares options, patterns, or approaches using explicit criteria and trade-offs.",
+            MetaTailDe: "Vergleichsorientierte Prompt-Strategien mit klaren Kriterien",
+            MetaTailEn: "Comparison-oriented prompt strategies with explicit criteria",
+            BenefitAddonDe: "Bessere Entscheidungen durch strukturierte Gegenüberstellung",
+            BenefitAddonEn: "Better decisions through structured side-by-side comparison",
+            PromptHintDe: "Vergleiche mindestens drei Optionen anhand klarer Kriterien.",
+            PromptHintEn: "Compare at least three options using explicit criteria."),
+        new(
+            Key: "audit",
+            SlugSuffixDe: "audit",
+            SlugSuffixEn: "audit",
+            HeadlineTailDe: "für Audit und Qualitätsprüfung",
+            HeadlineTailEn: "for audit and quality review",
+            IntroTailDe: "Diese Variante fokussiert Prüffragen, Qualitätslücken und Maßnahmen zur systematischen Verbesserung.",
+            IntroTailEn: "This variant focuses on review questions, quality gaps, and actions for systematic improvement.",
+            MetaTailDe: "Audit-orientierte Prompt-Qualitätssicherung",
+            MetaTailEn: "Audit-oriented prompt quality assurance",
+            BenefitAddonDe: "Mehr Transparenz über Qualitätslücken und Korrekturen",
+            BenefitAddonEn: "More transparency around quality gaps and corrections",
+            PromptHintDe: "Identifiziere Lücken, Risiken und konkrete Korrekturen.",
+            PromptHintEn: "Identify gaps, risks, and concrete corrections."),
+        new(
+            Key: "best-practices",
+            SlugSuffixDe: "best-practices",
+            SlugSuffixEn: "best-practices",
+            HeadlineTailDe: "mit Best Practices",
+            HeadlineTailEn: "with best practices",
+            IntroTailDe: "Der Fokus liegt auf bewährten Mustern, wiederholbaren Erfolgsfaktoren und sauber dokumentierten Vorgehensweisen.",
+            IntroTailEn: "The focus is on proven patterns, repeatable success factors, and clearly documented approaches.",
+            MetaTailDe: "Best Practices für hochwertige Prompt-Workflows",
+            MetaTailEn: "Best practices for high-quality prompt workflows",
+            BenefitAddonDe: "Schneller Zugriff auf erprobte Qualitätsmuster",
+            BenefitAddonEn: "Faster access to proven quality patterns",
+            PromptHintDe: "Fasse bewährte Vorgehensweisen kompakt und übertragbar zusammen.",
+            PromptHintEn: "Summarize proven approaches in a compact, reusable format."),
+        new(
+            Key: "scenario",
+            SlugSuffixDe: "szenarien",
+            SlugSuffixEn: "scenarios",
+            HeadlineTailDe: "für Szenario-Planung",
+            HeadlineTailEn: "for scenario planning",
+            IntroTailDe: "Diese Seite beleuchtet Best Case, Base Case und Risikoszenarien mit passenden Reaktionsoptionen.",
+            IntroTailEn: "This page explores best-case, base-case, and risk scenarios with matching response options.",
+            MetaTailDe: "Szenario-basierte Prompt-Strategien und Optionen",
+            MetaTailEn: "Scenario-based prompt strategies and options",
+            BenefitAddonDe: "Mehr Robustheit durch vorbereitete Alternativszenarien",
+            BenefitAddonEn: "Greater robustness through prepared alternative scenarios",
+            PromptHintDe: "Erstelle Best-, Base- und Risk-Case mit Maßnahmen.",
+            PromptHintEn: "Create best, base, and risk cases including actions."),
+        new(
+            Key: "deep-dive",
+            SlugSuffixDe: "deep-dive",
+            SlugSuffixEn: "deep-dive",
+            HeadlineTailDe: "als Deep Dive",
+            HeadlineTailEn: "as a deep dive",
+            IntroTailDe: "Diese Variante geht tiefer in Zusammenhänge, Fachlogik und Entscheidungskriterien, ohne die Umsetzbarkeit zu verlieren.",
+            IntroTailEn: "This variant goes deeper into relationships, domain logic, and decision criteria without losing execution clarity.",
+            MetaTailDe: "Deep-Dive Prompt-Analyse mit fachlicher Tiefe",
+            MetaTailEn: "Deep-dive prompt analysis with domain depth",
+            BenefitAddonDe: "Mehr fachliche Tiefe für komplexe Fragestellungen",
+            BenefitAddonEn: "More domain depth for complex questions",
+            PromptHintDe: "Gehe tiefer auf Hintergründe, Kriterien und Nuancen ein.",
+            PromptHintEn: "Go deeper into background, criteria, and nuances.")
     ];
 
     private static readonly IReadOnlyList<ThemeDefinition> Themes = BuildThemes();
@@ -2005,7 +2089,355 @@ public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
                     "Build a weekly worksheet for social studies including a reflection question.",
                     "Draft a text-analysis worksheet with an evaluation rubric."
                 ],
-                relatedThemeKeys: ["unterrichtsmaterial", "quiz", "lernzettel", "schule-referat"])
+                relatedThemeKeys: ["unterrichtsmaterial", "quiz", "lernzettel", "schule-referat"]),
+
+            Theme(
+                key: "linkedin-b2b",
+                category: PresetCategory.Marketing,
+                isPrimaryForCategory: false,
+                slugRootDe: "linkedin-b2b-prompts",
+                slugRootEn: "linkedin-b2b-prompts",
+                nameDe: "LinkedIn B2B Prompts",
+                nameEn: "LinkedIn B2B Prompts",
+                audienceDe: "B2B-Marketingteams, Founder und Demand-Gen-Verantwortliche",
+                audienceEn: "B2B marketing teams, founders, and demand generation owners",
+                introDe: "LinkedIn B2B Prompts helfen dabei, Thought Leadership, Pipeline-Content und Social Selling sauber auf Entscheider auszurichten.",
+                introEn: "LinkedIn B2B prompts help align thought leadership, pipeline content, and social selling to decision-maker audiences.",
+                benefitsDe:
+                [
+                    "Mehr Reichweite bei relevanten B2B-Zielgruppen",
+                    "Klarere Positionierung für Produkte und Expertise",
+                    "Bessere Umwandlung von Insights in Pipeline-Content",
+                    "Wiederverwendbare Formate für Team- und Founder-Profile"
+                ],
+                benefitsEn:
+                [
+                    "More reach among relevant B2B audiences",
+                    "Clearer positioning for products and expertise",
+                    "Better conversion of insights into pipeline content",
+                    "Reusable formats for team and founder profiles"
+                ],
+                useCasesDe:
+                [
+                    "LinkedIn Posts für Demand Generation entwickeln",
+                    "Founder Posts mit klarer Meinungsposition schreiben",
+                    "Karussell-Ideen für komplexe B2B-Themen strukturieren",
+                    "Kommentar-Strategien für Social Selling vorbereiten",
+                    "Content-Serien für Produktkategorien planen"
+                ],
+                useCasesEn:
+                [
+                    "Develop LinkedIn posts for demand generation",
+                    "Write founder posts with a clear point of view",
+                    "Structure carousel ideas for complex B2B topics",
+                    "Prepare comment strategies for social selling",
+                    "Plan content series for product categories"
+                ],
+                examplePromptsDe:
+                [
+                    "Schreibe einen LinkedIn B2B Post für CISOs über KI-Governance mit starkem Hook und CTA.",
+                    "Entwickle eine 5-teilige LinkedIn Content-Serie für ein SaaS Produkt im Bereich Revenue Operations.",
+                    "Formuliere einen Founder Post über Learnings aus gescheiterten Produkt-Experimenten im B2B.",
+                    "Baue ein Carousel-Konzept für einen erklärungsbedürftigen Workflow im Enterprise-Vertrieb."
+                ],
+                examplePromptsEn:
+                [
+                    "Write a LinkedIn B2B post for CISOs about AI governance with a strong hook and CTA.",
+                    "Develop a 5-part LinkedIn content series for a SaaS product in revenue operations.",
+                    "Draft a founder post about lessons from failed product experiments in B2B.",
+                    "Build a carousel concept for an enterprise sales workflow that needs explanation."
+                ],
+                relatedThemeKeys: ["marketing", "business", "seo", "job"]),
+
+            Theme(
+                key: "customer-support",
+                category: PresetCategory.Business,
+                isPrimaryForCategory: false,
+                slugRootDe: "customer-support-prompts",
+                slugRootEn: "customer-support-prompts",
+                nameDe: "Customer Support Prompts",
+                nameEn: "Customer Support Prompts",
+                audienceDe: "Support-Teams, Customer Success und Operations-Verantwortliche",
+                audienceEn: "support teams, customer success teams, and operations leads",
+                introDe: "Customer Support Prompts strukturieren Antworten, Eskalationen und Service-Standards für schnelle und konsistente Kundenerlebnisse.",
+                introEn: "Customer support prompts structure replies, escalations, and service standards for fast and consistent customer experiences.",
+                benefitsDe:
+                [
+                    "Schnellere Antwortzeiten bei wiederkehrenden Anfragen",
+                    "Konsistentere Tonalität im Kundendialog",
+                    "Klare Eskalationslogik für sensible Fälle",
+                    "Bessere Qualitätssicherung in Support-Workflows"
+                ],
+                benefitsEn:
+                [
+                    "Faster response times for recurring requests",
+                    "More consistent tone in customer conversations",
+                    "Clear escalation logic for sensitive cases",
+                    "Stronger quality assurance in support workflows"
+                ],
+                useCasesDe:
+                [
+                    "Antwortvorlagen für schwierige Support-Tickets erstellen",
+                    "Eskalationsmails für kritische Fälle formulieren",
+                    "FAQ-Antworten für Self-Service Bereiche schreiben",
+                    "Onboarding-Nachrichten für neue Kundinnen strukturieren",
+                    "Service-Reviews aus Ticketmustern ableiten"
+                ],
+                useCasesEn:
+                [
+                    "Create reply templates for difficult support tickets",
+                    "Draft escalation emails for critical cases",
+                    "Write FAQ replies for self-service sections",
+                    "Structure onboarding messages for new customers",
+                    "Derive service reviews from ticket patterns"
+                ],
+                examplePromptsDe:
+                [
+                    "Formuliere eine empathische, lösungsorientierte Antwort auf ein Ticket mit wiederholter Frustration des Kunden.",
+                    "Erstelle eine Eskalationsvorlage für einen Enterprise-Kunden mit SLA-Risiko.",
+                    "Baue eine Makro-Antwort für häufige Fragen zur Rechnungsstellung mit klaren nächsten Schritten.",
+                    "Entwickle ein Review-Template für wöchentliche Support-Learnings aus Ticket-Clustern."
+                ],
+                examplePromptsEn:
+                [
+                    "Draft an empathetic, solution-oriented reply to a ticket from a repeatedly frustrated customer.",
+                    "Create an escalation template for an enterprise customer with SLA risk.",
+                    "Build a macro response for common billing questions including clear next steps.",
+                    "Develop a review template for weekly support learnings from ticket clusters."
+                ],
+                relatedThemeKeys: ["business", "email", "produktivitaet", "job"]),
+
+            Theme(
+                key: "debugging",
+                category: PresetCategory.Coding,
+                isPrimaryForCategory: false,
+                slugRootDe: "debugging-prompts",
+                slugRootEn: "debugging-prompts",
+                nameDe: "Debugging Prompts",
+                nameEn: "Debugging Prompts",
+                audienceDe: "Entwicklerinnen, QA-Teams und technische Leads",
+                audienceEn: "developers, QA teams, and technical leads",
+                introDe: "Debugging Prompts helfen dabei, Fehler systematisch zu isolieren, Hypothesen zu prüfen und saubere Fix-Strategien abzuleiten.",
+                introEn: "Debugging prompts help isolate issues systematically, test hypotheses, and derive clean fix strategies.",
+                benefitsDe:
+                [
+                    "Schnellere Eingrenzung von Fehlerursachen",
+                    "Bessere Struktur für Reproduktion und Analyse",
+                    "Weniger Trial-and-Error bei komplexen Bugs",
+                    "Sauberere Kommunikation zwischen Dev und QA"
+                ],
+                benefitsEn:
+                [
+                    "Faster isolation of root causes",
+                    "Better structure for reproduction and analysis",
+                    "Less trial and error for complex bugs",
+                    "Cleaner communication between dev and QA"
+                ],
+                useCasesDe:
+                [
+                    "Fehlerberichte in reproduzierbare Schritte übersetzen",
+                    "Hypothesenlisten für schwer greifbare Bugs erstellen",
+                    "Logs und Stacktraces systematisch auswerten",
+                    "Fix-Optionen nach Risiko und Aufwand vergleichen",
+                    "Postmortem-Zusammenfassungen für Vorfälle schreiben"
+                ],
+                useCasesEn:
+                [
+                    "Translate bug reports into reproducible steps",
+                    "Create hypothesis lists for elusive bugs",
+                    "Analyze logs and stack traces systematically",
+                    "Compare fix options by risk and effort",
+                    "Write postmortem summaries for incidents"
+                ],
+                examplePromptsDe:
+                [
+                    "Analysiere diesen Stacktrace und leite die wahrscheinlichsten Ursachen in Prioritätsreihenfolge ab.",
+                    "Baue einen Debugging-Plan für einen intermittierenden Fehler im Login-Flow.",
+                    "Vergleiche drei potenzielle Fix-Strategien für einen Speicherleck-Bug anhand Risiko und Aufwand.",
+                    "Formuliere ein technisches Incident-Postmortem mit Timeline, Root Cause und Präventionsmaßnahmen."
+                ],
+                examplePromptsEn:
+                [
+                    "Analyze this stack trace and derive the most likely causes in priority order.",
+                    "Build a debugging plan for an intermittent bug in the login flow.",
+                    "Compare three possible fix strategies for a memory leak by risk and effort.",
+                    "Draft a technical incident postmortem with timeline, root cause, and preventive actions."
+                ],
+                relatedThemeKeys: ["coding", "produktivitaet", "business", "job"]),
+
+            Theme(
+                key: "interview-vorbereitung",
+                category: PresetCategory.Job,
+                isPrimaryForCategory: false,
+                slugRootDe: "interview-vorbereitung-prompts",
+                slugRootEn: "interview-preparation-prompts",
+                nameDe: "Interview Vorbereitung Prompts",
+                nameEn: "Interview Preparation Prompts",
+                audienceDe: "Bewerberinnen, Karriere-Coaches und Recruiting-nahe Teams",
+                audienceEn: "job candidates, career coaches, and recruiting-adjacent teams",
+                introDe: "Interview Vorbereitung Prompts strukturieren Antworten, Storylines und Fragekataloge für überzeugende Gespräche.",
+                introEn: "Interview preparation prompts structure answers, storylines, and question sets for convincing interviews.",
+                benefitsDe:
+                [
+                    "Klarere Selbstpräsentation in Interviews",
+                    "Bessere STAR- oder Case-basierte Antworten",
+                    "Höhere Sicherheit bei schwierigen Rückfragen",
+                    "Gezieltere Vorbereitung auf Rollen und Unternehmen"
+                ],
+                benefitsEn:
+                [
+                    "Clearer self-presentation in interviews",
+                    "Stronger STAR- or case-based answers",
+                    "More confidence when facing difficult follow-up questions",
+                    "More targeted preparation for roles and companies"
+                ],
+                useCasesDe:
+                [
+                    "Antworten für typische HR-Fragen vorbereiten",
+                    "Storyline für Führungserfahrung strukturieren",
+                    "Case Interview Ansatz aufbauen",
+                    "Fragen an das Unternehmen entwickeln",
+                    "Schwächen-Fragen glaubwürdig beantworten"
+                ],
+                useCasesEn:
+                [
+                    "Prepare answers for typical HR questions",
+                    "Structure a story arc for leadership experience",
+                    "Build an approach for case interviews",
+                    "Develop questions for the company",
+                    "Answer weakness questions credibly"
+                ],
+                examplePromptsDe:
+                [
+                    "Erstelle fünf starke Antworten auf typische Interviewfragen für eine Product-Manager-Rolle.",
+                    "Formuliere meine Projekterfahrung in STAR-Struktur für ein Data-Analyst-Interview um.",
+                    "Entwickle einen Fragenkatalog an ein Startup für die finale Interviewrunde.",
+                    "Baue ein 30-Minuten-Trainingsskript für schwierige Rückfragen zu Lücken im Lebenslauf."
+                ],
+                examplePromptsEn:
+                [
+                    "Create five strong answers to common interview questions for a product manager role.",
+                    "Rewrite my project experience into STAR format for a data analyst interview.",
+                    "Develop a question set for a startup in the final interview round.",
+                    "Build a 30-minute practice script for difficult questions about resume gaps."
+                ],
+                relatedThemeKeys: ["job", "business", "produktivitaet", "marketing"]),
+
+            Theme(
+                key: "lernplan",
+                category: PresetCategory.University,
+                isPrimaryForCategory: false,
+                slugRootDe: "lernplan-prompts",
+                slugRootEn: "study-plan-prompts",
+                nameDe: "Lernplan Prompts",
+                nameEn: "Study Plan Prompts",
+                audienceDe: "Studierende, Lerncoaches und akademische Programme",
+                audienceEn: "students, learning coaches, and academic programs",
+                introDe: "Lernplan Prompts helfen bei strukturierter Prüfungsvorbereitung, Priorisierung von Stoff und realistischen Lernrhythmen.",
+                introEn: "Study plan prompts help structure exam prep, prioritize material, and build realistic study rhythms.",
+                benefitsDe:
+                [
+                    "Klarere Priorisierung großer Stoffmengen",
+                    "Realistische Lernpläne statt Überforderung",
+                    "Bessere Wiederholung und Transferleistung",
+                    "Mehr Verbindlichkeit durch klare Wochenziele"
+                ],
+                benefitsEn:
+                [
+                    "Clearer prioritization of large amounts of material",
+                    "Realistic study plans instead of overload",
+                    "Better repetition and knowledge transfer",
+                    "More accountability through explicit weekly goals"
+                ],
+                useCasesDe:
+                [
+                    "Prüfungsplan für vier Wochen Vorbereitung erstellen",
+                    "Lernblöcke für mehrere Module koordinieren",
+                    "Wiederholungszyklen für schwierige Themen planen",
+                    "Prioritäten für begrenzte Lernzeit setzen",
+                    "Reflexionsroutinen für Lernfortschritt entwickeln"
+                ],
+                useCasesEn:
+                [
+                    "Create an exam plan for four weeks of preparation",
+                    "Coordinate study blocks across multiple modules",
+                    "Plan repetition cycles for difficult topics",
+                    "Set priorities for limited study time",
+                    "Develop review routines for learning progress"
+                ],
+                examplePromptsDe:
+                [
+                    "Erstelle einen 21-Tage-Lernplan für eine Statistikprüfung mit Wiederholungsphasen und Übungsblöcken.",
+                    "Priorisiere drei Uni-Module für die Klausurenphase anhand Schwierigkeit, Umfang und Deadline.",
+                    "Baue eine Wochenroutine für fokussiertes Lernen neben einem 20-Stunden-Job.",
+                    "Entwickle einen Lernplan mit Active Recall und Spaced Repetition für Psychologie."
+                ],
+                examplePromptsEn:
+                [
+                    "Create a 21-day study plan for a statistics exam with revision phases and practice blocks.",
+                    "Prioritize three university modules for exam season by difficulty, scope, and deadline.",
+                    "Build a weekly routine for focused studying alongside a 20-hour job.",
+                    "Develop a study plan using active recall and spaced repetition for psychology."
+                ],
+                relatedThemeKeys: ["quiz", "lernzettel", "produktivitaet", "unterrichtsmaterial"]),
+
+            Theme(
+                key: "newsletter",
+                category: PresetCategory.Marketing,
+                isPrimaryForCategory: false,
+                slugRootDe: "newsletter-prompts",
+                slugRootEn: "newsletter-prompts",
+                nameDe: "Newsletter Prompts",
+                nameEn: "Newsletter Prompts",
+                audienceDe: "Marketing-Teams, Creator und Content-Verantwortliche",
+                audienceEn: "marketing teams, creators, and content owners",
+                introDe: "Newsletter Prompts unterstützen bei Themenplanung, Betreffzeilen, Segmentierung und Conversion-orientierten Mailings.",
+                introEn: "Newsletter prompts support topic planning, subject lines, segmentation, and conversion-oriented email sends.",
+                benefitsDe:
+                [
+                    "Stärkere Öffnungs- und Klickraten durch bessere Hooks",
+                    "Konsistentere Newsletter-Serien mit klarer Dramaturgie",
+                    "Wiederverwendbare Formate für verschiedene Segmente",
+                    "Bessere Verbindung von Content und Conversion"
+                ],
+                benefitsEn:
+                [
+                    "Stronger open and click rates through better hooks",
+                    "More consistent newsletter series with clear flow",
+                    "Reusable formats for different segments",
+                    "Better connection between content and conversion"
+                ],
+                useCasesDe:
+                [
+                    "Betreffzeilen für B2B-Newsletter entwickeln",
+                    "Wöchentliche Content-Mailings strukturieren",
+                    "Launch-Newsletter für neue Features schreiben",
+                    "Segmentierte Newsletter für verschiedene Zielgruppen erstellen",
+                    "Reaktivierungs-Mails für inaktive Abonnenten formulieren"
+                ],
+                useCasesEn:
+                [
+                    "Develop subject lines for B2B newsletters",
+                    "Structure weekly content mailings",
+                    "Write launch newsletters for new features",
+                    "Create segmented newsletters for different audiences",
+                    "Draft reactivation emails for inactive subscribers"
+                ],
+                examplePromptsDe:
+                [
+                    "Schreibe einen Newsletter für SaaS-Kundinnen über ein neues Analytics-Feature mit klarem CTA.",
+                    "Erstelle zehn Betreffzeilen-Varianten für einen Creator-Newsletter zum Thema AI Productivity.",
+                    "Baue eine 4-teilige Willkommenssequenz für neue Newsletter-Abonnenten.",
+                    "Formuliere eine Reaktivierungs-Mail für inaktive Leser mit wertorientiertem Angebot."
+                ],
+                examplePromptsEn:
+                [
+                    "Write a newsletter for SaaS customers about a new analytics feature with a clear CTA.",
+                    "Create ten subject line variants for a creator newsletter about AI productivity.",
+                    "Build a four-part welcome sequence for new newsletter subscribers.",
+                    "Draft a reactivation email for inactive readers using a value-driven offer."
+                ],
+                relatedThemeKeys: ["email", "marketing", "seo", "linkedin-b2b"])
         ];
     }
 

@@ -10,25 +10,36 @@
 @inject IJSRuntime JsRuntime
 @inject NavigationManager Navigation
 
-<PageTitle>@L["PageTitle_Optimizer"]</PageTitle>
+<PageTitle>@OptimizerPageTitle</PageTitle>
 <HeadContent>
+    <meta name="application-name" content="PromptForge" />
     <meta name="description" content="@OptimizerMetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="@L["PageTitle_Optimizer"]" />
+    <meta property="og:title" content="@OptimizerPageTitle" />
     <meta property="og:description" content="@OptimizerMetaDescription" />
+    <meta property="og:site_name" content="PromptForge" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="@L["PageTitle_Optimizer"]" />
+    <meta name="twitter:title" content="@OptimizerPageTitle" />
     <meta name="twitter:description" content="@OptimizerMetaDescription" />
     <link rel="canonical" href="@CanonicalUrl" />
     <link rel="alternate" hreflang="de" href="@GermanUrl" />
     <link rel="alternate" hreflang="en" href="@EnglishUrl" />
     <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
     <script type="application/ld+json">@((MarkupString)OptimizerJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)OptimizerBreadcrumbJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)OptimizerHowToJsonLd)</script>
 </HeadContent>
+
+<nav class="mb-3" aria-label="breadcrumb">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PromptForge</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@OptimizerPageTitle</li>
+    </ol>
+</nav>
 
 <div class="row g-4">
     <div class="col-xl-5">
@@ -155,6 +166,45 @@
     </div>
 </div>
 
+<section class="mt-4" aria-labelledby="optimizer-benefits-title">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <h2 id="optimizer-benefits-title" class="h4 mb-2">@OptimizerBenefitsTitle</h2>
+            <p class="text-secondary mb-3">@OptimizerBenefitsIntro</p>
+            <div class="row g-3">
+                @foreach (var benefit in OptimizerBenefits)
+                {
+                    <div class="col-md-4">
+                        <div class="border rounded-3 h-100 p-3">
+                            <p class="mb-0">@benefit</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mt-4" aria-labelledby="optimizer-howto-title">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <h2 id="optimizer-howto-title" class="h4 mb-2">@OptimizerHowToTitle</h2>
+            <p class="text-secondary mb-3">@OptimizerHowToIntro</p>
+            <ol class="mb-4">
+                @foreach (var step in OptimizerHowToSteps.Select((text, index) => new { text, index }))
+                {
+                    <li id="@($"optimizer-step-{step.index + 1}")" class="mb-2">@step.text</li>
+                }
+            </ol>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-secondary" href="@GeneratorPath">@ContextGeneratorCta</a>
+                <a class="btn btn-outline-secondary" href="@PresetsPath">@ContextPresetsCta</a>
+                <a class="btn btn-outline-secondary" href="@AppRoutes.FaqPathForCulture(CurrentLanguage)">@OptimizerRelatedFaqLabel</a>
+            </div>
+        </div>
+    </div>
+</section>
+
 @code {
     [SupplyParameterFromQuery(Name = "history")]
     public Guid? HistoryId { get; set; }
@@ -176,11 +226,49 @@
         : "Direct access to matching landing pages and presets for your optimizer context.";
     private string ContextPresetsCta => IsGerman ? "Preset-Bibliothek" : "Preset library";
     private string ContextGeneratorCta => IsGerman ? "Zum Generator" : "Open generator";
+    private string OptimizerPageTitle => IsGerman
+        ? "Prompt Optimizer für bessere KI-Prompts | PromptForge"
+        : "Prompt Optimizer for Better AI Prompts | PromptForge";
+    private string OptimizerBenefitsTitle => IsGerman ? "Warum der Prompt Optimizer nützlich ist" : "Why the prompt optimizer is useful";
+    private string OptimizerBenefitsIntro => IsGerman
+        ? "Die Seite ergänzt dünne Ausgangsprompts um klarere Ziele, robustere Struktur und kontextgerechte Qualitätsregeln."
+        : "This page upgrades thin draft prompts with clearer goals, stronger structure, and context-aware quality rules.";
+    private IReadOnlyList<string> OptimizerBenefits => IsGerman
+        ?
+        [
+            "Bessere Zieldefinition und präzisere Arbeitsanweisungen für KI-Antworten.",
+            "Kontextabhängige Überarbeitung für Business, Social Media, Politik, Hochschule und Coding.",
+            "Mehr Nachvollziehbarkeit durch optionale Hinweise, warum der Prompt verbessert wurde."
+        ]
+        :
+        [
+            "Better objective definition and more precise instructions for AI responses.",
+            "Context-aware revision for business, social media, politics, university, and coding use cases.",
+            "More transparency through optional summaries of why the prompt improved."
+        ];
+    private string OptimizerHowToTitle => IsGerman ? "So optimierst du bestehende Prompts" : "How to optimize existing prompts";
+    private string OptimizerHowToIntro => IsGerman
+        ? "Mit diesen drei Schritten verbesserst du bestehende KI-Prompts systematisch und wiederholbar."
+        : "Use these three steps to improve existing AI prompts systematically and repeatedly.";
+    private IReadOnlyList<string> OptimizerHowToSteps => IsGerman
+        ?
+        [
+            "Füge deinen vorhandenen Prompt vollständig ein und wähle die Zielsprache.",
+            "Setze den passenden Kontext, damit Stil, Präzision und Qualität richtig priorisiert werden.",
+            "Vergleiche den optimierten Prompt mit der Ausgangsversion und übernimm die verbesserte Struktur direkt in deinen Workflow."
+        ]
+        :
+        [
+            "Paste your existing prompt in full and select the target language.",
+            "Choose the right context so tone, precision, and quality priorities are aligned correctly.",
+            "Compare the optimized prompt with the original and reuse the improved structure directly in your workflow."
+        ];
+    private string OptimizerRelatedFaqLabel => IsGerman ? "FAQ öffnen" : "Open FAQ";
     private string OptimizerProcessingButtonLabel => IsGerman ? "KI optimiert Prompt..." : "AI is optimizing...";
     private string OptimizerProcessingHint => IsGerman ? "Die KI verbessert gerade Zieldefinition, Struktur und Ausgabeformat." : "AI is currently improving goal definition, structure, and output format.";
     private string OptimizerMetaDescription => CurrentLanguage.Equals("de", StringComparison.OrdinalIgnoreCase)
-        ? "Optimiere bestehende Prompts mit klarerer Zieldefinition, Struktur und kontextabhängigen Qualitätsregeln."
-        : "Optimize existing prompts with clearer goals, stronger structure, and context-aware quality rules.";
+        ? "Optimiere bestehende KI-Prompts mit klarerer Zieldefinition, robusterer Struktur und kontextabhängigen Qualitätsregeln für bessere Ergebnisse."
+        : "Optimize existing AI prompts with clearer objectives, stronger structure, and context-aware quality rules for better results.";
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
     private string LocalizedOptimizerPath => AppRoutes.OptimizerPathForCulture(CurrentLanguage);
@@ -197,7 +285,7 @@
             new
             {
                 @type = "WebPage",
-                name = L["PageTitle_Optimizer"].Value,
+                name = OptimizerPageTitle,
                 description = OptimizerMetaDescription,
                 url = CanonicalUrl,
                 inLanguage = CurrentLanguage
@@ -212,6 +300,34 @@
                 description = OptimizerMetaDescription
             }
         }
+    });
+    private string OptimizerBreadcrumbJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "BreadcrumbList",
+        itemListElement = new object[]
+        {
+            new { @type = "ListItem", position = 1, name = "PromptForge", item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage)) },
+            new { @type = "ListItem", position = 2, name = OptimizerPageTitle, item = CanonicalUrl }
+        }
+    });
+    private string OptimizerHowToJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "HowTo",
+        name = OptimizerHowToTitle,
+        description = OptimizerHowToIntro,
+        inLanguage = CurrentLanguage,
+        step = OptimizerHowToSteps
+            .Select((step, index) => new
+            {
+                @type = "HowToStep",
+                position = index + 1,
+                name = step,
+                text = step,
+                url = CanonicalUrl + $"#optimizer-step-{index + 1}"
+            })
+            .ToArray()
     });
 
     protected override async Task OnInitializedAsync()

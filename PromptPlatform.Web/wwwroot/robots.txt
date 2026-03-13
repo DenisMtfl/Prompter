@@ -9,9 +9,11 @@ Disallow: /health
 Disallow: /monitor
 Disallow: /rum
 Disallow: /analytics
+Disallow: /admin
 Disallow: /culture/
 Disallow: /*?*
 Allow: /
+Sitemap: /sitemap.xml
 
 User-agent: GPTBot
 Disallow: /de/history
@@ -24,6 +26,7 @@ Disallow: /health
 Disallow: /monitor
 Disallow: /rum
 Disallow: /analytics
+Disallow: /admin
 Disallow: /culture/
 Disallow: /*?*
 Allow: /
@@ -39,6 +42,7 @@ Disallow: /health
 Disallow: /monitor
 Disallow: /rum
 Disallow: /analytics
+Disallow: /admin
 Disallow: /culture/
 Disallow: /*?*
 Allow: /
@@ -54,6 +58,7 @@ Disallow: /health
 Disallow: /monitor
 Disallow: /rum
 Disallow: /analytics
+Disallow: /admin
 Disallow: /culture/
 Disallow: /*?*
 Allow: /
@@ -69,6 +74,7 @@ Disallow: /health
 Disallow: /monitor
 Disallow: /rum
 Disallow: /analytics
+Disallow: /admin
 Disallow: /culture/
 Disallow: /*?*
 Allow: /
@@ -84,6 +90,7 @@ Disallow: /health
 Disallow: /monitor
 Disallow: /rum
 Disallow: /analytics
+Disallow: /admin
 Disallow: /culture/
 Disallow: /*?*
 Allow: /

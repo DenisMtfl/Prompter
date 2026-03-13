@@ -10,25 +10,35 @@
 @inject IJSRuntime JsRuntime
 @inject NavigationManager Navigation
 
-<PageTitle>@L["PageTitle_Presets"]</PageTitle>
+<PageTitle>@PresetsTitle</PageTitle>
 <HeadContent>
+    <meta name="application-name" content="PromptForge" />
     <meta name="description" content="@PresetsMetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="@L["PageTitle_Presets"]" />
+    <meta property="og:title" content="@PresetsTitle" />
     <meta property="og:description" content="@PresetsMetaDescription" />
+    <meta property="og:site_name" content="PromptForge" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="@L["PageTitle_Presets"]" />
+    <meta name="twitter:title" content="@PresetsTitle" />
     <meta name="twitter:description" content="@PresetsMetaDescription" />
     <link rel="canonical" href="@CanonicalUrl" />
     <link rel="alternate" hreflang="de" href="@GermanUrl" />
     <link rel="alternate" hreflang="en" href="@EnglishUrl" />
     <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
     <script type="application/ld+json">@((MarkupString)PresetsJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)PresetDiscoveryJsonLd)</script>
 </HeadContent>
+
+<nav class="mb-3" aria-label="breadcrumb">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PromptForge</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@PresetsTitle</li>
+    </ol>
+</nav>
 
 <section class="mb-4">
     <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
@@ -251,9 +261,12 @@
     private string ExampleInputLabel => IsGerman ? "Beispiel-Eingabe" : "Example input";
     private string ComplexityLabel => IsGerman ? "Komplexität" : "Complexity";
     private string LoadingMoreLabel => IsGerman ? "Weitere Presets werden geladen..." : "Loading more presets...";
+    private string PresetsTitle => IsGerman
+        ? "KI Prompt Presets und Vorlagen | PromptForge"
+        : "AI Prompt Presets and Templates | PromptForge";
     private string PresetsMetaDescription => IsGerman
-        ? "Durchsuchbare Preset-Bibliothek mit Filtern nach Bereich, Plattform und Unterkategorie inklusive direkter Generator-Übernahme."
-        : "Searchable preset library with filters by domain, platform, and subcategory plus direct generator handoff.";
+        ? "Durchsuchbare Bibliothek für KI Prompt Presets und Vorlagen mit Filtern nach Kategorie, Plattform und Unterkategorie sowie direkter Generator-Übernahme."
+        : "Searchable library of AI prompt presets and templates with filters by category, platform, and subcategory plus direct generator handoff.";
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string LocalizedPresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
     private string CanonicalUrl => ToAbsolute(LocalizedPresetsPath);
@@ -267,7 +280,7 @@
             new
             {
                 @type = "CollectionPage",
-                name = L["PageTitle_Presets"].Value,
+                name = PresetsTitle,
                 description = PresetsMetaDescription,
                 url = CanonicalUrl,
                 inLanguage = CurrentLanguage
@@ -278,10 +291,25 @@
                 itemListElement = new object[]
                 {
                     new { @type = "ListItem", position = 1, name = "PromptForge", item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage)) },
-                    new { @type = "ListItem", position = 2, name = L["PageTitle_Presets"].Value, item = CanonicalUrl }
+                    new { @type = "ListItem", position = 2, name = PresetsTitle, item = CanonicalUrl }
                 }
             }
         }
+    });
+    private string PresetDiscoveryJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "ItemList",
+        name = ClusterNavigationTitle,
+        itemListElement = ClusterPages
+            .Select((page, index) => new
+            {
+                @type = "ListItem",
+                position = index + 1,
+                name = page.Title,
+                url = ToAbsolute(page.Path)
+            })
+            .ToArray()
     });
 
     private IReadOnlyList<string> AvailableSubcategories => PresetsCollection

@@ -8,13 +8,15 @@
 @inject IExperimentService ExperimentService
 @inject NavigationManager Navigation
 
-<PageTitle>@L["PageTitle_Landing"]</PageTitle>
+<PageTitle>@HomeTitle</PageTitle>
 <HeadContent>
+    <meta name="application-name" content="PromptForge" />
     <meta name="description" content="@HomeMetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="@HomeTitle" />
     <meta property="og:description" content="@HomeMetaDescription" />
+    <meta property="og:site_name" content="PromptForge" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
@@ -26,6 +28,7 @@
     <link rel="alternate" hreflang="en" href="@EnglishHomeUrl" />
     <link rel="alternate" hreflang="x-default" href="@EnglishHomeUrl" />
     <script type="application/ld+json">@((MarkupString)HomeJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)HomeNavigationJsonLd)</script>
 </HeadContent>
 
 <div class="landing-page">
@@ -103,6 +106,57 @@
         </div>
     </section>
 
+    @if (FeaturedPresets.Count > 0)
+    {
+        <section class="mb-5 landing-section" aria-labelledby="featured-presets-title">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+                <div>
+                    <h2 id="featured-presets-title" class="h3 mb-1">@FeaturedPresetsTitle</h2>
+                    <p class="text-secondary mb-0">@FeaturedPresetsSubtitle</p>
+                </div>
+                <a class="link-secondary text-decoration-none"
+                   href="@PresetsPath"
+                   data-track="landing.featured-presets.browse"
+                   data-track-context="@CurrentLanguage">@ClusterAction</a>
+            </div>
+
+            <div class="row g-3">
+                @foreach (var preset in FeaturedPresets)
+                {
+                    var landingPath = GetCategoryLandingPath(preset);
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card border-0 shadow-sm h-100 feature-card-modern">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                    <h3 class="h5 mb-0">@preset.GetTitle(CurrentLanguage)</h3>
+                                    <span class="badge rounded-pill text-bg-light border">@GetCategoryLabel(preset.Category)</span>
+                                </div>
+                                <p class="text-secondary small">@preset.GetDescription(CurrentLanguage)</p>
+                                <div class="small text-secondary mb-3">
+                                    @preset.GetSubcategory(CurrentLanguage) · @preset.DefaultPlatform
+                                </div>
+                                <div class="mt-auto d-flex gap-2 flex-wrap">
+                                    <a class="btn btn-sm btn-primary"
+                                       href="@($"{GeneratorPath}?preset={preset.Id}")"
+                                       data-track="landing.featured-presets.use"
+                                       data-track-context="@preset.Category">@FeaturedPresetUseLabel</a>
+                                    @if (!string.IsNullOrWhiteSpace(landingPath))
+                                    {
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                           href="@landingPath"
+                                           data-track="landing.featured-presets.landing"
+                                           data-track-context="@preset.Category">@FeaturedPresetLandingLabel</a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
     <section class="mb-5 landing-section">
         <h2 class="h3 mb-3">@L["Landing_Features_Title"]</h2>
         <div class="row g-3">
@@ -164,6 +218,7 @@
 
 @code {
     private IReadOnlyList<SeoLandingPageLinkViewModel> ClusterPages { get; set; } = [];
+    private IReadOnlyList<PromptPreset> FeaturedPresets { get; set; } = [];
 
     private static readonly IReadOnlyList<(string TitleKey, string DescriptionKey)> FeatureCards =
     [
@@ -185,6 +240,12 @@
     private string ClusterAction => IsGerman ? "Alle Presets durchsuchen" : "Browse all presets";
     private string ClusterPageButton => IsGerman ? "Landingpage" : "Landing page";
     private string ClusterPresetsButton => IsGerman ? "Presets" : "Presets";
+    private string FeaturedPresetsTitle => IsGerman ? "Beliebte Presets als SEO-Einstieg" : "Popular presets as SEO entry points";
+    private string FeaturedPresetsSubtitle => IsGerman
+        ? "Diese kuratierten Presets verbinden organische Einstiegsseiten direkt mit konkreten Generator-Workflows."
+        : "These curated presets connect organic entry pages directly with concrete generator workflows.";
+    private string FeaturedPresetUseLabel => IsGerman ? "Preset starten" : "Start preset";
+    private string FeaturedPresetLandingLabel => IsGerman ? "Themenseite" : "Topic page";
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string OptimizerPath => AppRoutes.OptimizerPathForCulture(CurrentLanguage);
     private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
@@ -200,10 +261,12 @@
     private string PrimaryCtaLabel => HeroExperimentVariant == "B"
         ? (IsGerman ? "Jetzt Prompt erstellen" : "Create prompt now")
         : L["Landing_CtaPrimary"];
-    private string HomeTitle => L["PageTitle_Landing"];
+    private string HomeTitle => IsGerman
+        ? "KI Prompt Generator, Optimizer & Presets | PromptForge"
+        : "AI Prompt Generator, Optimizer & Presets | PromptForge";
     private string HomeMetaDescription => IsGerman
-        ? "PromptForge: KI-Prompt-Generator, Optimizer und Preset-Bibliothek mit skalierbaren SEO-Themenclustern."
-        : "PromptForge: AI prompt generator, optimizer, and preset library with scalable SEO topic clusters.";
+        ? "PromptForge bündelt KI Prompt Generator, Prompt Optimizer und durchsuchbare Presets mit klaren Themenclustern für bessere organische Sichtbarkeit."
+        : "PromptForge combines an AI prompt generator, prompt optimizer, and searchable presets with clear topic clusters for stronger organic visibility.";
     private int TotalPresetCount { get; set; }
     private string HeroPresetCountLabel => IsGerman
         ? $"{TotalPresetCount.ToString("N0", CultureInfo.CurrentCulture)} Presets verfügbar"
@@ -218,10 +281,22 @@
         {
             new
             {
+                @type = "Organization",
+                name = "PromptForge",
+                url = ToAbsolute("/"),
+                sameAs = Array.Empty<string>()
+            },
+            new
+            {
                 @type = "WebSite",
                 name = "PromptForge",
                 url = ToAbsolute("/"),
-                inLanguage = new[] { "de", "en" }
+                inLanguage = new[] { "de", "en" },
+                publisher = new
+                {
+                    @type = "Organization",
+                    name = "PromptForge"
+                }
             },
             new
             {
@@ -232,7 +307,46 @@
                 offers = new { @type = "Offer", price = "0", priceCurrency = "USD" },
                 url = CanonicalUrl,
                 description = HomeMetaDescription
+            },
+            new
+            {
+                @type = "ItemList",
+                name = FeaturedPresetsTitle,
+                itemListElement = FeaturedPresets
+                    .Select((preset, index) => new
+                    {
+                        @type = "ListItem",
+                        position = index + 1,
+                        name = preset.GetTitle(CurrentLanguage),
+                        url = ToAbsolute($"{GeneratorPath}?preset={preset.Id}")
+                    })
+                    .ToArray()
             }
+        }
+    });
+    private string HomeNavigationJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @graph = new object[]
+        {
+            new
+            {
+                @type = "ItemList",
+                name = ClusterTitle,
+                itemListElement = ClusterPages
+                    .Select((page, index) => new
+                    {
+                        @type = "ListItem",
+                        position = index + 1,
+                        name = page.Title,
+                        url = ToAbsolute(page.Path)
+                    })
+                    .ToArray()
+            },
+            new { @type = "SiteNavigationElement", name = HomeTitle, url = CanonicalUrl },
+            new { @type = "SiteNavigationElement", name = L["PageTitle_Presets"].Value, url = ToAbsolute(PresetsPath) },
+            new { @type = "SiteNavigationElement", name = L["PageTitle_Faq"].Value, url = ToAbsolute(FaqPath) },
+            new { @type = "SiteNavigationElement", name = L["PageTitle_Generator"].Value, url = ToAbsolute(GeneratorPath) }
         }
     });
 
@@ -240,8 +354,20 @@
     {
         HeroExperimentVariant = ExperimentService.ResolveVariant(HeroExperimentKey);
         ClusterPages = SeoLandingPageService.GetClusterPages(CurrentLanguage);
-        TotalPresetCount = (await PresetService.GetAllAsync()).Count;
+        var presets = await PresetService.GetAllAsync();
+        TotalPresetCount = presets.Count;
+        FeaturedPresets = presets
+            .OrderByDescending(x => x.PopularityScore)
+            .ThenBy(x => x.GetTitle(CurrentLanguage), StringComparer.CurrentCultureIgnoreCase)
+            .Take(6)
+            .ToList();
     }
+
+    private string GetCategoryLabel(PresetCategory category)
+        => CategoryLabelResolver.Resolve(category.ToString(), L);
+
+    private string? GetCategoryLandingPath(PromptPreset preset)
+        => SeoLandingPageService.GetCategoryLandingPath(CurrentLanguage, preset.Category);
 
     private string ToAbsolute(string relativePath)
     {

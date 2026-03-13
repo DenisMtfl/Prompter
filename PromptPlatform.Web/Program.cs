@@ -1,7 +1,11 @@
 using System.Globalization;
 using System.IO.Compression;
+using System.Net;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
@@ -19,6 +23,11 @@ using PromptPlatform.Web.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+});
+
 var supportedCultureCodes = new[] { "de", "en" };
 var supportedCultures = supportedCultureCodes.Select(x => new CultureInfo(x)).ToList();
 
@@ -35,6 +44,40 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 builder.Services.Configure<HealthThresholdOptions>(builder.Configuration.GetSection("HealthThresholds"));
 builder.Services.Configure<WebVitalsOptions>(builder.Configuration.GetSection("WebVitals"));
 builder.Services.Configure<GrowthAnalyticsOptions>(builder.Configuration.GetSection("GrowthAnalytics"));
+builder.Services.Configure<AdminAuthenticationOptions>(builder.Configuration.GetSection(AdminAuthenticationOptions.SectionName));
+builder.Services.Configure<SupabasePresetCatalogOptions>(builder.Configuration.GetSection(SupabasePresetCatalogOptions.SectionName));
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = AppRoutes.AdminLoginPath;
+        options.AccessDeniedPath = AppRoutes.AdminLoginPath;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.Name = "PromptForge.Admin";
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(12);
+    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AdminAuthenticationOptions.PolicyName, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole(AdminAuthenticationOptions.RoleName);
+    });
+});
+builder.Services.AddAntiforgery(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+    options.SuppressXFrameOptionsHeader = true;
+});
 
 builder.Services.AddHttpLogging(options =>
 {
@@ -119,6 +162,18 @@ builder.Services.AddRateLimiter(options =>
             AutoReplenishment = true
         });
     });
+
+    options.AddPolicy("admin-auth", httpContext =>
+    {
+        var key = GetRateLimitKey(httpContext);
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(5),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
 });
 
 builder.Services.AddHealthChecks()
@@ -129,7 +184,21 @@ builder.Services.AddHealthChecks()
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddScoped<IPresetService, PresetService>();
+builder.Services.AddHttpClient(SupabasePresetService.HttpClientName);
+builder.Services.AddSingleton<PresetService>();
+builder.Services.AddSingleton<SupabasePresetService>();
+builder.Services.AddSingleton<SupabaseAdminAuthService>();
+builder.Services.AddSingleton<IAdminPresetService, SupabaseAdminPresetService>();
+builder.Services.AddSingleton<IPresetService>(serviceProvider =>
+{
+    var options = builder.Configuration
+        .GetSection(SupabasePresetCatalogOptions.SectionName)
+        .Get<SupabasePresetCatalogOptions>();
+
+    return SupabasePresetService.IsConfigured(options)
+        ? serviceProvider.GetRequiredService<SupabasePresetService>()
+        : serviceProvider.GetRequiredService<PresetService>();
+});
 builder.Services.AddScoped<IPromptGenerationService, PromptGenerationService>();
 builder.Services.AddScoped<IPromptOptimizerService, PromptOptimizerService>();
 builder.Services.AddScoped<IUserLibraryService, UserLibraryService>();
@@ -143,6 +212,17 @@ builder.Services.AddScoped<IExperimentService, ExperimentService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+
+if (app.Environment.IsProduction())
+{
+    var allowedHosts = app.Configuration["AllowedHosts"];
+    if (string.IsNullOrWhiteSpace(allowedHosts)
+        || allowedHosts.Contains('*')
+        || allowedHosts.Contains("__SET_PRODUCTION_HOSTS__", StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException("AllowedHosts must be set to the production domains before go-live.");
+    }
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -172,6 +252,8 @@ app.UseRateLimiter();
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 app.Use(async (context, next) =>
 {
@@ -200,13 +282,13 @@ app.Use(async (context, next) =>
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("live"),
-    ResponseWriter = WriteHealthResponse
+    ResponseWriter = (context, report) => WriteHealthResponse(context, report, app.Environment)
 });
 
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready"),
-    ResponseWriter = WriteHealthResponse
+    ResponseWriter = (context, report) => WriteHealthResponse(context, report, app.Environment)
 });
 
 app.MapGet("/culture/set", (HttpContext context, string culture, string? returnUrl, ISeoLandingContentRepository seoContentRepository) =>
@@ -222,8 +304,9 @@ app.MapGet("/culture/set", (HttpContext context, string culture, string? returnU
         {
             Expires = DateTimeOffset.UtcNow.AddYears(1),
             IsEssential = true,
-            HttpOnly = false,
+            HttpOnly = true,
             SameSite = SameSiteMode.Lax,
+            Secure = !app.Environment.IsDevelopment() || context.Request.IsHttps,
             Path = "/"
         });
 
@@ -231,6 +314,52 @@ app.MapGet("/culture/set", (HttpContext context, string culture, string? returnU
 
     return Results.LocalRedirect(target);
 }).RequireRateLimiting("culture-switch");
+
+app.MapPost("/admin/sign-in", async (HttpContext context, SupabaseAdminAuthService adminAuthService) =>
+{
+    var form = await context.Request.ReadFormAsync();
+    var email = form["email"].ToString();
+    var password = form["password"].ToString();
+    var returnUrl = ResolveAdminReturnUrl(form["returnUrl"].ToString());
+    var result = await adminAuthService.SignInAsync(email, password, context.RequestAborted);
+
+    if (result.IsNotConfigured)
+    {
+        return Results.LocalRedirect(BuildAdminLoginRedirect("not-configured", returnUrl));
+    }
+
+    if (result.IsForbidden)
+    {
+        return Results.LocalRedirect(BuildAdminLoginRedirect("forbidden", returnUrl));
+    }
+
+    if (!result.Success || string.IsNullOrWhiteSpace(result.Email) || string.IsNullOrWhiteSpace(result.UserId))
+    {
+        return Results.LocalRedirect(BuildAdminLoginRedirect("invalid", returnUrl));
+    }
+
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.NameIdentifier, result.UserId),
+        new Claim(ClaimTypes.Name, result.Email),
+        new Claim(ClaimTypes.Email, result.Email),
+        new Claim(ClaimTypes.Role, AdminAuthenticationOptions.RoleName)
+    };
+
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    var principal = new ClaimsPrincipal(identity);
+
+    await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+    return Results.LocalRedirect(returnUrl);
+}).RequireRateLimiting("admin-auth");
+
+app.MapPost("/admin/sign-out", async (HttpContext context) =>
+{
+    var form = await context.Request.ReadFormAsync();
+    var returnUrl = ResolveAdminReturnUrl(form["returnUrl"].ToString());
+    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.LocalRedirect(returnUrl);
+}).RequireAuthorization(AdminAuthenticationOptions.PolicyName);
 
 app.MapPost("/analytics/events", (HttpContext context, GrowthEventIngestRequest payload, IGrowthAnalyticsService analytics, IOptions<GrowthAnalyticsOptions> options) =>
 {
@@ -260,7 +389,7 @@ app.MapPost("/rum/vitals", (HttpContext context, WebVitalsIngestRequest payload,
 
 app.MapGet("/monitor/web-vitals", (HttpContext context, IWebVitalsTelemetryService telemetry, IOptions<WebVitalsOptions> options) =>
 {
-    if (!options.Value.DashboardEnabled)
+    if (!CanAccessDashboard(context, app.Environment, options.Value.DashboardEnabled))
     {
         return Results.NotFound();
     }
@@ -271,7 +400,7 @@ app.MapGet("/monitor/web-vitals", (HttpContext context, IWebVitalsTelemetryServi
 
 app.MapGet("/monitor/growth", (HttpContext context, IGrowthAnalyticsService analytics, IOptions<GrowthAnalyticsOptions> options) =>
 {
-    if (!options.Value.DashboardEnabled)
+    if (!CanAccessDashboard(context, app.Environment, options.Value.DashboardEnabled))
     {
         return Results.NotFound();
     }
@@ -282,7 +411,7 @@ app.MapGet("/monitor/growth", (HttpContext context, IGrowthAnalyticsService anal
 
 app.MapGet("/monitor/content-ops", (HttpContext context, IContentOpsService contentOps, IOptions<GrowthAnalyticsOptions> options) =>
 {
-    if (!options.Value.DashboardEnabled)
+    if (!CanAccessDashboard(context, app.Environment, options.Value.DashboardEnabled))
     {
         return Results.NotFound();
     }
@@ -420,6 +549,25 @@ static string ResolveLocalizedReturnUrl(string? returnUrl, string targetCulture,
     return $"/{string.Join('/', segments)}{suffixPart}";
 }
 
+static string ResolveAdminReturnUrl(string? returnUrl)
+{
+    if (string.IsNullOrWhiteSpace(returnUrl) || !Uri.IsWellFormedUriString(returnUrl, UriKind.Relative))
+    {
+        return AppRoutes.AdminPresetCreatePath;
+    }
+
+    var trimmed = returnUrl.Trim();
+    if (!trimmed.StartsWith("/", StringComparison.Ordinal) || trimmed.StartsWith("//", StringComparison.Ordinal))
+    {
+        return AppRoutes.AdminPresetCreatePath;
+    }
+
+    return trimmed;
+}
+
+static string BuildAdminLoginRedirect(string error, string returnUrl)
+    => $"{AppRoutes.AdminLoginPath}?error={Uri.EscapeDataString(error)}&returnUrl={Uri.EscapeDataString(ResolveAdminReturnUrl(returnUrl))}";
+
 static bool IsPrivateNoIndexPath(PathString path)
 {
     var value = path.Value?.ToLowerInvariant() ?? string.Empty;
@@ -433,6 +581,7 @@ static bool IsPrivateNoIndexPath(PathString path)
            || value.StartsWith("/monitor", StringComparison.Ordinal)
            || value.StartsWith("/rum", StringComparison.Ordinal)
            || value.StartsWith("/analytics", StringComparison.Ordinal)
+           || value.StartsWith("/admin", StringComparison.Ordinal)
            || value is "/history" or "/favorites" or "/de/history" or "/en/history" or "/de/favorites" or "/en/favorites";
 }
 
@@ -611,6 +760,34 @@ static string GetRateLimitKey(HttpContext context)
     return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 }
 
+static bool CanAccessDashboard(HttpContext context, IWebHostEnvironment environment, bool dashboardEnabled)
+{
+    if (!dashboardEnabled)
+    {
+        return false;
+    }
+
+    return environment.IsDevelopment() || IsLocalRequest(context);
+}
+
+static bool IsLocalRequest(HttpContext context)
+{
+    var remoteIp = context.Connection.RemoteIpAddress;
+    var localIp = context.Connection.LocalIpAddress;
+
+    if (remoteIp is null)
+    {
+        return false;
+    }
+
+    if (IPAddress.IsLoopback(remoteIp))
+    {
+        return true;
+    }
+
+    return localIp is not null && remoteIp.Equals(localIp);
+}
+
 static void ApplyPublicCacheHeaders(HttpContext context, TimeSpan duration)
 {
     var seconds = Math.Max(60, (int)duration.TotalSeconds);
@@ -618,10 +795,24 @@ static void ApplyPublicCacheHeaders(HttpContext context, TimeSpan duration)
     context.Response.Headers["Vary"] = "Accept-Encoding";
 }
 
-static Task WriteHealthResponse(HttpContext context, HealthReport report)
+static Task WriteHealthResponse(HttpContext context, HealthReport report, IWebHostEnvironment environment)
 {
     context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
     context.Response.ContentType = "application/json; charset=utf-8";
+
+    if (!environment.IsDevelopment())
+    {
+        var minimalPayload = new
+        {
+            status = report.Status.ToString(),
+            totalDurationMs = report.TotalDuration.TotalMilliseconds,
+            checks = report.Entries.ToDictionary(
+                x => x.Key,
+                x => x.Value.Status.ToString())
+        };
+
+        return context.Response.WriteAsJsonAsync(minimalPayload);
+    }
 
     var payload = new
     {

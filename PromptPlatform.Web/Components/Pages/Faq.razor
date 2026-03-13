@@ -8,11 +8,13 @@
 
 <PageTitle>@PageTitle</PageTitle>
 <HeadContent>
+    <meta name="application-name" content="PromptForge" />
     <meta name="description" content="@MetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="@PageTitle" />
     <meta property="og:description" content="@MetaDescription" />
+    <meta property="og:site_name" content="PromptForge" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
@@ -25,9 +27,17 @@
     <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
     <script type="application/ld+json">@((MarkupString)FaqJsonLd)</script>
     <script type="application/ld+json">@((MarkupString)BreadcrumbJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)FaqPageJsonLd)</script>
 </HeadContent>
 
 <article class="faq-page">
+    <nav class="mb-3" aria-label="breadcrumb">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PromptForge</a></li>
+            <li class="breadcrumb-item active" aria-current="page">FAQ</li>
+        </ol>
+    </nav>
+
     <section class="hero-section faq-hero rounded-4 p-4 p-lg-5 mb-4">
         <div class="row g-4 align-items-center">
             <div class="col-lg-8">
@@ -142,12 +152,12 @@
     private string EnglishUrl => ToAbsolute(AppRoutes.FaqPathForCulture("en"));
 
     private string PageTitle => IsGerman
-        ? "PromptForge - Häufige Fragen (FAQ)"
-        : "PromptForge - Frequently Asked Questions (FAQ)";
+        ? "FAQ zu Prompt Generator, Optimizer & Presets | PromptForge"
+        : "FAQ for Prompt Generator, Optimizer & Presets | PromptForge";
 
     private string MetaDescription => IsGerman
-        ? "Detaillierte FAQ zu PromptForge: Generator, Optimizer, Presets, SEO-Landingpages, Lokalisierung, Datenschutz und Skalierung."
-        : "Detailed FAQ about PromptForge: generator, optimizer, presets, SEO landing pages, localization, privacy, and scalability.";
+        ? "Detaillierte FAQ zu PromptForge mit Antworten zu Prompt Generator, Prompt Optimizer, Presets, SEO-Landingpages, Lokalisierung und Datenhaltung."
+        : "Detailed PromptForge FAQ covering the prompt generator, prompt optimizer, presets, SEO landing pages, localization, and data handling.";
 
     private string HeroBadge => IsGerman ? "Produkt- und Plattform-FAQ" : "Product and Platform FAQ";
     private string HeroTitle => IsGerman
@@ -205,6 +215,17 @@
                 item = CanonicalUrl
             }
         }
+    });
+
+    private string FaqPageJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "CollectionPage",
+        name = PageTitle,
+        description = MetaDescription,
+        url = CanonicalUrl,
+        inLanguage = CurrentLanguage,
+        significantLink = RelatedPages.Select(x => ToAbsolute(x.Path)).ToArray()
     });
 
     private static readonly IReadOnlyList<FaqSection> Sections =

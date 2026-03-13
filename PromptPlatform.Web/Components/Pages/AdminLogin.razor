@@ -1,0 +1,78 @@
+@page "/admin/login"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+
+<PageTitle>Admin Login</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+</HeadContent>
+
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h3 mb-3">Admin Login</h1>
+                <p class="text-secondary">Logge dich mit deinem Supabase-Account ein, um neue Presets direkt in Supabase anzulegen.</p>
+
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <div class="alert alert-danger">@ErrorMessage</div>
+                }
+
+                <form method="post" action="/admin/sign-in">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="returnUrl" value="@ResolvedReturnUrl" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="admin-email">E-Mail</label>
+                        <input id="admin-email" class="form-control" type="email" name="email" autocomplete="username" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="admin-password">Passwort</label>
+                        <input id="admin-password" class="form-control" type="password" name="password" autocomplete="current-password" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Als Admin einloggen</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    private string ResolvedReturnUrl => string.IsNullOrWhiteSpace(ReturnUrl)
+        ? "/admin/presets/new"
+        : ReturnUrl!;
+
+    private string? ErrorMessage => Error switch
+    {
+        "invalid" => "Login fehlgeschlagen.",
+        "forbidden" => "Dein Supabase-User hat keine Admin-Berechtigung.",
+        "not-configured" => "Admin-Login ist noch nicht konfiguriert.",
+        _ => null
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationStateTask is null)
+        {
+            return;
+        }
+
+        var state = await AuthenticationStateTask;
+        if (state.User.Identity?.IsAuthenticated == true && state.User.IsInRole(AdminAuthenticationOptions.RoleName))
+        {
+            Navigation.NavigateTo(ResolvedReturnUrl, forceLoad: true);
+        }
+    }
+}

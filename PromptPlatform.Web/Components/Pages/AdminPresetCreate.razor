@@ -1,0 +1,263 @@
+@page "/admin/presets/new"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = AdminAuthenticationOptions.PolicyName)]
+@inject IAdminPresetService AdminPresetService
+@inject NavigationManager Navigation
+
+<PageTitle>Admin · Preset erstellen</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+</HeadContent>
+
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4 flex-wrap">
+    <div>
+        <h1 class="h3 mb-1">Neues Preset erstellen</h1>
+        <p class="text-secondary mb-0">Das Preset wird direkt in den normalisierten Supabase-Katalog geschrieben.</p>
+    </div>
+    <form method="post" action="/admin/sign-out">
+        <AntiforgeryToken />
+        <input type="hidden" name="returnUrl" value="/admin/login" />
+        <button type="submit" class="btn btn-outline-secondary">Logout</button>
+    </form>
+</div>
+
+@if (!AdminPresetService.CanCreatePresets)
+{
+    <div class="alert alert-warning">
+        `SupabasePresetCatalog:ServiceRoleKey` ist noch nicht gesetzt. Ohne Service-Role-Key kann kein Preset gespeichert werden.
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(StatusMessage))
+{
+    <div class="alert @(IsSuccess ? "alert-success" : "alert-danger")">@StatusMessage</div>
+}
+
+<EditForm Model="Model" OnValidSubmit="CreatePresetAsync" FormName="admin-create-preset">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Slug</label>
+                    <InputText class="form-control" @bind-Value="Model.Slug" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Kategorie</label>
+                    <InputSelect class="form-select" @bind-Value="Model.Category">
+                        @foreach (var value in Enum.GetValues<PresetCategory>())
+                        {
+                            <option value="@value">@value</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Main Category</label>
+                    <InputSelect class="form-select" @bind-Value="Model.DefaultMainCategory">
+                        @foreach (var value in Enum.GetValues<MainCategory>())
+                        {
+                            <option value="@value">@value</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Titel DE</label>
+                    <InputText class="form-control" @bind-Value="Model.TitleDe" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Titel EN</label>
+                    <InputText class="form-control" @bind-Value="Model.TitleEn" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Subcategory DE</label>
+                    <InputText class="form-control" @bind-Value="Model.SubcategoryDe" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Subcategory EN</label>
+                    <InputText class="form-control" @bind-Value="Model.SubcategoryEn" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Beschreibung DE</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.DescriptionDe" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Beschreibung EN</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.DescriptionEn" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Defaults</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Plattform</label>
+                    <InputText class="form-control" @bind-Value="Model.DefaultPlatform" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Popularity</label>
+                    <InputNumber class="form-control" @bind-Value="Model.PopularityScore" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Tone</label>
+                    <InputSelect class="form-select" @bind-Value="Model.DefaultTone">
+                        @foreach (var value in Enum.GetValues<PromptTone>())
+                        {
+                            <option value="@value">@value</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Length</label>
+                    <InputSelect class="form-select" @bind-Value="Model.DefaultLength">
+                        @foreach (var value in Enum.GetValues<PromptLength>())
+                        {
+                            <option value="@value">@value</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Complexity</label>
+                    <InputSelect class="form-select" @bind-Value="Model.DefaultComplexityLevel">
+                        @foreach (var value in Enum.GetValues<ComplexityLevel>())
+                        {
+                            <option value="@value">@value</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Output Format</label>
+                    <InputSelect class="form-select" @bind-Value="Model.DefaultOutputFormat">
+                        @foreach (var value in Enum.GetValues<OutputFormat>())
+                        {
+                            <option value="@value">@value</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Default Topic DE</label>
+                    <InputText class="form-control" @bind-Value="Model.DefaultTopicDe" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Default Topic EN</label>
+                    <InputText class="form-control" @bind-Value="Model.DefaultTopicEn" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Target Audience DE</label>
+                    <InputText class="form-control" @bind-Value="Model.DefaultTargetAudienceDe" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Target Audience EN</label>
+                    <InputText class="form-control" @bind-Value="Model.DefaultTargetAudienceEn" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Role DE</label>
+                    <InputText class="form-control" @bind-Value="Model.DefaultRoleDe" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Role EN</label>
+                    <InputText class="form-control" @bind-Value="Model.DefaultRoleEn" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Extra Instructions DE</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.DefaultExtraInstructionsDe" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Extra Instructions EN</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.DefaultExtraInstructionsEn" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Beispiele & Tags</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Example Input DE</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.ExampleInputDe" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Example Input EN</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.ExampleInputEn" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Example Prompt DE</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.ExamplePromptDe" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Example Prompt EN</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.ExamplePromptEn" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Tags DE</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.TagsDe" />
+                    <div class="form-text">Komma, Semikolon oder Zeilenumbruch getrennt.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Tags EN</label>
+                    <InputTextArea class="form-control" @bind-Value="Model.TagsEn" />
+                    <div class="form-text">Comma, semicolon, or line break separated.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">Preset speichern</button>
+        <button type="button" class="btn btn-outline-secondary" @onclick="AutoGenerateSlug">Slug aus Titel erzeugen</button>
+    </div>
+</EditForm>
+
+@code {
+    private AdminPresetEditorModel Model { get; set; } = new();
+    private bool IsSubmitting { get; set; }
+    private bool IsSuccess { get; set; }
+    private string? StatusMessage { get; set; }
+
+    private async Task CreatePresetAsync()
+    {
+        if (!AdminPresetService.CanCreatePresets)
+        {
+            StatusMessage = "Service-Role-Key fehlt. Preset konnte nicht gespeichert werden.";
+            IsSuccess = false;
+            return;
+        }
+
+        try
+        {
+            IsSubmitting = true;
+            StatusMessage = null;
+
+            Model.Slug = SupabaseAdminPresetService.NormalizeSlug(Model.Slug);
+            var presetId = await AdminPresetService.CreateAsync(Model);
+
+            IsSuccess = true;
+            StatusMessage = $"Preset '{presetId}' wurde gespeichert.";
+            Model = new AdminPresetEditorModel();
+        }
+        catch (Exception exception)
+        {
+            IsSuccess = false;
+            StatusMessage = exception.Message;
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private void AutoGenerateSlug()
+    {
+        var source = string.IsNullOrWhiteSpace(Model.TitleEn) ? Model.TitleDe : Model.TitleEn;
+        Model.Slug = SupabaseAdminPresetService.NormalizeSlug(source);
+    }
+}

@@ -46,6 +46,19 @@
                 </ul>
 
                 <div class="d-flex align-items-center gap-2 navbar-actions">
+                    <AuthorizeView Roles="@AdminAuthenticationOptions.RoleName">
+                        <Authorized>
+                            <NavLink class="btn btn-outline-secondary btn-sm" href="@AppRoutes.AdminPresetCreatePath">Admin</NavLink>
+                            <form method="post" action="/admin/sign-out" class="d-inline">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="returnUrl" value="@LandingPath" />
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">Logout</button>
+                            </form>
+                        </Authorized>
+                        <NotAuthorized>
+                            <NavLink class="btn btn-outline-secondary btn-sm" href="@AppRoutes.AdminLoginPath">Admin Login</NavLink>
+                        </NotAuthorized>
+                    </AuthorizeView>
                     <LanguageSwitcher />
                     <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleTheme">
                         @(IsDarkTheme ? L["Theme_Dark"] : L["Theme_Light"])

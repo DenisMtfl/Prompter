@@ -24,11 +24,13 @@ else
 {
     <PageTitle>@PageModel.MetaTitle</PageTitle>
     <HeadContent>
+        <meta name="application-name" content="PromptForge" />
         <meta name="description" content="@PageModel.MetaDescription" />
         <meta name="robots" content="index,follow,max-image-preview:large" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content="@PageModel.MetaTitle" />
         <meta property="og:description" content="@PageModel.MetaDescription" />
+        <meta property="og:site_name" content="PromptForge" />
         <meta property="og:url" content="@CanonicalUrl" />
         <meta property="og:locale" content="@(PageModel.Culture == "de" ? "de_DE" : "en_US")" />
         <meta property="og:locale:alternate" content="@(PageModel.Culture == "de" ? "en_US" : "de_DE")" />
@@ -41,6 +43,7 @@ else
         <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
         <script type="application/ld+json">@((MarkupString)WebPageJsonLd)</script>
         <script type="application/ld+json">@((MarkupString)BreadcrumbJsonLd)</script>
+        <script type="application/ld+json">@((MarkupString)RelatedContentJsonLd)</script>
         @if (PageModel.FaqItems.Count > 0)
         {
             <script type="application/ld+json">@((MarkupString)FaqJsonLd)</script>
@@ -48,6 +51,13 @@ else
     </HeadContent>
 
     <article class="seo-landing">
+        <nav class="mb-3" aria-label="breadcrumb">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(ActiveCulture)">PromptForge</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@PageModel.MetaTitle</li>
+            </ol>
+        </nav>
+
         <section class="hero-section seo-hero rounded-4 p-4 p-lg-5 mb-5" aria-labelledby="seo-hero-title">
             <div class="row g-4 align-items-center">
                 <div class="col-lg-9">
@@ -307,6 +317,33 @@ else
                 text = x.Answer
             }
         }).ToArray()) ?? Array.Empty<object>()
+    });
+    private string RelatedContentJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @graph = new object[]
+        {
+            new
+            {
+                @type = "CollectionPage",
+                name = PageModel?.MetaTitle ?? string.Empty,
+                description = PageModel?.MetaDescription ?? string.Empty,
+                url = CanonicalUrl,
+                inLanguage = PageModel?.Culture ?? "de"
+            },
+            new
+            {
+                @type = "ItemList",
+                name = PageModel?.RelatedPagesTitle ?? string.Empty,
+                itemListElement = (PageModel?.RelatedPages.Select((page, index) => new
+                {
+                    @type = "ListItem",
+                    position = index + 1,
+                    name = page.Title,
+                    url = ToAbsolute(page.Path)
+                }).ToArray()) ?? Array.Empty<object>()
+            }
+        }
     });
 
     protected override async Task OnParametersSetAsync()

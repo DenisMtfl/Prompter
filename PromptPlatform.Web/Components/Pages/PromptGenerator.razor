@@ -11,25 +11,36 @@
 @inject IJSRuntime JsRuntime
 @inject NavigationManager Navigation
 
-<PageTitle>@L["PageTitle_Generator"]</PageTitle>
+<PageTitle>@GeneratorPageTitle</PageTitle>
 <HeadContent>
+    <meta name="application-name" content="PromptForge" />
     <meta name="description" content="@GeneratorMetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="@L["PageTitle_Generator"]" />
+    <meta property="og:title" content="@GeneratorPageTitle" />
     <meta property="og:description" content="@GeneratorMetaDescription" />
+    <meta property="og:site_name" content="PromptForge" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="@L["PageTitle_Generator"]" />
+    <meta name="twitter:title" content="@GeneratorPageTitle" />
     <meta name="twitter:description" content="@GeneratorMetaDescription" />
     <link rel="canonical" href="@CanonicalUrl" />
     <link rel="alternate" hreflang="de" href="@GermanUrl" />
     <link rel="alternate" hreflang="en" href="@EnglishUrl" />
     <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
     <script type="application/ld+json">@((MarkupString)GeneratorJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)GeneratorBreadcrumbJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)GeneratorHowToJsonLd)</script>
 </HeadContent>
+
+<nav class="mb-3" aria-label="breadcrumb">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PromptForge</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@GeneratorPageTitle</li>
+    </ol>
+</nav>
 
 <div class="row g-4 generator-layout">
     <div class="col-xl-6 d-flex">
@@ -282,6 +293,45 @@
     </div>
 </div>
 
+<section class="mt-4" aria-labelledby="generator-benefits-title">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <h2 id="generator-benefits-title" class="h4 mb-2">@GeneratorBenefitsTitle</h2>
+            <p class="text-secondary mb-3">@GeneratorBenefitsIntro</p>
+            <div class="row g-3">
+                @foreach (var benefit in GeneratorBenefits)
+                {
+                    <div class="col-md-4">
+                        <div class="border rounded-3 h-100 p-3">
+                            <p class="mb-0">@benefit</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mt-4" aria-labelledby="generator-howto-title">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <h2 id="generator-howto-title" class="h4 mb-2">@GeneratorHowToTitle</h2>
+            <p class="text-secondary mb-3">@GeneratorHowToIntro</p>
+            <ol class="mb-4">
+                @foreach (var step in GeneratorHowToSteps.Select((text, index) => new { text, index }))
+                {
+                    <li id="@($"step-{step.index + 1}")" class="mb-2">@step.text</li>
+                }
+            </ol>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-secondary" href="@PresetsPath">@GeneratorRelatedPresetsLabel</a>
+                <a class="btn btn-outline-secondary" href="@AppRoutes.FaqPathForCulture(CurrentLanguage)">@GeneratorRelatedFaqLabel</a>
+                <a class="btn btn-outline-secondary" href="@AppRoutes.OptimizerPathForCulture(CurrentLanguage)">@GeneratorRelatedOptimizerLabel</a>
+            </div>
+        </div>
+    </div>
+</section>
+
 @code {
     [SupplyParameterFromQuery(Name = "preset")]
     public string? PresetId { get; set; }
@@ -338,6 +388,46 @@
     private bool IsCustomRoleSelected => SelectedRoleOption.Equals(CustomRoleOptionValue, StringComparison.Ordinal);
     private string GeneratorProcessingButtonLabel => IsGerman ? "KI erstellt Prompt..." : "AI is generating...";
     private string GeneratorProcessingHint => IsGerman ? "Die KI analysiert deine Eingaben und erstellt die optimale Struktur." : "AI is analyzing your input and building the optimal structure.";
+    private string GeneratorPageTitle => IsGerman
+        ? "KI Prompt Generator für bessere Prompts | PromptForge"
+        : "AI Prompt Generator for Better Prompts | PromptForge";
+    private string GeneratorBenefitsTitle => IsGerman ? "Warum dieser KI Prompt Generator suchstark ist" : "Why this AI prompt generator is search-friendly";
+    private string GeneratorBenefitsIntro => IsGerman
+        ? "Die Seite kombiniert klar strukturierte Eingaben, interne Verlinkung und thematische Hilfestellungen, damit Nutzer und Suchmaschinen den Nutzen sofort erkennen."
+        : "This page combines structured inputs, internal linking, and thematic guidance so users and search engines can immediately understand its value.";
+    private IReadOnlyList<string> GeneratorBenefits => IsGerman
+        ?
+        [
+            "Klare Eingabefelder für Ziel, Rolle, Plattform, Format und Qualitätsniveau.",
+            "Direkter Wechsel zu passenden Landingpages und Presets für konkretere Anwendungsfälle.",
+            "Bessere Prompt-Qualität durch feste Struktur statt unpräziser Freitext-Eingaben."
+        ]
+        :
+        [
+            "Clear input fields for objective, role, platform, output format, and quality level.",
+            "Direct paths to matching landing pages and presets for more specific use cases.",
+            "Higher prompt quality through structured guidance instead of vague free-text input."
+        ];
+    private string GeneratorHowToTitle => IsGerman ? "So nutzt du den Prompt Generator effektiv" : "How to use the prompt generator effectively";
+    private string GeneratorHowToIntro => IsGerman
+        ? "Mit diesen drei Schritten erstellst du schneller hilfreiche, wiederverwendbare KI-Prompts."
+        : "Use these three steps to create helpful, reusable AI prompts faster.";
+    private IReadOnlyList<string> GeneratorHowToSteps => IsGerman
+        ?
+        [
+            "Wähle Hauptkategorie, Unterkategorie und Zielgruppe passend zu deinem Anwendungsfall.",
+            "Definiere Tonalität, Länge, Ausgabeformat und Qualitätsniveau für die gewünschte Antwort.",
+            "Starte mit einem Preset oder ergänze manuelle Hinweise, um den finalen Prompt direkt weiterzuverwenden."
+        ]
+        :
+        [
+            "Choose the main category, subcategory, and target audience that fit your use case.",
+            "Define tone, length, output format, and quality level for the response you want.",
+            "Start from a preset or add manual instructions to reuse the final prompt right away."
+        ];
+    private string GeneratorRelatedPresetsLabel => IsGerman ? "Presets entdecken" : "Explore presets";
+    private string GeneratorRelatedFaqLabel => IsGerman ? "FAQ lesen" : "Read FAQ";
+    private string GeneratorRelatedOptimizerLabel => IsGerman ? "Prompt Optimizer öffnen" : "Open prompt optimizer";
 
     private IReadOnlyList<string> AvailableSubcategoryOptions => GetSubcategoryOptions(Request.MainCategory);
     private IReadOnlyList<string> AvailableTargetAudienceOptions => GetTargetAudienceOptions(Request.MainCategory);
@@ -349,11 +439,12 @@
     private string? CurrentCategoryLandingPath
         => SeoLandingPageService.GetMainCategoryLandingPath(CurrentLanguage, Request.MainCategory);
 
+    private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
     private string CurrentCategoryPresetsPath
         => $"{AppRoutes.PresetsPathForCulture(CurrentLanguage)}?category={CategoryMappingUtility.ToPresetCategory(Request.MainCategory)}";
     private string GeneratorMetaDescription => IsGerman
-        ? "Erzeuge hochwertige, kategoriespezifische KI-Prompts mit Struktur-, Format- und Qualitätsvorgaben."
-        : "Generate high-quality, category-specific AI prompts with structure, format, and quality constraints.";
+        ? "Erzeuge hochwertige KI-Prompts mit klarer Zieldefinition, Kategorie-Logik, Formatvorgaben und direktem Zugriff auf passende Presets."
+        : "Generate high-quality AI prompts with clear objective setting, category logic, output constraints, and direct access to matching presets.";
     private string LocalizedGeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string CanonicalUrl => ToAbsolute(LocalizedGeneratorPath);
     private string GermanUrl => ToAbsolute(AppRoutes.GeneratorPathForCulture("de"));
@@ -366,7 +457,7 @@
             new
             {
                 @type = "WebPage",
-                name = L["PageTitle_Generator"].Value,
+                name = GeneratorPageTitle,
                 description = GeneratorMetaDescription,
                 url = CanonicalUrl,
                 inLanguage = CurrentLanguage
@@ -381,6 +472,34 @@
                 description = GeneratorMetaDescription
             }
         }
+    });
+    private string GeneratorBreadcrumbJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "BreadcrumbList",
+        itemListElement = new object[]
+        {
+            new { @type = "ListItem", position = 1, name = "PromptForge", item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage)) },
+            new { @type = "ListItem", position = 2, name = GeneratorPageTitle, item = CanonicalUrl }
+        }
+    });
+    private string GeneratorHowToJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "HowTo",
+        name = GeneratorHowToTitle,
+        description = GeneratorHowToIntro,
+        inLanguage = CurrentLanguage,
+        step = GeneratorHowToSteps
+            .Select((step, index) => new
+            {
+                @type = "HowToStep",
+                position = index + 1,
+                name = step,
+                text = step,
+                url = CanonicalUrl + $"#step-{index + 1}"
+            })
+            .ToArray()
     });
 
     protected override async Task OnInitializedAsync()

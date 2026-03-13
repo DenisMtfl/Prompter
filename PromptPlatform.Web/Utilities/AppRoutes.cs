@@ -8,6 +8,7 @@ public static class AppRoutes
     public const string Faq = "faq";
     public const string History = "history";
     public const string Favorites = "favorites";
+    public const string Admin = "admin";
 
     public const string HomePath = "/";
     public const string GeneratorPath = "/generator";
@@ -16,6 +17,8 @@ public static class AppRoutes
     public const string FaqPath = "/faq";
     public const string HistoryPath = "/history";
     public const string FavoritesPath = "/favorites";
+    public const string AdminLoginPath = "/admin/login";
+    public const string AdminPresetCreatePath = "/admin/presets/new";
 
     public static string HomePathForCulture(string culture)
         => $"/{NormalizeCulture(culture)}";
