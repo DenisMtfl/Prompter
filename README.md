@@ -1,4 +1,4 @@
-# PromptForge
+# PromptToMars
 
 Skalierbare, mehrsprachige Webplattform für AI Prompt Engineering auf Basis von **.NET 10**, **Blazor Web App** und **Bootstrap**.
 
@@ -106,4 +106,4 @@ Standardcheck vor Push:
 
 ```bash
 dotnet build PromptPlatform.slnx
-```
+

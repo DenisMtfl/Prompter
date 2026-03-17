@@ -8,6 +8,22 @@
     letter-spacing: 0.02em;
 }
 
+.app-navbar .brand-with-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.app-navbar .brand-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 0.45rem;
+    object-fit: cover;
+    border: 1px solid color-mix(in srgb, var(--app-navbar-brand) 18%, transparent);
+    background: color-mix(in srgb, var(--app-surface) 74%, transparent);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--app-navbar-brand) 22%, transparent);
+}
+
 .app-navbar .navbar-brand:hover {
     color: var(--app-navbar-brand);
 }
@@ -53,6 +69,11 @@
 }
 
 @media (max-width: 991.98px) {
+    .app-navbar .brand-logo {
+        width: 26px;
+        height: 26px;
+    }
+
     .app-navbar .navbar-collapse {
         padding-top: 0.75rem;
     }

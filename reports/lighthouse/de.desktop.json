@@ -1313,7 +1313,7 @@
                 "height": 266
               },
               "snippet": "<div class=\"card shadow-sm border-0 h-100 hero-facts-card\">",
-              "nodeLabel": "Warum Teams PromptForge nutzen\nStrukturierte Prompt-Workflows für viele Domänen…"
+              "nodeLabel": "Warum Teams PromptToMars nutzen\nStrukturierte Prompt-Workflows für viele Domänen…"
             },
             "score": 0.003304977074139038,
             "subItems": {
@@ -3965,7 +3965,7 @@
                     "height": 266
                   },
                   "snippet": "<div class=\"card shadow-sm border-0 h-100 hero-facts-card\">",
-                  "nodeLabel": "Warum Teams PromptForge nutzen\nStrukturierte Prompt-Workflows für viele Domänen…"
+                  "nodeLabel": "Warum Teams PromptToMars nutzen\nStrukturierte Prompt-Workflows für viele Domänen…"
                 },
                 "score": 0.003304977074139038,
                 "subItems": {
@@ -9892,3 +9892,4 @@
     }
   }
 }
+

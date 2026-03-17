@@ -463,8 +463,8 @@ public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
                     SlugDe = slugDe,
                     SlugEn = slugEn,
                     MetaTitle = Txt(
-                        $"{theme.NameDe}: {variant.MetaTailDe} | PromptForge",
-                        $"{theme.NameEn}: {variant.MetaTailEn} | PromptForge"),
+                        $"{theme.NameDe}: {variant.MetaTailDe} | PromptToMars",
+                        $"{theme.NameEn}: {variant.MetaTailEn} | PromptToMars"),
                     MetaDescription = Txt(
                         $"{theme.IntroDe} {variant.IntroTailDe} Mit Presets, Beispielen und direktem Einstieg in den Prompt Generator.",
                         $"{theme.IntroEn} {variant.IntroTailEn} Includes presets, examples, and direct access to the prompt generator."),
@@ -2531,3 +2531,5 @@ public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
         string PromptHintDe,
         string PromptHintEn);
 }
+
+

@@ -24,13 +24,13 @@ else
 {
     <PageTitle>@PageModel.MetaTitle</PageTitle>
     <HeadContent>
-        <meta name="application-name" content="PromptForge" />
+        <meta name="application-name" content="PromptToMars" />
         <meta name="description" content="@PageModel.MetaDescription" />
         <meta name="robots" content="index,follow,max-image-preview:large" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content="@PageModel.MetaTitle" />
         <meta property="og:description" content="@PageModel.MetaDescription" />
-        <meta property="og:site_name" content="PromptForge" />
+        <meta property="og:site_name" content="PromptToMars" />
         <meta property="og:url" content="@CanonicalUrl" />
         <meta property="og:locale" content="@(PageModel.Culture == "de" ? "de_DE" : "en_US")" />
         <meta property="og:locale:alternate" content="@(PageModel.Culture == "de" ? "en_US" : "de_DE")" />
@@ -55,7 +55,7 @@ else
     <article class="seo-landing">
         <nav class="mb-3" aria-label="breadcrumb">
             <ol class="breadcrumb small mb-0">
-                <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(ActiveCulture)">PromptForge</a></li>
+                <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(ActiveCulture)">PromptToMars</a></li>
                 <li class="breadcrumb-item active" aria-current="page">@PageModel.MetaTitle</li>
             </ol>
         </nav>
@@ -359,7 +359,7 @@ else
         isPartOf = new
         {
             @type = "WebSite",
-            name = "PromptForge",
+            name = "PromptToMars",
             url = ToAbsolute("/")
         }
     });
@@ -373,7 +373,7 @@ else
             {
                 @type = "ListItem",
                 position = 1,
-                name = "PromptForge",
+                name = "PromptToMars",
                 item = ToAbsolute(AppRoutes.HomePathForCulture(ActiveCulture))
             },
             new
@@ -424,10 +424,10 @@ else
         @type = "ImageObject",
         contentUrl = SiteImageUrl,
         url = SiteImageUrl,
-        creditText = "PromptForge",
+        creditText = "PromptToMars",
         acquireLicensePage = AcquireLicenseUrl,
         license = LicenseUrl,
-        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptToMars"
     });
     private string RelatedContentJsonLd => JsonSerializer.Serialize(new
     {
@@ -497,3 +497,4 @@ else
         return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
     }
 }
+

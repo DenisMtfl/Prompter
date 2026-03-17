@@ -8,13 +8,13 @@
 
 <PageTitle>@PageTitle</PageTitle>
 <HeadContent>
-    <meta name="application-name" content="PromptForge" />
+    <meta name="application-name" content="PromptToMars" />
     <meta name="description" content="@MetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="@PageTitle" />
     <meta property="og:description" content="@MetaDescription" />
-    <meta property="og:site_name" content="PromptForge" />
+    <meta property="og:site_name" content="PromptToMars" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
@@ -34,7 +34,7 @@
 <article class="faq-page">
     <nav class="mb-3" aria-label="breadcrumb">
         <ol class="breadcrumb small mb-0">
-            <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PromptForge</a></li>
+            <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PromptToMars</a></li>
             <li class="breadcrumb-item active" aria-current="page">FAQ</li>
         </ol>
     </nav>
@@ -156,8 +156,8 @@
     private string SiteImageUrl => ToAbsolute("/favicon.png");
 
     private string PageTitle => IsGerman
-        ? "FAQ zu KI Prompts, Presets & Prompt Optimizer | PromptForge"
-        : "FAQ for AI Prompts, Presets & Prompt Optimizer | PromptForge";
+        ? "FAQ zu KI Prompts, Presets & Prompt Optimizer | PromptToMars"
+        : "FAQ for AI Prompts, Presets & Prompt Optimizer | PromptToMars";
 
     private string ImageMetadataJsonLd => JsonSerializer.Serialize(new
     {
@@ -165,20 +165,20 @@
         @type = "ImageObject",
         contentUrl = SiteImageUrl,
         url = SiteImageUrl,
-        creditText = "PromptForge",
+        creditText = "PromptToMars",
         acquireLicensePage = AcquireLicenseUrl,
         license = LicenseUrl,
-        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptToMars"
     });
 
     private string MetaDescription => IsGerman
-        ? "Detaillierte FAQ zu PromptForge mit Antworten zu KI Prompt Generator, Prompt Optimizer, Prompt-Vorlagen, Presets, SEO-Landingpages, Lokalisierung und Datenhaltung."
-        : "Detailed PromptForge FAQ covering the AI prompt generator, prompt optimizer, prompt templates, presets, SEO landing pages, localization, and data handling.";
+        ? "Detaillierte FAQ zu PromptToMars mit Antworten zu KI Prompt Generator, Prompt Optimizer, Prompt-Vorlagen, Presets, SEO-Landingpages, Lokalisierung und Datenhaltung."
+        : "Detailed PromptToMars FAQ covering the AI prompt generator, prompt optimizer, prompt templates, presets, SEO landing pages, localization, and data handling.";
 
     private string HeroBadge => IsGerman ? "Produkt- und Plattform-FAQ" : "Product and Platform FAQ";
     private string HeroTitle => IsGerman
-        ? "Alles Wichtige zu PromptForge auf einen Blick"
-        : "Everything important about PromptForge in one place";
+        ? "Alles Wichtige zu PromptToMars auf einen Blick"
+        : "Everything important about PromptToMars in one place";
     private string HeroSubtitle => IsGerman
         ? "Diese FAQ beantwortet zentrale Fragen zu Funktionen, Qualität, SEO-Architektur, Datenhaltung und Erweiterbarkeit der Plattform."
         : "This FAQ answers key questions about features, quality, SEO architecture, data handling, and platform extensibility.";
@@ -220,7 +220,7 @@
             {
                 @type = "ListItem",
                 position = 1,
-                name = "PromptForge",
+                name = "PromptToMars",
                 item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage))
             },
             new
@@ -250,14 +250,14 @@
             "platform-basics",
             new("Grundlagen der Plattform", "Platform fundamentals"),
             new(
-                "Diese Fragen erklären den Kernnutzen, die Zielgruppen und die grundlegende Architektur von PromptForge.",
-                "These questions explain PromptForge core value, target audiences, and foundational architecture."),
+                "Diese Fragen erklären den Kernnutzen, die Zielgruppen und die grundlegende Architektur von PromptToMars.",
+                "These questions explain PromptToMars core value, target audiences, and foundational architecture."),
             [
                 new(
-                    new("Wofür ist PromptForge gedacht?", "What is PromptForge built for?"),
+                    new("Wofür ist PromptToMars gedacht?", "What is PromptToMars built for?"),
                     new(
-                        "PromptForge ist eine universelle Prompt-Plattform für Business, Bildung, Marketing, Politik, Coding und weitere Bereiche. Sie kombiniert Generator, Optimizer und Preset-Bibliothek, damit Teams wiederholbar hochwertige Prompts erstellen können.",
-                        "PromptForge is a universal prompt platform for business, education, marketing, politics, coding, and more. It combines generator, optimizer, and preset library so teams can produce high-quality prompts consistently.")),
+                        "PromptToMars ist eine universelle Prompt-Plattform für Business, Bildung, Marketing, Politik, Coding und weitere Bereiche. Sie kombiniert Generator, Optimizer und Preset-Bibliothek, damit Teams wiederholbar hochwertige Prompts erstellen können.",
+                        "PromptToMars is a universal prompt platform for business, education, marketing, politics, coding, and more. It combines generator, optimizer, and preset library so teams can produce high-quality prompts consistently.")),
                 new(
                     new("Welche Sprachen unterstützt die Plattform?", "Which languages does the platform support?"),
                     new(
@@ -269,10 +269,10 @@
                         "Die Architektur trennt Inhalt, Rendering und Routing, damit neue Presets, Kategorien und Landingpages datenbasiert ergänzt werden können. Dadurch sind große Bibliotheken mit hunderten bis tausenden Einträgen wartbar.",
                         "The architecture separates content, rendering, and routing so new presets, categories, and landing pages can be added in a data-driven way. This keeps large libraries with hundreds or thousands of entries maintainable.")),
                 new(
-                    new("Ist PromptForge nur ein Tool oder auch eine Wissensstruktur?", "Is PromptForge only a tool or also a knowledge structure?"),
+                    new("Ist PromptToMars nur ein Tool oder auch eine Wissensstruktur?", "Is PromptToMars only a tool or also a knowledge structure?"),
                     new(
-                        "Beides. Neben den Werkzeugeingaben baut PromptForge Themencluster und FAQ-Strukturen auf, damit Nutzer schneller die passende Prompt-Strategie finden und Suchmaschinen die Inhalte klar einordnen können.",
-                        "Both. Beyond generation tooling, PromptForge builds topic clusters and FAQ structures so users can find suitable prompt strategies quickly and search engines can clearly understand the content.")),
+                        "Beides. Neben den Werkzeugeingaben baut PromptToMars Themencluster und FAQ-Strukturen auf, damit Nutzer schneller die passende Prompt-Strategie finden und Suchmaschinen die Inhalte klar einordnen können.",
+                        "Both. Beyond generation tooling, PromptToMars builds topic clusters and FAQ structures so users can find suitable prompt strategies quickly and search engines can clearly understand the content.")),
                 new(
                     new("Welche Rolle spielen Presets im Gesamtsystem?", "What role do presets play in the overall system?"),
                     new(
@@ -304,8 +304,8 @@
                 new(
                     new("Welche Qualitätselemente enthält ein generierter Prompt?", "Which quality elements are included in a generated prompt?"),
                     new(
-                        "Ein guter Prompt enthält mindestens Rolle, Zielbeschreibung, Arbeitsstruktur, Ausgabeformat, Qualitätsanforderungen und Plattformhinweise. PromptForge baut diese Elemente systematisch ein.",
-                        "A strong prompt includes at least role, objective, working structure, output format, quality requirements, and platform notes. PromptForge assembles these elements systematically.")),
+                        "Ein guter Prompt enthält mindestens Rolle, Zielbeschreibung, Arbeitsstruktur, Ausgabeformat, Qualitätsanforderungen und Plattformhinweise. PromptToMars baut diese Elemente systematisch ein.",
+                        "A strong prompt includes at least role, objective, working structure, output format, quality requirements, and platform notes. PromptToMars assembles these elements systematically.")),
                 new(
                     new("Wie lade ich Presets direkt in den Generator?", "How do I load presets directly into the generator?"),
                     new(
@@ -481,8 +481,8 @@
             "scalability",
             new("Leistung, Skalierung und Betrieb", "Performance, scalability, and operations"),
             new(
-                "Zum Abschluss: wie PromptForge technisch stabil bleibt, wenn Inhalte und Nutzerzahlen wachsen.",
-                "Finally: how PromptForge stays stable as content and traffic scale."),
+                "Zum Abschluss: wie PromptToMars technisch stabil bleibt, wenn Inhalte und Nutzerzahlen wachsen.",
+                "Finally: how PromptToMars stays stable as content and traffic scale."),
             [
                 new(
                     new("Wie bleibt die Seite bei vielen Presets performant?", "How does the site stay performant with many presets?"),
@@ -539,3 +539,5 @@
         LocalizedText Intro,
         IReadOnlyList<FaqItem> Items);
 }
+
+

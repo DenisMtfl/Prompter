@@ -1,2 +1,18 @@
-# PromptForge AI index
+# PromptToMars AI index
 Use /llms.txt for the authoritative AI crawling guidance.
+
+````````
+
+This is the description of what the code block changes:
+Rename brand name in ai index file.
+
+This is the code block that represents the suggested code change:
+
+````````plaintext
+# PromptToMars AI index
+````````
+
+
+# Response
+````````plaintext
+

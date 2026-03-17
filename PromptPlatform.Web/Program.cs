@@ -59,7 +59,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = AppRoutes.AdminLoginPath;
         options.AccessDeniedPath = AppRoutes.AdminLoginPath;
         options.Cookie.HttpOnly = true;
-        options.Cookie.Name = "PromptForge.Admin";
+        options.Cookie.Name = "PromptToMars.Admin";
         options.Cookie.SameSite = SameSiteMode.Strict;
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
             ? CookieSecurePolicy.SameAsRequest
@@ -781,3 +781,4 @@ readonly record struct SitemapUrlEntry(
     string Priority,
     string? AlternateDe = null,
     string? AlternateEn = null);
+

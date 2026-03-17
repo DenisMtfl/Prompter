@@ -12,13 +12,13 @@
 
 <PageTitle>@PresetsTitle</PageTitle>
 <HeadContent>
-    <meta name="application-name" content="PromptForge" />
+    <meta name="application-name" content="PromptToMars" />
     <meta name="description" content="@PresetsMetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="@PresetsTitle" />
     <meta property="og:description" content="@PresetsMetaDescription" />
-    <meta property="og:site_name" content="PromptForge" />
+    <meta property="og:site_name" content="PromptToMars" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
@@ -36,7 +36,7 @@
 
 <nav class="mb-3" aria-label="breadcrumb">
     <ol class="breadcrumb small mb-0">
-        <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PromptForge</a></li>
+        <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PromptToMars</a></li>
         <li class="breadcrumb-item active" aria-current="page">@PresetsTitle</li>
     </ol>
 </nav>
@@ -263,8 +263,8 @@
     private string ComplexityLabel => IsGerman ? "Komplexität" : "Complexity";
     private string LoadingMoreLabel => IsGerman ? "Weitere Presets werden geladen..." : "Loading more presets...";
     private string PresetsTitle => IsGerman
-        ? "KI Prompt Presets, Vorlagen & Beispiele | PromptForge"
-        : "AI Prompt Presets, Templates & Examples | PromptForge";
+        ? "KI Prompt Presets, Vorlagen & Beispiele | PromptToMars"
+        : "AI Prompt Presets, Templates & Examples | PromptToMars";
     private string PresetsMetaDescription => IsGerman
         ? "Durchsuchbare Bibliothek für KI Prompt Presets, Prompt-Vorlagen und Beispiele mit Filtern nach Kategorie, Plattform und Unterkategorie sowie direkter Generator-Übernahme."
         : "Searchable library of AI prompt presets, prompt templates, and examples with filters by category, platform, and subcategory plus direct generator handoff.";
@@ -282,10 +282,10 @@
         @type = "ImageObject",
         contentUrl = SiteImageUrl,
         url = SiteImageUrl,
-        creditText = "PromptForge",
+        creditText = "PromptToMars",
         acquireLicensePage = AcquireLicenseUrl,
         license = LicenseUrl,
-        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptToMars"
     });
     private string PresetsJsonLd => JsonSerializer.Serialize(new
     {
@@ -305,7 +305,7 @@
                 @type = "BreadcrumbList",
                 itemListElement = new object[]
                 {
-                    new { @type = "ListItem", position = 1, name = "PromptForge", item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage)) },
+                    new { @type = "ListItem", position = 1, name = "PromptToMars", item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage)) },
                     new { @type = "ListItem", position = 2, name = PresetsTitle, item = CanonicalUrl }
                 }
             }

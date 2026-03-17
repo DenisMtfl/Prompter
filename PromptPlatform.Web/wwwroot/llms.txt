@@ -1,6 +1,6 @@
-# PromptForge
+# PromptToMars
 
-> PromptForge is a bilingual prompt platform (German/English) with generator, optimizer, preset library, and topic landing pages.
+> PromptToMars is a bilingual prompt platform (German/English) with generator, optimizer, preset library, and topic landing pages.
 
 ## Primary entry points
 - /de
@@ -32,9 +32,7 @@
 - /en/favorites
 - /favorites
 - /health/*
-- /monitor/*
-- /rum/*
-- /analytics/*
 
 ## Sitemap
 - /sitemap.xml
+

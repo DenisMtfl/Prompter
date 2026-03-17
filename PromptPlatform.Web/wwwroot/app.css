@@ -519,39 +519,91 @@ main .card:hover {
     text-transform: uppercase;
 }
 
-.awesome-facts-card {
-    border: 1px solid var(--app-border-soft);
-}
-
-.awesome-search-card {
-    border-radius: 1.15rem;
-    background: linear-gradient(155deg, var(--app-surface) 0%, rgba(59, 130, 246, 0.06) 100%);
-}
-
-.awesome-search-form {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 0.75rem;
-}
-
-.awesome-search-form .btn {
-    min-width: 8rem;
-}
-
-.awesome-browse-card {
-    border-radius: 1rem;
-}
-
-.awesome-browse-icon {
-    width: 2rem;
-    height: 2rem;
+.hero-brand-stack {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.55rem;
-    border: 1px solid rgba(37, 99, 235, 0.24);
-    background: linear-gradient(150deg, rgba(37, 99, 235, 0.15) 0%, rgba(14, 165, 233, 0.1) 100%);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+}
+
+.awesome-tagline {
     font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #2563eb;
+    text-transform: none;
+}
+
+.hero-wordmark {
+    display: inline-block;
+    font-size: clamp(1.45rem, 4.2vw, 2.4rem);
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+    background: linear-gradient(95deg, #f97316 0%, #ef4444 42%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 10px 24px rgba(239, 68, 68, 0.28);
+}
+
+.hero-catchline {
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--app-muted);
+}
+
+[data-bs-theme="light"] {
+    --hero-logo-opacity: 0.72;
+    --hero-logo-saturation: 1.06;
+    --hero-logo-drop-shadow: drop-shadow(0 12px 28px rgba(15, 23, 42, 0.14));
+}
+
+[data-bs-theme="dark"] {
+    --hero-logo-opacity: 0.86;
+    --hero-logo-saturation: 1.16;
+    --hero-logo-drop-shadow: drop-shadow(0 14px 32px rgba(2, 6, 23, 0.55));
+}
+
+.hero-logo-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem;
+    position: relative;
+    border-radius: 1.1rem;
+    background:
+        linear-gradient(var(--app-surface), var(--app-surface)) padding-box,
+        linear-gradient(130deg, rgba(56, 189, 248, 0.7), rgba(239, 68, 68, 0.8), rgba(245, 158, 11, 0.75)) border-box;
+    border: 1px solid transparent;
+    box-shadow:
+        0 14px 30px rgba(15, 23, 42, 0.22),
+        0 0 0 1px rgba(56, 189, 248, 0.18) inset;
+}
+
+.hero-logo-panel::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 1.3rem;
+    background: radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.25), rgba(239, 68, 68, 0.12) 45%, transparent 75%);
+    filter: blur(10px);
+    z-index: -1;
+}
+
+.hero-logo-transparent {
+    width: min(280px, 100%);
+    max-height: 280px;
+    object-fit: contain;
+    opacity: var(--hero-logo-opacity);
+    filter: saturate(var(--hero-logo-saturation)) var(--hero-logo-drop-shadow);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    user-select: none;
+    border-radius: 0.85rem;
 }
 
 @media (min-width: 1200px) {
@@ -573,6 +625,11 @@ main .card:hover {
 @media (max-width: 767.98px) {
     .landing-hero h1 {
         font-size: clamp(1.85rem, 6.5vw, 2.3rem);
+    }
+
+    .hero-logo-transparent {
+        width: min(220px, 78vw);
+        max-height: 220px;
     }
 
     .faq-hero h1 {

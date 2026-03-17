@@ -10,13 +10,13 @@
 
 <PageTitle>@HomeTitle</PageTitle>
 <HeadContent>
-    <meta name="application-name" content="PromptForge" />
+    <meta name="application-name" content="PromptToMars" />
     <meta name="description" content="@HomeMetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="@HomeTitle" />
     <meta property="og:description" content="@HomeMetaDescription" />
-    <meta property="og:site_name" content="PromptForge" />
+    <meta property="og:site_name" content="PromptToMars" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
@@ -36,7 +36,12 @@
     <section class="hero-section landing-hero awesome-hero rounded-4 p-4 p-lg-5 mb-5">
         <div class="row g-4 align-items-center">
             <div class="col-lg-8">
-                <span class="badge text-bg-primary mb-3 awesome-kicker">@L["Landing_HeroBadge"]</span>
+                <div class="hero-brand-stack mb-2">
+                    <span class="badge text-bg-primary awesome-kicker">@L["Landing_HeroBadge"]</span>
+                    <div class="hero-wordmark">PromptToMars</div>
+                </div>
+                <p class="awesome-tagline mb-1">@HeroSlogan</p>
+                <p class="hero-catchline mb-3">@HeroCatchline</p>
                 <h1 class="display-5 fw-bold mb-3">@L["Landing_HeroTitle"]</h1>
                 <p class="lead mb-4">@L["Landing_HeroSubtitle"]</p>
                 <div class="d-flex flex-wrap gap-2 mb-4">
@@ -56,6 +61,9 @@
                 </div>
             </div>
             <div class="col-lg-4">
+                <div class="hero-logo-panel mb-3">
+                    <img src="/images/PromptToMars-logo.png" alt="@HeroLogoAlt" class="hero-logo-transparent" loading="eager" decoding="async" />
+                </div>
                 <div class="card shadow-sm border-0 h-100 hero-facts-card awesome-facts-card">
                     <div class="card-body">
                         <h2 class="h5 mb-3">@L["Landing_QuickFacts_Title"]</h2>
@@ -237,7 +245,7 @@
 
     private static readonly IReadOnlyList<(string TitleKey, string DescriptionKey)> FeatureCards =
     [
-        ("Landing_Feature_Generator_Title", "Landing_Feature_Generator_Desc"),
+        ("Landing_Feature_Generator_Title", "Landing_Feature_Optimizer_Desc"),
         ("Landing_Feature_Optimizer_Title", "Landing_Feature_Optimizer_Desc"),
         ("Landing_Feature_Library_Title", "Landing_Feature_Library_Desc")
     ];
@@ -282,13 +290,20 @@
     private string PrimaryCtaLabel => HeroExperimentVariant == "B"
         ? (IsGerman ? "Jetzt Prompt erstellen" : "Create prompt now")
         : L["Landing_CtaPrimary"];
+    private string HeroSlogan => IsGerman
+        ? "Von der Idee bis zur Wirkung — PromptToMars bringt deine Prompts auf ein neues Level."
+        : "From first idea to real impact — PromptToMars takes your prompts to the next level.";
+    private string HeroCatchline => IsGerman
+        ? "Schneller. Präziser. Unvergesslich bessere Prompts."
+        : "Faster. Sharper. Unforgettable prompts.";
+    private string HeroLogoAlt => IsGerman ? "PromptToMars Logo als Hero-Visual" : "PromptToMars logo as hero visual";
 
     private string HomeTitle => IsGerman
-        ? "KI Prompt Generator, Prompt Optimizer & Vorlagen | PromptForge"
-        : "AI Prompt Generator, Prompt Optimizer & Templates | PromptForge";
+        ? "KI Prompt Generator, Prompt Optimizer & Vorlagen | PromptToMars"
+        : "AI Prompt Generator, Prompt Optimizer & Templates | PromptToMars";
     private string HomeMetaDescription => IsGerman
-        ? "PromptForge ist eine Plattform für KI Prompt Generator, Prompt Optimizer und Prompt-Vorlagen. Erstelle bessere ChatGPT-Prompts, nutze Presets, und skaliere deine SEO-Themencluster."
-        : "PromptForge is a platform for an AI prompt generator, prompt optimizer, and prompt templates. Create better ChatGPT prompts, use presets, and scale your SEO topic clusters.";
+        ? "PromptToMars ist eine Plattform für KI Prompt Generator, Prompt Optimizer und Prompt-Vorlagen. Erstelle bessere ChatGPT-Prompts, nutze Presets, und skaliere deine SEO-Themencluster."
+        : "PromptToMars is a platform for an AI prompt generator, prompt optimizer, and prompt templates. Create better ChatGPT prompts, use presets, and scale your SEO topic clusters.";
     private int TotalPresetCount { get; set; }
     private string HeroPresetCountLabel => IsGerman
         ? $"{TotalPresetCount.ToString("N0", CultureInfo.CurrentCulture)} Presets verfügbar"
@@ -305,10 +320,10 @@
         @type = "ImageObject",
         contentUrl = SiteImageUrl,
         url = SiteImageUrl,
-        creditText = "PromptForge",
+        creditText = "PromptToMars",
         acquireLicensePage = AcquireLicenseUrl,
         license = LicenseUrl,
-        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptToMars"
     });
     private string HomeJsonLd => JsonSerializer.Serialize(new
     {
@@ -318,26 +333,26 @@
             new
             {
                 @type = "Organization",
-                name = "PromptForge",
+                name = "PromptToMars",
                 url = ToAbsolute("/"),
                 sameAs = Array.Empty<string>()
             },
             new
             {
                 @type = "WebSite",
-                name = "PromptForge",
+                name = "PromptToMars",
                 url = ToAbsolute("/"),
                 inLanguage = new[] { "de", "en" },
                 publisher = new
                 {
                     @type = "Organization",
-                    name = "PromptForge"
+                    name = "PromptToMars"
                 }
             },
             new
             {
                 @type = "SoftwareApplication",
-                name = "PromptForge",
+                name = "PromptToMars",
                 applicationCategory = "BusinessApplication",
                 operatingSystem = "Web",
                 offers = new { @type = "Offer", price = "0", priceCurrency = "USD" },
@@ -424,3 +439,4 @@
         return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
     }
 }
+
