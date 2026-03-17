@@ -22,28 +22,44 @@
             const fallback = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
             document.documentElement.setAttribute("data-bs-theme", fromStorage || fallback);
 
-            const currentLanguage = (document.documentElement.lang || "de").slice(0, 2).toLowerCase();
+            const normalizeLanguage = (value) => {
+                const candidate = (value || "").toLowerCase();
+                return candidate.startsWith("de") ? "de" : "en";
+            };
+
+            const browserLanguage = (() => {
+                const fromList = Array.isArray(navigator.languages)
+                    ? navigator.languages.find(x => /^de|^en/i.test(x || ""))
+                    : null;
+                return normalizeLanguage(fromList || navigator.language || "de");
+            })();
+
+            const currentLanguage = normalizeLanguage(document.documentElement.lang || "de");
             const savedLanguage = localStorage.getItem("prompt-language");
             const pathname = (window.location.pathname || "").toLowerCase();
             const pathLanguage = pathname === "/de" || pathname.startsWith("/de/")
                 ? "de"
                 : ((pathname === "/en" || pathname.startsWith("/en/")) ? "en" : null);
 
+            const setCultureCookie = (lang) => {
+                const normalized = normalizeLanguage(lang);
+                const oneYear = 60 * 60 * 24 * 365;
+                const secure = window.location.protocol === "https:" ? "; Secure" : "";
+                document.cookie = `.AspNetCore.Culture=c=${normalized}|uic=${normalized}; path=/; max-age=${oneYear}; SameSite=Lax${secure}`;
+            };
+
             if (pathLanguage) {
                 localStorage.setItem("prompt-language", pathLanguage);
+                setCultureCookie(pathLanguage);
                 return;
             }
 
-            if (!savedLanguage || (savedLanguage !== "de" && savedLanguage !== "en")) {
-                localStorage.setItem("prompt-language", currentLanguage);
-                return;
-            }
+            const normalizedSaved = (savedLanguage === "de" || savedLanguage === "en")
+                ? savedLanguage
+                : browserLanguage;
 
-            if (savedLanguage !== currentLanguage && !window.location.pathname.startsWith("/culture/set")) {
-                const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-                const target = `/culture/set?culture=${encodeURIComponent(savedLanguage)}&returnUrl=${encodeURIComponent(returnUrl || "/")}`;
-                window.location.replace(target);
-            }
+            localStorage.setItem("prompt-language", normalizedSaved);
+            setCultureCookie(normalizedSaved || currentLanguage);
         })();
     </script>
     <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: true)" />

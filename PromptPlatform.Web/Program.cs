@@ -36,11 +36,16 @@ builder.Services.AddLocalization(options => options.ResourcesPath = "Resources")
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
-    options.DefaultRequestCulture = new RequestCulture("de");
+    options.DefaultRequestCulture = new RequestCulture("en");
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
     options.ApplyCurrentCultureToResponseHeaders = true;
-    options.RequestCultureProviders.Insert(0, new PathSegmentRequestCultureProvider(supportedCultureCodes));
+    options.RequestCultureProviders =
+    [
+        new PathSegmentRequestCultureProvider(supportedCultureCodes),
+        new CookieRequestCultureProvider(),
+        new AcceptLanguageHeaderRequestCultureProvider()
+    ];
 });
 builder.Services.Configure<HealthThresholdOptions>(builder.Configuration.GetSection("HealthThresholds"));
 builder.Services.Configure<WebVitalsOptions>(builder.Configuration.GetSection("WebVitals"));
@@ -304,30 +309,6 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
     ResponseWriter = (context, report) => WriteHealthResponse(context, report, app.Environment)
 });
 
-app.MapGet("/culture/set", (HttpContext context, string culture, string? returnUrl, ISeoLandingContentRepository seoContentRepository) =>
-{
-    var normalizedCulture = supportedCultureCodes.Contains(culture, StringComparer.OrdinalIgnoreCase)
-        ? culture.ToLowerInvariant()
-        : "de";
-
-    context.Response.Cookies.Append(
-        CookieRequestCultureProvider.DefaultCookieName,
-        CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(normalizedCulture)),
-        new CookieOptions
-        {
-            Expires = DateTimeOffset.UtcNow.AddYears(1),
-            IsEssential = true,
-            HttpOnly = true,
-            SameSite = SameSiteMode.Lax,
-            Secure = !app.Environment.IsDevelopment() || context.Request.IsHttps,
-            Path = "/"
-        });
-
-    var target = ResolveLocalizedReturnUrl(returnUrl, normalizedCulture, seoContentRepository);
-
-    return Results.LocalRedirect(target);
-}).RequireRateLimiting("culture-switch");
-
 app.MapPost("/admin/sign-in", async (HttpContext context, SupabaseAdminAuthService adminAuthService) =>
 {
     var form = await context.Request.ReadFormAsync();
@@ -498,70 +479,6 @@ app.MapRazorComponents<App>()
 
 app.Run();
 
-static string ResolveLocalizedReturnUrl(string? returnUrl, string targetCulture, ISeoLandingContentRepository seoContentRepository)
-{
-    if (string.IsNullOrWhiteSpace(returnUrl) || !Uri.IsWellFormedUriString(returnUrl, UriKind.Relative))
-    {
-        return AppRoutes.HomePathForCulture(targetCulture);
-    }
-
-    var trimmed = returnUrl.Trim();
-    var (pathPart, suffixPart) = SplitPathAndSuffix(trimmed);
-
-    var normalizedPath = pathPart.StartsWith("/", StringComparison.Ordinal)
-        ? pathPart
-        : $"/{pathPart}";
-
-    var segments = normalizedPath
-        .Split('/', StringSplitOptions.RemoveEmptyEntries)
-        .ToList();
-
-    if (segments.Count == 0)
-    {
-        return AppRoutes.HomePathForCulture(targetCulture);
-    }
-
-    if (!segments[0].Equals("de", StringComparison.OrdinalIgnoreCase) &&
-        !segments[0].Equals("en", StringComparison.OrdinalIgnoreCase))
-    {
-        if (segments.Count == 1)
-        {
-            var knownCorePath = segments[0].ToLowerInvariant() switch
-            {
-                "" => AppRoutes.HomePathForCulture(targetCulture),
-                AppRoutes.Generator => AppRoutes.GeneratorPathForCulture(targetCulture),
-                AppRoutes.Optimizer => AppRoutes.OptimizerPathForCulture(targetCulture),
-                AppRoutes.Presets => AppRoutes.PresetsPathForCulture(targetCulture),
-                AppRoutes.Faq => AppRoutes.FaqPathForCulture(targetCulture),
-                AppRoutes.History => AppRoutes.HistoryPathForCulture(targetCulture),
-                AppRoutes.Favorites => AppRoutes.FavoritesPathForCulture(targetCulture),
-                _ => null
-            };
-
-            if (knownCorePath is not null)
-            {
-                return $"{knownCorePath}{suffixPart}";
-            }
-        }
-
-        return $"{normalizedPath}{suffixPart}";
-    }
-
-    // Map SEO landing pages to their target-language slug.
-    if (segments.Count == 2)
-    {
-        var page = seoContentRepository.GetBySlug(segments[1]);
-        if (page is not null)
-        {
-            var localizedSlug = targetCulture == "de" ? page.SlugDe : page.SlugEn;
-            return $"/{targetCulture}/{localizedSlug}{suffixPart}";
-        }
-    }
-
-    segments[0] = targetCulture;
-    return $"/{string.Join('/', segments)}{suffixPart}";
-}
-
 static string ResolveAdminReturnUrl(string? returnUrl)
 {
     if (string.IsNullOrWhiteSpace(returnUrl) || !Uri.IsWellFormedUriString(returnUrl, UriKind.Relative))
@@ -648,12 +565,7 @@ static bool TryBuildCanonicalRedirectTarget(HttpContext context, IReadOnlyList<s
 {
     target = string.Empty;
 
-    if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method))
-    {
-        return false;
-    }
-
-    var rawPath = context.Request.Path.Value ?? string.Empty;
+    var rawPath = context.Request.Path.Value;
     if (string.IsNullOrWhiteSpace(rawPath))
     {
         return false;
@@ -667,22 +579,6 @@ static bool TryBuildCanonicalRedirectTarget(HttpContext context, IReadOnlyList<s
     var normalizedPath = NormalizePath(rawPath);
     var changed = !normalizedPath.Equals(rawPath, StringComparison.Ordinal);
 
-    if (normalizedPath is "/" or "/generator" or "/optimizer" or "/presets" or "/faq")
-    {
-        var culture = ResolvePreferredCulture(context, supportedCultureCodes);
-        normalizedPath = normalizedPath switch
-        {
-            "/" => AppRoutes.HomePathForCulture(culture),
-            "/generator" => AppRoutes.GeneratorPathForCulture(culture),
-            "/optimizer" => AppRoutes.OptimizerPathForCulture(culture),
-            "/presets" => AppRoutes.PresetsPathForCulture(culture),
-            "/faq" => AppRoutes.FaqPathForCulture(culture),
-            _ => normalizedPath
-        };
-
-        changed = true;
-    }
-
     if (!changed)
     {
         return false;
@@ -690,39 +586,6 @@ static bool TryBuildCanonicalRedirectTarget(HttpContext context, IReadOnlyList<s
 
     target = $"{normalizedPath}{context.Request.QueryString}";
     return true;
-}
-
-static string ResolvePreferredCulture(HttpContext context, IReadOnlyList<string> supportedCultureCodes)
-{
-    var cookieName = CookieRequestCultureProvider.DefaultCookieName;
-    if (context.Request.Cookies.TryGetValue(cookieName, out var cultureCookie) && !string.IsNullOrWhiteSpace(cultureCookie))
-    {
-        var parsed = CookieRequestCultureProvider.ParseCookieValue(cultureCookie);
-        var cookieCulture = parsed?.UICultures.FirstOrDefault().Value
-                            ?? parsed?.Cultures.FirstOrDefault().Value;
-
-        if (!string.IsNullOrWhiteSpace(cookieCulture) && supportedCultureCodes.Contains(cookieCulture, StringComparer.OrdinalIgnoreCase))
-        {
-            return cookieCulture.ToLowerInvariant();
-        }
-    }
-
-    var acceptLanguage = context.Request.Headers.AcceptLanguage.ToString();
-    if (!string.IsNullOrWhiteSpace(acceptLanguage))
-    {
-        var preferred = acceptLanguage
-            .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty)
-            .Select(x => x.Length >= 2 ? x[..2].ToLowerInvariant() : string.Empty)
-            .FirstOrDefault(x => supportedCultureCodes.Contains(x, StringComparer.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(preferred))
-        {
-            return preferred;
-        }
-    }
-
-    return "de";
 }
 
 static string NormalizePath(string path)

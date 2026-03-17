@@ -6,6 +6,7 @@ public static class AppRoutes
     public const string Optimizer = "optimizer";
     public const string Presets = "presets";
     public const string Faq = "faq";
+    public const string License = "license";
     public const string History = "history";
     public const string Favorites = "favorites";
     public const string Admin = "admin";
@@ -15,6 +16,7 @@ public static class AppRoutes
     public const string OptimizerPath = "/optimizer";
     public const string PresetsPath = "/presets";
     public const string FaqPath = "/faq";
+    public const string LicensePath = "/license";
     public const string HistoryPath = "/history";
     public const string FavoritesPath = "/favorites";
     public const string AdminLoginPath = "/admin/login";
@@ -34,6 +36,9 @@ public static class AppRoutes
 
     public static string FaqPathForCulture(string culture)
         => BuildLocalizedPath(culture, Faq);
+
+    public static string LicensePathForCulture(string culture)
+        => BuildLocalizedPath(culture, License);
 
     public static string HistoryPathForCulture(string culture)
         => BuildLocalizedPath(culture, History);

@@ -505,6 +505,55 @@ main .card:hover {
     background: linear-gradient(160deg, var(--app-surface) 0%, var(--app-surface-soft) 100%);
 }
 
+/* Awesome-Copilot inspired home refinements */
+.awesome-shell {
+    gap: 0.35rem;
+}
+
+.awesome-hero {
+    border-radius: 1.35rem;
+}
+
+.awesome-kicker {
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.awesome-facts-card {
+    border: 1px solid var(--app-border-soft);
+}
+
+.awesome-search-card {
+    border-radius: 1.15rem;
+    background: linear-gradient(155deg, var(--app-surface) 0%, rgba(59, 130, 246, 0.06) 100%);
+}
+
+.awesome-search-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.75rem;
+}
+
+.awesome-search-form .btn {
+    min-width: 8rem;
+}
+
+.awesome-browse-card {
+    border-radius: 1rem;
+}
+
+.awesome-browse-icon {
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.55rem;
+    border: 1px solid rgba(37, 99, 235, 0.24);
+    background: linear-gradient(150deg, rgba(37, 99, 235, 0.15) 0%, rgba(14, 165, 233, 0.1) 100%);
+    font-size: 1rem;
+}
+
 @media (min-width: 1200px) {
     .generator-result-card {
         position: sticky;
@@ -543,5 +592,13 @@ main .card:hover {
     .preset-example-input {
         min-height: 88px;
         max-height: 88px;
+    }
+
+    .awesome-search-form {
+        grid-template-columns: 1fr;
+    }
+
+    .awesome-search-form .btn {
+        width: 100%;
     }
 }

@@ -29,13 +29,14 @@
     <link rel="alternate" hreflang="x-default" href="@EnglishHomeUrl" />
     <script type="application/ld+json">@((MarkupString)HomeJsonLd)</script>
     <script type="application/ld+json">@((MarkupString)HomeNavigationJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)ImageMetadataJsonLd)</script>
 </HeadContent>
 
-<div class="landing-page">
-    <section class="hero-section landing-hero rounded-4 p-4 p-lg-5 mb-5">
+<div class="landing-page awesome-shell">
+    <section class="hero-section landing-hero awesome-hero rounded-4 p-4 p-lg-5 mb-5">
         <div class="row g-4 align-items-center">
             <div class="col-lg-8">
-                <span class="badge text-bg-primary mb-3">@L["Landing_HeroBadge"]</span>
+                <span class="badge text-bg-primary mb-3 awesome-kicker">@L["Landing_HeroBadge"]</span>
                 <h1 class="display-5 fw-bold mb-3">@L["Landing_HeroTitle"]</h1>
                 <p class="lead mb-4">@L["Landing_HeroSubtitle"]</p>
                 <div class="d-flex flex-wrap gap-2 mb-4">
@@ -55,7 +56,7 @@
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100 hero-facts-card">
+                <div class="card shadow-sm border-0 h-100 hero-facts-card awesome-facts-card">
                     <div class="card-body">
                         <h2 class="h5 mb-3">@L["Landing_QuickFacts_Title"]</h2>
                         <ul class="list-group list-group-flush">
@@ -65,6 +66,19 @@
                         </ul>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-5" aria-labelledby="landing-search-title">
+        <div class="card border-0 shadow-sm awesome-search-card">
+            <div class="card-body p-4">
+                <h2 id="landing-search-title" class="h5 mb-2">@SearchSectionTitle</h2>
+                <p class="text-secondary small mb-3">@SearchSectionSubtitle</p>
+                <form class="awesome-search-form" method="get" action="@PresetsPath">
+                    <input class="form-control form-control-lg" type="search" name="search" placeholder="@SearchPlaceholder" />
+                    <button class="btn btn-primary" type="submit">@SearchButtonLabel</button>
+                </form>
             </div>
         </div>
     </section>
@@ -81,12 +95,13 @@
                data-track-context="@CurrentLanguage">@ClusterAction</a>
         </div>
 
-        <div class="row g-3">
+        <div class="row g-3 awesome-browse-grid">
             @foreach (var clusterPage in ClusterPages)
             {
                 <div class="col-md-6 col-xl-4">
-                    <div class="card border-0 shadow-sm h-100 cluster-hub-card">
+                    <div class="card border-0 shadow-sm h-100 cluster-hub-card awesome-browse-card">
                         <div class="card-body d-flex flex-column">
+                            <div class="awesome-browse-icon mb-2">@GetClusterIcon(clusterPage.Category)</div>
                             <h3 class="h5">@clusterPage.Title</h3>
                             <p class="text-secondary small">@clusterPage.Description</p>
                             <div class="mt-auto d-flex gap-2 flex-wrap">
@@ -233,17 +248,17 @@
 
     private bool IsGerman => CurrentLanguage == "de";
 
-    private string ClusterTitle => IsGerman ? "Themencluster für organisches Wachstum" : "Topic clusters for organic growth";
+    private string ClusterTitle => IsGerman ? "Themencluster für KI-Prompts und organisches Wachstum" : "Topic clusters for AI prompts and organic growth";
     private string ClusterSubtitle => IsGerman
-        ? "Jede Landingpage bildet ein eigenes Cluster und verlinkt auf passende Presets und verwandte Themenbereiche."
-        : "Each landing page forms its own cluster and links to matching presets and related topic pages.";
+        ? "Jede Landingpage bildet ein eigenes Cluster und verlinkt auf passende Prompt-Vorlagen, Presets und verwandte Themenbereiche."
+        : "Each landing page forms its own cluster and links to matching prompt templates, presets, and related topic pages.";
     private string ClusterAction => IsGerman ? "Alle Presets durchsuchen" : "Browse all presets";
     private string ClusterPageButton => IsGerman ? "Landingpage" : "Landing page";
     private string ClusterPresetsButton => IsGerman ? "Presets" : "Presets";
-    private string FeaturedPresetsTitle => IsGerman ? "Beliebte Presets als SEO-Einstieg" : "Popular presets as SEO entry points";
+    private string FeaturedPresetsTitle => IsGerman ? "Beliebte KI-Prompt-Vorlagen als SEO-Einstieg" : "Popular AI prompt templates as SEO entry points";
     private string FeaturedPresetsSubtitle => IsGerman
-        ? "Diese kuratierten Presets verbinden organische Einstiegsseiten direkt mit konkreten Generator-Workflows."
-        : "These curated presets connect organic entry pages directly with concrete generator workflows.";
+        ? "Diese kuratierten Presets verbinden organische Einstiegsseiten direkt mit konkreten Prompt-Generator-Workflows."
+        : "These curated presets connect organic entry pages directly with concrete prompt-generator workflows.";
     private string FeaturedPresetUseLabel => IsGerman ? "Preset starten" : "Start preset";
     private string FeaturedPresetLandingLabel => IsGerman ? "Themenseite" : "Topic page";
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
@@ -252,21 +267,28 @@
     private string FaqPath => AppRoutes.FaqPathForCulture(CurrentLanguage);
     private string FaqSectionTitle => IsGerman ? "Häufige Fragen und Produktwissen" : "Frequently asked questions and product guidance";
     private string FaqSectionSubtitle => IsGerman
-        ? "Alle Details zu Prompt-Qualität, Preset-Nutzung, SEO-Struktur und Skalierung findest du in der ausführlichen FAQ."
-        : "Find detailed guidance on prompt quality, preset usage, SEO structure, and scalability in the full FAQ.";
+        ? "Alle Details zu Prompt-Qualität, Prompt-Vorlagen, SEO-Struktur und Skalierung findest du in der ausführlichen FAQ."
+        : "Find detailed guidance on prompt quality, prompt templates, SEO structure, and scalability in the full FAQ.";
     private string FaqSectionCta => IsGerman ? "FAQ öffnen" : "Open FAQ";
     private string OptimizerSectionCta => IsGerman ? "Optimizer öffnen" : "Open optimizer";
+    private string SearchSectionTitle => IsGerman ? "Alle Ressourcen durchsuchen" : "Search all resources";
+    private string SearchSectionSubtitle => IsGerman
+        ? "Suche direkt nach KI-Prompts, Prompt-Vorlagen, Presets und Kategorien für deinen Anwendungsfall."
+        : "Search directly for AI prompts, prompt templates, presets, and categories for your use case.";
+    private string SearchPlaceholder => IsGerman ? "Mindestens zwei Zeichen eingeben…" : "Type at least two characters…";
+    private string SearchButtonLabel => IsGerman ? "Suche" : "Search";
     private string HeroExperimentKey => "landing_primary_cta";
     private string HeroExperimentVariant { get; set; } = "A";
     private string PrimaryCtaLabel => HeroExperimentVariant == "B"
         ? (IsGerman ? "Jetzt Prompt erstellen" : "Create prompt now")
         : L["Landing_CtaPrimary"];
+
     private string HomeTitle => IsGerman
-        ? "KI Prompt Generator, Optimizer & Presets | PromptForge"
-        : "AI Prompt Generator, Optimizer & Presets | PromptForge";
+        ? "KI Prompt Generator, Prompt Optimizer & Vorlagen | PromptForge"
+        : "AI Prompt Generator, Prompt Optimizer & Templates | PromptForge";
     private string HomeMetaDescription => IsGerman
-        ? "PromptForge bündelt KI Prompt Generator, Prompt Optimizer und durchsuchbare Presets mit klaren Themenclustern für bessere organische Sichtbarkeit."
-        : "PromptForge combines an AI prompt generator, prompt optimizer, and searchable presets with clear topic clusters for stronger organic visibility.";
+        ? "PromptForge ist eine Plattform für KI Prompt Generator, Prompt Optimizer und Prompt-Vorlagen. Erstelle bessere ChatGPT-Prompts, nutze Presets, und skaliere deine SEO-Themencluster."
+        : "PromptForge is a platform for an AI prompt generator, prompt optimizer, and prompt templates. Create better ChatGPT prompts, use presets, and scale your SEO topic clusters.";
     private int TotalPresetCount { get; set; }
     private string HeroPresetCountLabel => IsGerman
         ? $"{TotalPresetCount.ToString("N0", CultureInfo.CurrentCulture)} Presets verfügbar"
@@ -274,6 +296,20 @@
     private string CanonicalUrl => ToAbsolute(IsGerman ? "/de" : "/en");
     private string GermanHomeUrl => ToAbsolute("/de");
     private string EnglishHomeUrl => ToAbsolute("/en");
+    private string LicenseUrl => ToAbsolute(AppRoutes.LicensePathForCulture(CurrentLanguage));
+    private string AcquireLicenseUrl => $"{LicenseUrl}#acquire";
+    private string SiteImageUrl => ToAbsolute("/favicon.png");
+    private string ImageMetadataJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "ImageObject",
+        contentUrl = SiteImageUrl,
+        url = SiteImageUrl,
+        creditText = "PromptForge",
+        acquireLicensePage = AcquireLicenseUrl,
+        license = LicenseUrl,
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
+    });
     private string HomeJsonLd => JsonSerializer.Serialize(new
     {
         @context = "https://schema.org",
@@ -368,6 +404,19 @@
 
     private string? GetCategoryLandingPath(PromptPreset preset)
         => SeoLandingPageService.GetCategoryLandingPath(CurrentLanguage, preset.Category);
+
+    private static string GetClusterIcon(PresetCategory category)
+        => category switch
+        {
+            PresetCategory.Business => "📊",
+            PresetCategory.Marketing => "📣",
+            PresetCategory.Coding => "⚙️",
+            PresetCategory.Influencer => "🪝",
+            PresetCategory.YouTube => "🎬",
+            PresetCategory.ImageGeneration => "🎨",
+            PresetCategory.Productivity => "✅",
+            _ => "📚"
+        };
 
     private string ToAbsolute(string relativePath)
     {

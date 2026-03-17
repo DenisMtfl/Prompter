@@ -33,6 +33,7 @@
     <script type="application/ld+json">@((MarkupString)GeneratorJsonLd)</script>
     <script type="application/ld+json">@((MarkupString)GeneratorBreadcrumbJsonLd)</script>
     <script type="application/ld+json">@((MarkupString)GeneratorHowToJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)ImageMetadataJsonLd)</script>
 </HeadContent>
 
 <nav class="mb-3" aria-label="breadcrumb">
@@ -389,8 +390,8 @@
     private string GeneratorProcessingButtonLabel => IsGerman ? "KI erstellt Prompt..." : "AI is generating...";
     private string GeneratorProcessingHint => IsGerman ? "Die KI analysiert deine Eingaben und erstellt die optimale Struktur." : "AI is analyzing your input and building the optimal structure.";
     private string GeneratorPageTitle => IsGerman
-        ? "KI Prompt Generator für bessere Prompts | PromptForge"
-        : "AI Prompt Generator for Better Prompts | PromptForge";
+        ? "KI Prompt Generator & Prompt-Vorlagen | PromptForge"
+        : "AI Prompt Generator & Prompt Templates | PromptForge";
     private string GeneratorBenefitsTitle => IsGerman ? "Warum dieser KI Prompt Generator suchstark ist" : "Why this AI prompt generator is search-friendly";
     private string GeneratorBenefitsIntro => IsGerman
         ? "Die Seite kombiniert klar strukturierte Eingaben, interne Verlinkung und thematische Hilfestellungen, damit Nutzer und Suchmaschinen den Nutzen sofort erkennen."
@@ -443,12 +444,26 @@
     private string CurrentCategoryPresetsPath
         => $"{AppRoutes.PresetsPathForCulture(CurrentLanguage)}?category={CategoryMappingUtility.ToPresetCategory(Request.MainCategory)}";
     private string GeneratorMetaDescription => IsGerman
-        ? "Erzeuge hochwertige KI-Prompts mit klarer Zieldefinition, Kategorie-Logik, Formatvorgaben und direktem Zugriff auf passende Presets."
-        : "Generate high-quality AI prompts with clear objective setting, category logic, output constraints, and direct access to matching presets.";
+        ? "Erzeuge hochwertige KI-Prompts und Prompt-Vorlagen mit klarer Zieldefinition, Kategorie-Logik und direktem Zugriff auf Presets für ChatGPT und andere KI-Tools."
+        : "Generate high-quality AI prompts and prompt templates with clear objective setting, category logic, and direct access to presets for ChatGPT and other AI tools.";
     private string LocalizedGeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string CanonicalUrl => ToAbsolute(LocalizedGeneratorPath);
     private string GermanUrl => ToAbsolute(AppRoutes.GeneratorPathForCulture("de"));
     private string EnglishUrl => ToAbsolute(AppRoutes.GeneratorPathForCulture("en"));
+    private string LicenseUrl => ToAbsolute(AppRoutes.LicensePathForCulture(CurrentLanguage));
+    private string AcquireLicenseUrl => $"{LicenseUrl}#acquire";
+    private string SiteImageUrl => ToAbsolute("/favicon.png");
+    private string ImageMetadataJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "ImageObject",
+        contentUrl = SiteImageUrl,
+        url = SiteImageUrl,
+        creditText = "PromptForge",
+        acquireLicensePage = AcquireLicenseUrl,
+        license = LicenseUrl,
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
+    });
     private string GeneratorJsonLd => JsonSerializer.Serialize(new
     {
         @context = "https://schema.org",

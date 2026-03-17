@@ -1,0 +1,54 @@
+@page "/license"
+@page "/de/license"
+@page "/en/license"
+@using System.Globalization
+
+<PageTitle>@PageTitle</PageTitle>
+<HeadContent>
+    <meta name="description" content="@MetaDescription" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <link rel="canonical" href="@CanonicalUrl" />
+    <link rel="alternate" hreflang="de" href="@GermanUrl" />
+    <link rel="alternate" hreflang="en" href="@EnglishUrl" />
+    <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
+</HeadContent>
+
+<section class="py-4">
+    <h1 class="h3 mb-3">@Heading</h1>
+    <p class="text-secondary mb-3">@Intro</p>
+
+    <h2 id="acquire" class="h5 mb-2">@AcquireTitle</h2>
+    <p class="text-secondary mb-0">@AcquireText</p>
+</section>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
+        ? "de"
+        : "en";
+
+    private bool IsGerman => CurrentLanguage == "de";
+    private string PageTitle => IsGerman ? "Bildlizenzen und Nutzungsrechte | PromptForge" : "Image licenses and usage rights | PromptForge";
+    private string MetaDescription => IsGerman
+        ? "Informationen zu Bildnutzung, Credits und Lizenzen bei PromptForge."
+        : "Information about image usage, credits, and licensing on PromptForge.";
+    private string Heading => IsGerman ? "Bildlizenzen" : "Image licensing";
+    private string Intro => IsGerman
+        ? "Die auf PromptForge verwendeten Marken- und Produktbilder stehen unter den hier beschriebenen Nutzungsbedingungen."
+        : "Brand and product images used on PromptForge are subject to the usage terms described here.";
+    private string AcquireTitle => IsGerman ? "Lizenz erwerben" : "Acquire a license";
+    private string AcquireText => IsGerman
+        ? "Für individuelle Nutzungsrechte oder erweiterte Lizenzfragen kontaktiere bitte das PromptForge-Team."
+        : "For individual usage rights or extended license requests, contact the PromptForge team.";
+
+    private string CanonicalUrl => ToAbsolute(AppRoutes.LicensePathForCulture(CurrentLanguage));
+    private string GermanUrl => ToAbsolute(AppRoutes.LicensePathForCulture("de"));
+    private string EnglishUrl => ToAbsolute(AppRoutes.LicensePathForCulture("en"));
+
+    private string ToAbsolute(string relativePath)
+    {
+        var normalized = string.IsNullOrWhiteSpace(relativePath) ? "/" : relativePath;
+        return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
+    }
+}

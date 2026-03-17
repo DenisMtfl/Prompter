@@ -45,6 +45,7 @@ else
         <script type="application/ld+json">@((MarkupString)BreadcrumbJsonLd)</script>
         <script type="application/ld+json">@((MarkupString)HowToJsonLd)</script>
         <script type="application/ld+json">@((MarkupString)RelatedContentJsonLd)</script>
+        <script type="application/ld+json">@((MarkupString)ImageMetadataJsonLd)</script>
         @if (PageModel.FaqItems.Count > 0)
         {
             <script type="application/ld+json">@((MarkupString)FaqJsonLd)</script>
@@ -318,6 +319,9 @@ else
     private string OptimizerPath => AppRoutes.OptimizerPathForCulture(ActiveCulture);
     private string FaqPath => AppRoutes.FaqPathForCulture(ActiveCulture);
     private string PresetsPath => AppRoutes.PresetsPathForCulture(ActiveCulture);
+    private string LicenseUrl => ToAbsolute(AppRoutes.LicensePathForCulture(ActiveCulture));
+    private string AcquireLicenseUrl => $"{LicenseUrl}#acquire";
+    private string SiteImageUrl => ToAbsolute("/favicon.png");
     private string LandingWorkflowTitle => ActiveCulture == "de" ? "So nutzt du diese Landingpage effektiv" : "How to use this landing page effectively";
     private string LandingWorkflowIntro => ActiveCulture == "de"
         ? "Nutze die Themenseite als Einstieg, wechsle dann in Presets und Generator und verfeinere den finalen Prompt im Optimizer."
@@ -413,6 +417,17 @@ else
                 text = x.Answer
             }
         }).ToArray()) ?? Array.Empty<object>()
+    });
+    private string ImageMetadataJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "ImageObject",
+        contentUrl = SiteImageUrl,
+        url = SiteImageUrl,
+        creditText = "PromptForge",
+        acquireLicensePage = AcquireLicenseUrl,
+        license = LicenseUrl,
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
     });
     private string RelatedContentJsonLd => JsonSerializer.Serialize(new
     {

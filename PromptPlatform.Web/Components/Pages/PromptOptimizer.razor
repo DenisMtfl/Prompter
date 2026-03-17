@@ -32,6 +32,7 @@
     <script type="application/ld+json">@((MarkupString)OptimizerJsonLd)</script>
     <script type="application/ld+json">@((MarkupString)OptimizerBreadcrumbJsonLd)</script>
     <script type="application/ld+json">@((MarkupString)OptimizerHowToJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)ImageMetadataJsonLd)</script>
 </HeadContent>
 
 <nav class="mb-3" aria-label="breadcrumb">
@@ -227,8 +228,8 @@
     private string ContextPresetsCta => IsGerman ? "Preset-Bibliothek" : "Preset library";
     private string ContextGeneratorCta => IsGerman ? "Zum Generator" : "Open generator";
     private string OptimizerPageTitle => IsGerman
-        ? "Prompt Optimizer für bessere KI-Prompts | PromptForge"
-        : "Prompt Optimizer for Better AI Prompts | PromptForge";
+        ? "Prompt Optimizer für KI-Prompts & Vorlagen | PromptForge"
+        : "Prompt Optimizer for AI Prompts & Templates | PromptForge";
     private string OptimizerBenefitsTitle => IsGerman ? "Warum der Prompt Optimizer nützlich ist" : "Why the prompt optimizer is useful";
     private string OptimizerBenefitsIntro => IsGerman
         ? "Die Seite ergänzt dünne Ausgangsprompts um klarere Ziele, robustere Struktur und kontextgerechte Qualitätsregeln."
@@ -267,14 +268,28 @@
     private string OptimizerProcessingButtonLabel => IsGerman ? "KI optimiert Prompt..." : "AI is optimizing...";
     private string OptimizerProcessingHint => IsGerman ? "Die KI verbessert gerade Zieldefinition, Struktur und Ausgabeformat." : "AI is currently improving goal definition, structure, and output format.";
     private string OptimizerMetaDescription => CurrentLanguage.Equals("de", StringComparison.OrdinalIgnoreCase)
-        ? "Optimiere bestehende KI-Prompts mit klarerer Zieldefinition, robusterer Struktur und kontextabhängigen Qualitätsregeln für bessere Ergebnisse."
-        : "Optimize existing AI prompts with clearer objectives, stronger structure, and context-aware quality rules for better results.";
+        ? "Optimiere bestehende KI-Prompts und Prompt-Vorlagen mit klarerer Zieldefinition, robusterer Struktur und kontextabhängigen Qualitätsregeln für bessere Ergebnisse in ChatGPT und anderen KI-Tools."
+        : "Optimize existing AI prompts and prompt templates with clearer objectives, stronger structure, and context-aware quality rules for better results in ChatGPT and other AI tools.";
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
     private string LocalizedOptimizerPath => AppRoutes.OptimizerPathForCulture(CurrentLanguage);
     private string CanonicalUrl => ToAbsolute(LocalizedOptimizerPath);
     private string GermanUrl => ToAbsolute(AppRoutes.OptimizerPathForCulture("de"));
     private string EnglishUrl => ToAbsolute(AppRoutes.OptimizerPathForCulture("en"));
+    private string LicenseUrl => ToAbsolute(AppRoutes.LicensePathForCulture(CurrentLanguage));
+    private string AcquireLicenseUrl => $"{LicenseUrl}#acquire";
+    private string SiteImageUrl => ToAbsolute("/favicon.png");
+    private string ImageMetadataJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "ImageObject",
+        contentUrl = SiteImageUrl,
+        url = SiteImageUrl,
+        creditText = "PromptForge",
+        acquireLicensePage = AcquireLicenseUrl,
+        license = LicenseUrl,
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
+    });
     private IReadOnlyList<SeoLandingPageLinkViewModel> OptimizerContextPages
         => SeoLandingPageService.GetGeneratorContextPages(CurrentLanguage, MapContextToMainCategory(Request.Context), maxItems: 4);
     private string OptimizerJsonLd => JsonSerializer.Serialize(new

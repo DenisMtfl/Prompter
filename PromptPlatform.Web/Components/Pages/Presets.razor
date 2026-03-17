@@ -31,6 +31,7 @@
     <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
     <script type="application/ld+json">@((MarkupString)PresetsJsonLd)</script>
     <script type="application/ld+json">@((MarkupString)PresetDiscoveryJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)ImageMetadataJsonLd)</script>
 </HeadContent>
 
 <nav class="mb-3" aria-label="breadcrumb">
@@ -262,16 +263,30 @@
     private string ComplexityLabel => IsGerman ? "Komplexität" : "Complexity";
     private string LoadingMoreLabel => IsGerman ? "Weitere Presets werden geladen..." : "Loading more presets...";
     private string PresetsTitle => IsGerman
-        ? "KI Prompt Presets und Vorlagen | PromptForge"
-        : "AI Prompt Presets and Templates | PromptForge";
+        ? "KI Prompt Presets, Vorlagen & Beispiele | PromptForge"
+        : "AI Prompt Presets, Templates & Examples | PromptForge";
     private string PresetsMetaDescription => IsGerman
-        ? "Durchsuchbare Bibliothek für KI Prompt Presets und Vorlagen mit Filtern nach Kategorie, Plattform und Unterkategorie sowie direkter Generator-Übernahme."
-        : "Searchable library of AI prompt presets and templates with filters by category, platform, and subcategory plus direct generator handoff.";
+        ? "Durchsuchbare Bibliothek für KI Prompt Presets, Prompt-Vorlagen und Beispiele mit Filtern nach Kategorie, Plattform und Unterkategorie sowie direkter Generator-Übernahme."
+        : "Searchable library of AI prompt presets, prompt templates, and examples with filters by category, platform, and subcategory plus direct generator handoff.";
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string LocalizedPresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
     private string CanonicalUrl => ToAbsolute(LocalizedPresetsPath);
     private string GermanUrl => ToAbsolute(AppRoutes.PresetsPathForCulture("de"));
     private string EnglishUrl => ToAbsolute(AppRoutes.PresetsPathForCulture("en"));
+    private string LicenseUrl => ToAbsolute(AppRoutes.LicensePathForCulture(CurrentLanguage));
+    private string AcquireLicenseUrl => $"{LicenseUrl}#acquire";
+    private string SiteImageUrl => ToAbsolute("/favicon.png");
+    private string ImageMetadataJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "ImageObject",
+        contentUrl = SiteImageUrl,
+        url = SiteImageUrl,
+        creditText = "PromptForge",
+        acquireLicensePage = AcquireLicenseUrl,
+        license = LicenseUrl,
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
+    });
     private string PresetsJsonLd => JsonSerializer.Serialize(new
     {
         @context = "https://schema.org",

@@ -14,20 +14,73 @@
 </div>
 
 @code {
+    private static readonly HashSet<string> LocalizedCoreSegments =
+    [
+        "generator",
+        "optimizer",
+        "presets",
+        "faq",
+        "history",
+        "favorites",
+        "license"
+    ];
+
     private string CurrentCultureLabel => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase)
         ? L["Language_German"]
         : L["Language_English"];
 
     private string BuildCultureUrl(string culture)
     {
-        var relative = Navigation.ToBaseRelativePath(Navigation.Uri);
-        var returnPath = string.IsNullOrWhiteSpace(relative) ? "/" : $"/{relative}";
-        return $"/culture/set?culture={culture}&returnUrl={Uri.EscapeDataString(returnPath)}";
+        var targetCulture = culture.Equals("en", StringComparison.OrdinalIgnoreCase) ? "en" : "de";
+        var current = new Uri(Navigation.Uri);
+        var path = current.AbsolutePath;
+        var query = current.Query;
+
+        var segments = path
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+
+        if (segments.Count == 0)
+        {
+            return AppRoutes.HomePathForCulture(targetCulture);
+        }
+
+        var first = segments[0].ToLowerInvariant();
+        var hasCulturePrefix = first is "de" or "en";
+
+        if (hasCulturePrefix)
+        {
+            if (segments.Count == 1)
+            {
+                return AppRoutes.HomePathForCulture(targetCulture);
+            }
+
+            var second = segments[1].ToLowerInvariant();
+            if (LocalizedCoreSegments.Contains(second))
+            {
+                segments[0] = targetCulture;
+                return $"/{string.Join('/', segments)}{query}";
+            }
+
+            return AppRoutes.HomePathForCulture(targetCulture);
+        }
+
+        if (path.Equals("/", StringComparison.Ordinal))
+        {
+            return AppRoutes.HomePathForCulture(targetCulture);
+        }
+
+        if (LocalizedCoreSegments.Contains(first))
+        {
+            return $"/{targetCulture}/{string.Join('/', segments)}{query}";
+        }
+
+        return AppRoutes.HomePathForCulture(targetCulture);
     }
 
     private async Task SelectLanguageAsync(string culture)
     {
-        await JsRuntime.InvokeVoidAsync("promptLanguage.set", culture);
-        Navigation.NavigateTo(BuildCultureUrl(culture), forceLoad: true);
+        var normalized = await JsRuntime.InvokeAsync<string>("promptLanguage.set", culture);
+        Navigation.NavigateTo(BuildCultureUrl(normalized), forceLoad: true);
     }
 }

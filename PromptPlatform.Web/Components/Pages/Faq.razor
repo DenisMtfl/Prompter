@@ -28,6 +28,7 @@
     <script type="application/ld+json">@((MarkupString)FaqJsonLd)</script>
     <script type="application/ld+json">@((MarkupString)BreadcrumbJsonLd)</script>
     <script type="application/ld+json">@((MarkupString)FaqPageJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)ImageMetadataJsonLd)</script>
 </HeadContent>
 
 <article class="faq-page">
@@ -150,14 +151,29 @@
     private string CanonicalUrl => ToAbsolute(LocalizedFaqPath);
     private string GermanUrl => ToAbsolute(AppRoutes.FaqPathForCulture("de"));
     private string EnglishUrl => ToAbsolute(AppRoutes.FaqPathForCulture("en"));
+    private string LicenseUrl => ToAbsolute(AppRoutes.LicensePathForCulture(CurrentLanguage));
+    private string AcquireLicenseUrl => $"{LicenseUrl}#acquire";
+    private string SiteImageUrl => ToAbsolute("/favicon.png");
 
     private string PageTitle => IsGerman
-        ? "FAQ zu Prompt Generator, Optimizer & Presets | PromptForge"
-        : "FAQ for Prompt Generator, Optimizer & Presets | PromptForge";
+        ? "FAQ zu KI Prompts, Presets & Prompt Optimizer | PromptForge"
+        : "FAQ for AI Prompts, Presets & Prompt Optimizer | PromptForge";
+
+    private string ImageMetadataJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "ImageObject",
+        contentUrl = SiteImageUrl,
+        url = SiteImageUrl,
+        creditText = "PromptForge",
+        acquireLicensePage = AcquireLicenseUrl,
+        license = LicenseUrl,
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptForge"
+    });
 
     private string MetaDescription => IsGerman
-        ? "Detaillierte FAQ zu PromptForge mit Antworten zu Prompt Generator, Prompt Optimizer, Presets, SEO-Landingpages, Lokalisierung und Datenhaltung."
-        : "Detailed PromptForge FAQ covering the prompt generator, prompt optimizer, presets, SEO landing pages, localization, and data handling.";
+        ? "Detaillierte FAQ zu PromptForge mit Antworten zu KI Prompt Generator, Prompt Optimizer, Prompt-Vorlagen, Presets, SEO-Landingpages, Lokalisierung und Datenhaltung."
+        : "Detailed PromptForge FAQ covering the AI prompt generator, prompt optimizer, prompt templates, presets, SEO landing pages, localization, and data handling.";
 
     private string HeroBadge => IsGerman ? "Produkt- und Plattform-FAQ" : "Product and Platform FAQ";
     private string HeroTitle => IsGerman
@@ -405,8 +421,8 @@
                 new(
                     new("Wie funktioniert die Sprachnavigation?", "How does language navigation work?"),
                     new(
-                        "Die Sprache wird über URL-Präfixe (`/de/` und `/en/`) gesteuert und in der Nutzerpräferenz gespeichert. Ein Wechsel berücksichtigt die aktuelle Seite und führt auf die passende Sprachvariante.",
-                        "Language is controlled via URL prefixes (`/de/` and `/en/`) and stored in user preference. Switching language preserves context and redirects to the matching localized page.")),
+                        "Die Sprache wird über URL-Präfixe (`/de/` und `/en/`) gesteuert und zusätzlich als Präferenz im Cookie gespeichert. Der Sprachwechsel bleibt im Kontext der aktuellen Seite und nutzt keinen separaten Redirect-Endpunkt.",
+                        "Language is controlled via URL prefixes (`/de/` and `/en/`) and additionally stored as a cookie preference. Language switching keeps the current page context and does not use a dedicated redirect endpoint.")),
                 new(
                     new("Warum sind sprachbezogene URLs wichtig?", "Why are language-specific URLs important?"),
                     new(
