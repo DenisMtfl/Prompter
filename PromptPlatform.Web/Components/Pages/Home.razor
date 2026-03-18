@@ -161,7 +161,7 @@
                                 </div>
                                 <div class="mt-auto d-flex gap-2 flex-wrap">
                                     <a class="btn btn-sm btn-primary"
-                                       href="@($"{GeneratorPath}?preset={preset.Id}")"
+                                       href="@AppRoutes.PromptPathForPreset(preset.Slug)"
                                        data-track="landing.featured-presets.use"
                                        data-track-context="@preset.Category">@FeaturedPresetUseLabel</a>
                                     @if (!string.IsNullOrWhiteSpace(landingPath))
@@ -299,11 +299,11 @@
     private string HeroLogoAlt => IsGerman ? "PromptToMars Logo als Hero-Visual" : "PromptToMars logo as hero visual";
 
     private string HomeTitle => IsGerman
-        ? "KI Prompt Generator, Prompt Optimizer & Vorlagen | PromptToMars"
-        : "AI Prompt Generator, Prompt Optimizer & Templates | PromptToMars";
+        ? "KI Prompt Generator, Prompt Optimizer, Prompt-Vorlagen & Shareable Prompts | PromptToMars"
+        : "AI Prompt Generator, Prompt Optimizer, Prompt Templates & Shareable Prompts | PromptToMars";
     private string HomeMetaDescription => IsGerman
-        ? "PromptToMars ist eine Plattform für KI Prompt Generator, Prompt Optimizer und Prompt-Vorlagen. Erstelle bessere ChatGPT-Prompts, nutze Presets, und skaliere deine SEO-Themencluster."
-        : "PromptToMars is a platform for an AI prompt generator, prompt optimizer, and prompt templates. Create better ChatGPT prompts, use presets, and scale your SEO topic clusters.";
+        ? "PromptToMars ist eine Plattform für KI Prompt Generator, Prompt Optimizer, Prompt-Vorlagen, teilbare Prompt-Links, Presets, Prompt Engineering und SEO-Landingpages. Erstelle bessere ChatGPT-Prompts und skaliere deine Themencluster effizient."
+        : "PromptToMars is a platform for an AI prompt generator, prompt optimizer, prompt templates, shareable prompt links, presets, prompt engineering, and SEO landing pages. Create better ChatGPT prompts and scale your topic clusters efficiently.";
     private int TotalPresetCount { get; set; }
     private string HeroPresetCountLabel => IsGerman
         ? $"{TotalPresetCount.ToString("N0", CultureInfo.CurrentCulture)} Presets verfügbar"
@@ -369,7 +369,7 @@
                         @type = "ListItem",
                         position = index + 1,
                         name = preset.GetTitle(CurrentLanguage),
-                        url = ToAbsolute($"{GeneratorPath}?preset={preset.Id}")
+                        url = ToAbsolute(AppRoutes.PromptPathForPreset(preset.Slug))
                     })
                     .ToArray()
             }

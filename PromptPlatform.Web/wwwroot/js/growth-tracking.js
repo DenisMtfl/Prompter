@@ -100,6 +100,25 @@
         });
     }
 
+    window.promptGrowth = {
+        track(name, properties) {
+            if (!name) {
+                return;
+            }
+
+            const payload = {
+                name: normalizeString(name, 120),
+                key: normalizeString(properties?.key, 160),
+                context: normalizeString(properties?.context, 160),
+                language: normalizeString(properties?.language, 8),
+                pageType: normalizeString(properties?.pageType, 30),
+                value: Number.isFinite(properties?.value) ? properties.value : undefined
+            };
+
+            enqueueEvent(payload);
+        }
+    };
+
     window.addEventListener("load", () => {
         trackPageView();
     }, { once: true });

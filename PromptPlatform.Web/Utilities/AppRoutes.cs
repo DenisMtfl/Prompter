@@ -3,8 +3,11 @@ namespace PromptPlatform.Web.Utilities;
 public static class AppRoutes
 {
     public const string Generator = "generator";
+    public const string Prompt = "prompt";
+    public const string Prompts = "prompts";
     public const string Optimizer = "optimizer";
     public const string Presets = "presets";
+    public const string Collections = "collections";
     public const string Faq = "faq";
     public const string License = "license";
     public const string History = "history";
@@ -13,8 +16,12 @@ public static class AppRoutes
 
     public const string HomePath = "/";
     public const string GeneratorPath = "/generator";
+    public const string PromptPath = "/prompt";
+    public const string ShortPromptPath = "/p";
+    public const string PromptsPath = "/prompts";
     public const string OptimizerPath = "/optimizer";
     public const string PresetsPath = "/presets";
+    public const string CollectionsPath = "/collections";
     public const string FaqPath = "/faq";
     public const string LicensePath = "/license";
     public const string HistoryPath = "/history";
@@ -28,11 +35,31 @@ public static class AppRoutes
     public static string GeneratorPathForCulture(string culture)
         => BuildLocalizedPath(culture, Generator);
 
+    public static string PromptPathForPreset(string slug)
+        => string.IsNullOrWhiteSpace(slug)
+            ? PromptPath
+            : $"/{Prompt}/{Uri.EscapeDataString(slug)}";
+
+    public static string PromptsPathForSlug(string slug)
+        => string.IsNullOrWhiteSpace(slug)
+            ? PromptsPath
+            : $"/{Prompts}/{Uri.EscapeDataString(slug)}";
+
+    public static string ShortPromptPathForPreset(string slug)
+        => string.IsNullOrWhiteSpace(slug)
+            ? ShortPromptPath
+            : $"/{ShortPromptPath.TrimStart('/')}/{Uri.EscapeDataString(slug)}";
+
     public static string OptimizerPathForCulture(string culture)
         => BuildLocalizedPath(culture, Optimizer);
 
     public static string PresetsPathForCulture(string culture)
         => BuildLocalizedPath(culture, Presets);
+
+    public static string CollectionsPathForSlug(string slug)
+        => string.IsNullOrWhiteSpace(slug)
+            ? CollectionsPath
+            : $"/{Collections}/{Uri.EscapeDataString(slug)}";
 
     public static string FaqPathForCulture(string culture)
         => BuildLocalizedPath(culture, Faq);

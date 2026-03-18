@@ -14,6 +14,11 @@ Disallow: /culture/
 Disallow: /*?*
 Allow: /
 Sitemap: /sitemap.xml
+Sitemap: /sitemaps/core.xml
+Sitemap: /sitemaps/landingpages.xml
+Sitemap: /sitemaps/prompts.xml
+Sitemap: /sitemaps/categories.xml
+Sitemap: /sitemaps/collections.xml
 
 User-agent: GPTBot
 Disallow: /de/history
@@ -126,4 +131,8 @@ Disallow: /*?*
 Allow: /
 
 Sitemap: /sitemap.xml
+Sitemap: /sitemaps/core.xml
+Sitemap: /sitemaps/landingpages.xml
+Sitemap: /sitemaps/prompts.xml
+Sitemap: /sitemaps/collections.xml
 # LLM guidance: /llms.txt

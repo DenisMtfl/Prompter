@@ -1,4 +1,5 @@
 @page "/optimizer"
+@page "/prompt-optimizer"
 @page "/de/optimizer"
 @page "/en/optimizer"
 @using System.Globalization
@@ -228,8 +229,8 @@
     private string ContextPresetsCta => IsGerman ? "Preset-Bibliothek" : "Preset library";
     private string ContextGeneratorCta => IsGerman ? "Zum Generator" : "Open generator";
     private string OptimizerPageTitle => IsGerman
-        ? "Prompt Optimizer für KI-Prompts & Vorlagen | PromptToMars"
-        : "Prompt Optimizer for AI Prompts & Templates | PromptToMars";
+        ? "Prompt Optimizer für KI-Prompts, Vorlagen & Shareable Prompts | PromptToMars"
+        : "Prompt Optimizer for AI Prompts, Templates & Shareable Prompts | PromptToMars";
     private string OptimizerBenefitsTitle => IsGerman ? "Warum der Prompt Optimizer nützlich ist" : "Why the prompt optimizer is useful";
     private string OptimizerBenefitsIntro => IsGerman
         ? "Die Seite ergänzt dünne Ausgangsprompts um klarere Ziele, robusterer Struktur und kontextgerechte Qualitätsregeln."
@@ -268,8 +269,8 @@
     private string OptimizerProcessingButtonLabel => IsGerman ? "KI optimiert Prompt..." : "AI is optimizing...";
     private string OptimizerProcessingHint => IsGerman ? "Die KI verbessert gerade Zieldefinition, Struktur und Ausgabeformat." : "AI is currently improving goal definition, structure, and output format.";
     private string OptimizerMetaDescription => CurrentLanguage.Equals("de", StringComparison.OrdinalIgnoreCase)
-        ? "Optimiere bestehende KI-Prompts und Prompt-Vorlagen mit klarerer Zieldefinition, robusterer Struktur und kontextabhängigen Qualitätsregeln für bessere Ergebnisse in ChatGPT und anderen KI-Tools."
-        : "Optimize existing AI prompts and prompt templates with clearer objectives, stronger structure, and context-aware quality rules for better results in ChatGPT and other AI tools.";
+        ? "Optimiere bestehende KI-Prompts und Prompt-Vorlagen mit klarerer Zieldefinition, robusterer Struktur, teilbaren Prompt-Seiten, Prompt Engineering und kontextabhängigen Qualitätsregeln für bessere Ergebnisse in ChatGPT und anderen KI-Tools."
+        : "Optimize existing AI prompts and prompt templates with clearer objectives, stronger structure, shareable prompt pages, prompt engineering, and context-aware quality rules for better results in ChatGPT and other AI tools.";
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
     private string LocalizedOptimizerPath => AppRoutes.OptimizerPathForCulture(CurrentLanguage);

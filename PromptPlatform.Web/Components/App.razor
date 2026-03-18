@@ -1,4 +1,5 @@
 @using System.Globalization
+@inject NavigationManager Navigation
 
 <!DOCTYPE html>
 <html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
@@ -6,6 +7,24 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="keywords" content="@Keywords" />
+    <meta name="author" content="PromptToMars" />
+    <meta name="generator" content="PromptToMars" />
+    <meta property="og:site_name" content="PromptToMars" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="PromptToMars" />
+    <meta name="application-name" content="PromptToMars" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HQFJNLMWKE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-HQFJNLMWKE');
+    </script>
     <base href="/" />
     <ResourcePreloader />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -80,3 +99,37 @@
 </body>
 
 </html>
+
+@code {
+    private string Keywords => BuildKeywords(GetCurrentPath());
+
+    private string GetCurrentPath()
+    {
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var path = string.IsNullOrWhiteSpace(relativePath)
+            ? "/"
+            : "/" + relativePath.Split('?', '#')[0].Trim('/');
+
+        return path.ToLowerInvariant();
+    }
+
+    private static string BuildKeywords(string path)
+    {
+        var keywords = path switch
+        {
+            "/" or "/de" or "/en" => "PromptToMars, AI prompt platform, AI prompt generator, prompt optimizer, prompt templates, prompt presets, prompt library, bilingual prompt platform, ChatGPT prompts, SEO landing pages, prompt engineering, AI writing assistant, content workflows, prompt sharing, prompt SEO, reusable AI prompts, prompt productivity, prompt workflow automation, prompt marketing, prompt strategy, prompt library online, prompt ideas, prompt writer, prompt copywriting, LLM prompts",
+            var p when p.Contains("/generator", StringComparison.OrdinalIgnoreCase) => "AI prompt generator, prompt builder, prompt templates, ChatGPT prompts, custom prompts, AI writing tools, prompt engineering, prompt creation, prompt workflow, prompt generator app, prompt ideas, prompt drafting, prompt writing, prompt ideation, prompt creation tool, prompt writer, copywriting prompts, LLM prompt generator, PromptToMars",
+            var p when p.Contains("/optimizer", StringComparison.OrdinalIgnoreCase) => "prompt optimizer, prompt improvement, prompt quality, prompt refinement, AI prompt enhancement, prompt engineering, prompt scoring, prompt rewriting, prompt analysis, prompt tuning, prompt diagnostics, prompt clarity, prompt structure, prompt audit, prompt rewrite, prompt formatter, PromptToMars",
+            var p when p.Contains("/presets", StringComparison.OrdinalIgnoreCase) => "prompt presets, reusable prompts, prompt templates, preset library, prompt examples, AI prompt library, prompt packs, prompt archive, prompt catalog, prompt collections, prompt snippets, prompt starter kits, prompt repository, prompt preset examples, prompt prompt library, PromptToMars",
+            var p when p.Contains("/faq", StringComparison.OrdinalIgnoreCase) => "prompt FAQ, AI prompts guide, prompt best practices, prompt writing tips, prompt engineering FAQ, prompt help, prompt strategy, prompt documentation, prompt workflow FAQ, prompt glossary, prompt guide, prompt support, prompt knowledge base, PromptToMars",
+            var p when p.StartsWith("/prompt/", StringComparison.OrdinalIgnoreCase) => "shareable prompt, shareable AI prompt, prompt link, prompt template, viral prompt URL, prompt share page, prompt page, prompt landing page, AI prompt generator, share prompt, prompt example, prompt URL, prompt share link, prompt permalink, PromptToMars",
+            var p when p.Contains("/history", StringComparison.OrdinalIgnoreCase) => "prompt history, saved prompts, generated prompts, prompt archive, prompt drafts, prompt log, prompt timeline, prompt history page, prompt backups, prompt version history, prompt history app, PromptToMars",
+            var p when p.Contains("/favorites", StringComparison.OrdinalIgnoreCase) => "favorite prompts, saved presets, prompt library, bookmarked prompts, reusable prompt collection, prompt favorites, saved prompt ideas, prompt shortlist, prompt bookmarks, prompt saved items, PromptToMars",
+            var p when p.Contains("/optimizer", StringComparison.OrdinalIgnoreCase) && p.Contains("/de", StringComparison.OrdinalIgnoreCase) => "deutsche prompt optimierung, KI prompt verbessern, prompt qualität, prompt verfeinern, prompt struktur verbessern, prompt text optimieren, prompt audit, prompt umformulieren, PromptToMars",
+            var p when p.Contains("/generator", StringComparison.OrdinalIgnoreCase) && p.Contains("/de", StringComparison.OrdinalIgnoreCase) => "deutscher AI prompt generator, prompt vorlagen, ChatGPT prompts auf deutsch, prompt erstellung, prompt generator deutsch, prompt schreiben, prompt tool deutsch, prompt texte, PromptToMars",
+            _ => "PromptToMars, AI prompts, prompt templates, prompt generator, prompt optimizer, prompt presets, prompt engineering, bilingual prompt platform, prompt sharing, SEO landing pages, reusable prompts, prompt writing, prompt library online, prompt ideas, prompt writer, prompt copywriting, LLM prompts"
+        };
+
+        return keywords;
+    }
+}

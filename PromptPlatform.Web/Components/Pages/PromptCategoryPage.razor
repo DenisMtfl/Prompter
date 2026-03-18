@@ -1,0 +1,10 @@
+@page "/prompts/{Slug}"
+@page "/de/prompts/{Slug}"
+@page "/en/prompts/{Slug}"
+
+<SeoLandingPage Slug="@Slug" />
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+}

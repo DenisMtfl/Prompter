@@ -1,10 +1,12 @@
 @page "/de/{Slug}"
 @page "/en/{Slug}"
+@page "/{Slug}"
 @using System.Globalization
 @using System.Text.Json
 @using Microsoft.AspNetCore.Http
 @inject IStringLocalizer<SharedResource> L
 @inject ISeoLandingPageService SeoLandingPageService
+@inject IJSRuntime JsRuntime
 @inject NavigationManager Navigation
 
 @if (PageModel is null)
@@ -41,6 +43,7 @@ else
         <link rel="alternate" hreflang="de" href="@GermanUrl" />
         <link rel="alternate" hreflang="en" href="@EnglishUrl" />
         <link rel="alternate" hreflang="x-default" href="@EnglishUrl" />
+        <meta name="keywords" content="@LandingKeywords" />
         <script type="application/ld+json">@((MarkupString)WebPageJsonLd)</script>
         <script type="application/ld+json">@((MarkupString)BreadcrumbJsonLd)</script>
         <script type="application/ld+json">@((MarkupString)HowToJsonLd)</script>
@@ -70,7 +73,7 @@ else
                 <div class="col-lg-3">
                     <div class="d-grid gap-2">
                         <a class="btn btn-primary"
-                           href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")"
+                           href="@AppRoutes.PromptPathForPreset(PageModel.CtaPresetSlug)"
                            data-track="seo.hero.generator"
                            data-track-context="@PageModel.Category">@PageModel.CtaGeneratorLabel</a>
                         <a class="btn btn-outline-secondary"
@@ -91,7 +94,7 @@ else
                             <p class="text-secondary mb-0">@LandingWorkflowIntro</p>
                         </div>
                         <div class="d-flex flex-wrap gap-2">
-                            <a class="btn btn-sm btn-primary" href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")">@PageModel.CtaGeneratorLabel</a>
+                            <a class="btn btn-sm btn-primary" href="@AppRoutes.PromptPathForPreset(PageModel.CtaPresetSlug)">@PageModel.CtaGeneratorLabel</a>
                             <a class="btn btn-sm btn-outline-secondary" href="@OptimizerPath">@LandingWorkflowOptimizerLabel</a>
                             <a class="btn btn-sm btn-outline-secondary" href="@FaqPath">@LandingWorkflowFaqLabel</a>
                         </div>
@@ -156,7 +159,7 @@ else
                                 <h3 class="h6">@preset.GetTitle(PageModel.Culture)</h3>
                                 <p class="text-secondary small">@preset.GetDescription(PageModel.Culture)</p>
                                 <a class="btn btn-sm btn-primary mt-auto"
-                                   href="@($"{GeneratorPath}?preset={preset.Id}")"
+                                   href="@AppRoutes.PromptPathForPreset(preset.Slug)"
                                    data-track="seo.presets.use"
                                    data-track-context="@PageModel.Category">@L["Presets_Action_UseThis"]</a>
                             </div>
@@ -195,7 +198,7 @@ else
                                     <h3 class="h6">@preset.GetTitle(PageModel.Culture)</h3>
                                     <p class="small text-secondary">@preset.GetDescription(PageModel.Culture)</p>
                                     <a class="btn btn-sm btn-outline-primary mt-auto"
-                                       href="@($"{GeneratorPath}?preset={preset.Id}")"
+                                       href="@AppRoutes.PromptPathForPreset(preset.Slug)"
                                        data-track="seo.related_presets.use"
                                        data-track-context="@PageModel.Category">@L["Presets_Action_UseThis"]</a>
                                 </div>
@@ -236,7 +239,7 @@ else
                     <h2 id="seo-tool-links-title" class="h3 mb-2">@ToolLinksTitle</h2>
                     <p class="text-secondary mb-3">@ToolLinksIntro</p>
                     <div class="d-flex flex-wrap gap-2 mb-3">
-                        <a class="btn btn-outline-primary" href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")">@PageModel.CtaGeneratorLabel</a>
+                        <a class="btn btn-outline-primary" href="@AppRoutes.PromptPathForPreset(PageModel.CtaPresetSlug)">@PageModel.CtaGeneratorLabel</a>
                         <a class="btn btn-outline-secondary" href="@PageModel.PresetsCategoryPath">@PageModel.CtaPresetsLabel</a>
                         <a class="btn btn-outline-secondary" href="@OptimizerPath">@ToolLinksOptimizerLabel</a>
                         <a class="btn btn-outline-secondary" href="@FaqPath">@ToolLinksFaqLabel</a>
@@ -288,7 +291,7 @@ else
                     <p class="text-secondary mb-4">@PageModel.CtaSubtitle</p>
                     <div class="d-flex flex-wrap gap-2">
                         <a class="btn btn-primary btn-lg"
-                           href="@($"{GeneratorPath}?preset={PageModel.CtaPresetId}")"
+                           href="@AppRoutes.PromptPathForPreset(PageModel.CtaPresetSlug)"
                            data-track="seo.cta.generator"
                            data-track-context="@PageModel.Category">@PageModel.CtaGeneratorLabel</a>
                         <a class="btn btn-outline-secondary btn-lg"
@@ -321,7 +324,7 @@ else
     private string PresetsPath => AppRoutes.PresetsPathForCulture(ActiveCulture);
     private string LicenseUrl => ToAbsolute(AppRoutes.LicensePathForCulture(ActiveCulture));
     private string AcquireLicenseUrl => $"{LicenseUrl}#acquire";
-    private string SiteImageUrl => ToAbsolute("/favicon.png");
+    private string SiteImageUrl => ToAbsolute(PageModel is null ? "/favicon.png" : SeoService.BuildCategoryOgImagePath(PageModel.Slug));
     private string LandingWorkflowTitle => ActiveCulture == "de" ? "So nutzt du diese Landingpage effektiv" : "How to use this landing page effectively";
     private string LandingWorkflowIntro => ActiveCulture == "de"
         ? "Nutze die Themenseite als Einstieg, wechsle dann in Presets und Generator und verfeinere den finalen Prompt im Optimizer."
@@ -343,11 +346,14 @@ else
     private string LandingWorkflowFaqLabel => ActiveCulture == "de" ? "FAQ lesen" : "Read FAQ";
     private string ToolLinksTitle => ActiveCulture == "de" ? "Nächste sinnvolle Schritte" : "Useful next steps";
     private string ToolLinksIntro => ActiveCulture == "de"
-        ? "Diese internen Links helfen dir, vom informativen Einstieg direkt in passende Presets, Tools und angrenzende Themencluster zu wechseln."
-        : "These internal links help you move from this informational entry page directly into matching presets, tools, and adjacent topic clusters.";
+        ? "Diese internen Links helfen dir, vom informativen Einstieg direkt in passende Presets, Tools, shareable Prompt-URLs und angrenzende Themencluster zu wechseln."
+        : "These internal links help you move from this informational entry page directly into matching presets, tools, shareable prompt URLs, and adjacent topic clusters.";
     private string ToolLinksOptimizerLabel => ActiveCulture == "de" ? "Prompt Optimizer" : "Prompt optimizer";
     private string ToolLinksFaqLabel => ActiveCulture == "de" ? "FAQ" : "FAQ";
     private string ToolLinksClusterLabel => ActiveCulture == "de" ? "Weitere thematisch passende Landingpages" : "More related landing pages";
+    private string LandingKeywords => ActiveCulture == "de"
+        ? $"PromptToMars, KI Prompt Landingpage, Prompt Vorlagen, Presets, Prompt Generator, Prompt Optimizer, {PageModel?.MetaTitle ?? string.Empty}, shareable prompt, SEO Landingpage"
+        : $"PromptToMars, AI prompt landing page, prompt templates, presets, prompt generator, prompt optimizer, {PageModel?.MetaTitle ?? string.Empty}, shareable prompt, SEO landing page";
     private string WebPageJsonLd => JsonSerializer.Serialize(new
     {
         @context = "https://schema.org",
@@ -463,7 +469,7 @@ else
                     @type = "ListItem",
                     position = index + 1,
                     name = preset.GetTitle(ActiveCulture),
-                    url = ToAbsolute($"{GeneratorPath}?preset={preset.Id}")
+                        url = ToAbsolute(AppRoutes.PromptPathForPreset(preset.Slug))
                 }).ToArray()) ?? Array.Empty<object>()
             }
         }
@@ -484,11 +490,37 @@ else
             : StatusCodes.Status200OK;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || PageModel is null)
+        {
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("promptGrowth.track", "category_page_view", new
+        {
+            key = PageModel.Slug,
+            context = PageModel.Category.ToString(),
+            language = PageModel.Culture,
+            pageType = "category"
+        });
+    }
+
     private string ResolveRouteCulture()
     {
         var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
         var firstSegment = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-        return firstSegment?.Equals("de", StringComparison.OrdinalIgnoreCase) == true ? "de" : "en";
+        if (firstSegment?.Equals("de", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return "de";
+        }
+
+        if (firstSegment?.Equals("en", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return "en";
+        }
+
+        return CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
     }
 
     private string ToAbsolute(string relativePath)

@@ -43,9 +43,12 @@ public sealed class SeoLandingPageService(
         var ctaPresetId = presetExamples.FirstOrDefault()?.Id
                           ?? allPresets.FirstOrDefault()?.Id
                           ?? string.Empty;
+        var ctaPresetSlug = presetExamples.FirstOrDefault()?.Slug
+                            ?? allPresets.FirstOrDefault()?.Slug
+                            ?? string.Empty;
 
         var resolvedSlug = normalizedCulture == "de" ? content.SlugDe : content.SlugEn;
-        var canonicalPath = BuildPath(normalizedCulture, resolvedSlug);
+        var canonicalPath = BuildPromptsPath(resolvedSlug);
         var alternateDe = BuildPath("de", content.SlugDe);
         var alternateEn = BuildPath("en", content.SlugEn);
         var labels = BuildLabels(normalizedCulture);
@@ -61,7 +64,7 @@ public sealed class SeoLandingPageService(
             Headline = content.Headline.Resolve(normalizedCulture),
             Intro = content.Intro.Resolve(normalizedCulture),
             MetaTitle = content.MetaTitle.Resolve(normalizedCulture),
-            MetaDescription = content.MetaDescription.Resolve(normalizedCulture),
+            MetaDescription = BuildMetaDescription(content.MetaDescription.Resolve(normalizedCulture), normalizedCulture),
             HeroBadge = labels.HeroBadge,
             BenefitsTitle = labels.BenefitsTitle,
             UseCasesTitle = labels.UseCasesTitle,
@@ -91,6 +94,7 @@ public sealed class SeoLandingPageService(
                 })
                 .ToList(),
             CtaPresetId = ctaPresetId,
+            CtaPresetSlug = ctaPresetSlug,
             PresetsCategoryPath = $"{AppRoutes.PresetsPathForCulture(normalizedCulture)}?category={content.Category}"
         };
     }
@@ -167,7 +171,7 @@ public sealed class SeoLandingPageService(
         }
 
         var slug = normalizedCulture == "de" ? primary.SlugDe : primary.SlugEn;
-        return BuildPath(normalizedCulture, slug);
+        return BuildPromptsPath(slug);
     }
 
     public string? GetMainCategoryLandingPath(string culture, MainCategory category)
@@ -203,20 +207,42 @@ public sealed class SeoLandingPageService(
         {
             Key = page.Key,
             Category = page.Category,
-            Path = BuildPath(normalizedCulture, slug),
+            Path = BuildPromptsPath(slug),
             Title = page.Headline.Resolve(normalizedCulture),
-            Description = page.MetaDescription.Resolve(normalizedCulture)
+            Description = BuildMetaDescription(page.MetaDescription.Resolve(normalizedCulture), normalizedCulture)
         };
     }
 
     private static string BuildPath(string culture, string slug)
         => $"/{NormalizeCulture(culture)}/{slug}";
 
+    private static string BuildPublicPath(string slug)
+        => $"/{slug}";
+
+    private static string BuildPromptsPath(string slug)
+        => $"/{AppRoutes.Prompts}/{slug}";
+
     private static string NormalizeCulture(string culture)
         => culture.Equals("de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
 
     private static bool IsCorePage(SeoLandingPageContent page)
         => page.Key.EndsWith("-core", StringComparison.OrdinalIgnoreCase);
+
+    private static string BuildMetaDescription(string description, string culture)
+    {
+        var seoTail = culture.Equals("de", StringComparison.OrdinalIgnoreCase)
+            ? " Entdecke passende Prompt-Vorlagen, Presets, KI Prompt Generator und shareable Prompt-Links für dieses Thema."
+            : " Discover matching prompt templates, presets, AI prompt generator workflows, and shareable prompt links for this topic.";
+
+        if (description.Contains("shareable prompt", StringComparison.OrdinalIgnoreCase)
+            || description.Contains("Prompt-Links", StringComparison.OrdinalIgnoreCase)
+            || description.Contains("prompt links", StringComparison.OrdinalIgnoreCase))
+        {
+            return description;
+        }
+
+        return string.Concat(description.TrimEnd(), seoTail);
+    }
 
     private static SeoLandingLabels BuildLabels(string culture)
     {

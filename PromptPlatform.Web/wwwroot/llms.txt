@@ -7,6 +7,7 @@
 - /en
 - /de/generator
 - /en/generator
+- /prompt/{slug}
 - /de/presets
 - /en/presets
 - /de/optimizer
@@ -35,4 +36,9 @@
 
 ## Sitemap
 - /sitemap.xml
+- /sitemaps/core.xml
+- /sitemaps/landingpages.xml
+- /sitemaps/prompts.xml
+- /sitemaps/categories.xml
+- /sitemaps/collections.xml
 

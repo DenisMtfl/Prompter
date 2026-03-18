@@ -37,5 +37,6 @@ public sealed class SeoLandingPageViewModel
     public required IReadOnlyList<SeoLandingPageLinkViewModel> RelatedPages { get; init; }
     public required IReadOnlyList<SeoFaqItemViewModel> FaqItems { get; init; }
     public required string CtaPresetId { get; init; }
+    public required string CtaPresetSlug { get; init; }
     public required string PresetsCategoryPath { get; init; }
 }

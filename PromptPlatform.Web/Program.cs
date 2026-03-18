@@ -422,7 +422,10 @@ app.MapMethods("/sitemap.xml", ["GET", "HEAD"], (HttpContext context) =>
     var index = BuildSitemapIndex(baseUrl, now,
     [
         "/sitemaps/core.xml",
-        "/sitemaps/landingpages.xml"
+        "/sitemaps/landingpages.xml",
+        "/sitemaps/prompts.xml",
+        "/sitemaps/categories.xml",
+        "/sitemaps/collections.xml"
     ]);
 
     ApplyPublicCacheHeaders(context, TimeSpan.FromHours(6));
@@ -454,6 +457,325 @@ app.MapMethods("/sitemaps/core.xml", ["GET", "HEAD"], (HttpContext context) =>
     ApplyPublicCacheHeaders(context, TimeSpan.FromHours(6));
     return Results.Text(sitemap.ToString(), "application/xml; charset=utf-8");
 }).RequireRateLimiting("seo-assets");
+
+app.MapMethods("/sitemaps/prompts.xml", ["GET", "HEAD"], async (HttpContext context, IPresetService presetService) =>
+{
+    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host.Value}".TrimEnd('/');
+
+    var entries = (await presetService.GetAllAsync())
+        .OrderByDescending(x => x.PopularityScore)
+        .ThenBy(x => x.Slug, StringComparer.OrdinalIgnoreCase)
+        .Select(preset => new SitemapUrlEntry(
+            AppRoutes.PromptsPathForSlug(preset.Slug),
+            "weekly",
+            "0.8"))
+        .ToList();
+
+    var sitemap = BuildUrlSet(baseUrl, entries, DateTime.UtcNow.ToString("yyyy-MM-dd"));
+    ApplyPublicCacheHeaders(context, TimeSpan.FromHours(6));
+    return Results.Text(sitemap.ToString(), "application/xml; charset=utf-8");
+}).RequireRateLimiting("seo-assets");
+
+app.MapMethods("/sitemaps/collections.xml", ["GET", "HEAD"], async (HttpContext context, IPresetService presetService) =>
+{
+    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host.Value}".TrimEnd('/');
+    var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
+
+    var collectionSlugs = GetCollectionDefinitions(language).Select(x => x.Slug).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    var entries = collectionSlugs
+        .Select(slug => new SitemapUrlEntry(AppRoutes.CollectionsPathForSlug(slug), "weekly", "0.8"))
+        .OrderBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    var sitemap = BuildUrlSet(baseUrl, entries, DateTime.UtcNow.ToString("yyyy-MM-dd"));
+    ApplyPublicCacheHeaders(context, TimeSpan.FromHours(6));
+    return Results.Text(sitemap.ToString(), "application/xml; charset=utf-8");
+}).RequireRateLimiting("seo-assets");
+
+app.MapGet("/api/prompts/{slug}", async (string slug, IPresetService presetService, HttpContext context) =>
+{
+    var preset = await presetService.GetByIdAsync(slug);
+    if (preset is null)
+    {
+        return Results.NotFound(new { error = "Prompt not found" });
+    }
+
+    var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
+    var payload = new
+    {
+        preset.Id,
+        preset.Slug,
+        preset.Category,
+        title = preset.GetTitle(language),
+        description = preset.GetDescription(language),
+        subcategory = preset.GetSubcategory(language),
+        exampleInput = preset.GetExampleInput(language),
+        examplePrompt = preset.GetExamplePrompt(language),
+        tags = preset.GetTags(language),
+        generatorUrl = AppRoutes.GeneratorPathForCulture(language) + $"?preset={Uri.EscapeDataString(preset.Slug)}",
+        shareUrl = AppRoutes.ShortPromptPathForPreset(preset.Slug),
+        seoUrl = AppRoutes.PromptsPathForSlug(preset.Slug)
+    };
+
+    context.Response.Headers["Cache-Control"] = "public, max-age=300";
+    return Results.Json(payload);
+}).RequireRateLimiting("seo-assets");
+
+app.MapGet("/api/prompts/search", async (string? q, IPresetService presetService, HttpContext context) =>
+{
+    var query = (q ?? string.Empty).Trim();
+    if (string.IsNullOrWhiteSpace(query))
+    {
+        return Results.Ok(Array.Empty<object>());
+    }
+
+    var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
+    var presets = await presetService.GetAllAsync();
+
+    var results = presets
+        .Select(preset => new
+        {
+            Preset = preset,
+            Score = ScorePreset(preset, query, language)
+        })
+        .Where(x => x.Score > 0)
+        .OrderByDescending(x => x.Score)
+        .ThenByDescending(x => x.Preset.PopularityScore)
+        .Take(12)
+        .Select(x => new
+        {
+            x.Preset.Id,
+            x.Preset.Slug,
+            x.Preset.Category,
+            title = x.Preset.GetTitle(language),
+            description = x.Preset.GetDescription(language),
+            shareUrl = AppRoutes.ShortPromptPathForPreset(x.Preset.Slug),
+            generatorUrl = AppRoutes.GeneratorPathForCulture(language) + $"?preset={Uri.EscapeDataString(x.Preset.Slug)}"
+        })
+        .ToArray();
+
+    context.Response.Headers["Cache-Control"] = "public, max-age=120";
+    return Results.Json(results);
+}).RequireRateLimiting("seo-assets");
+
+app.MapGet("/embed/prompt/{slug}", async (string slug, IPresetService presetService, HttpContext context) =>
+{
+    var preset = await presetService.GetByIdAsync(slug);
+    if (preset is null)
+    {
+        return Results.NotFound("<html><body><p>Prompt not found.</p></body></html>");
+    }
+
+    var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
+    var title = preset.GetTitle(language);
+    var description = preset.GetDescription(language);
+    var seoUrl = AppRoutes.PromptsPathForSlug(preset.Slug);
+    var generatorUrl = AppRoutes.GeneratorPathForCulture(language) + $"?preset={Uri.EscapeDataString(preset.Slug)}";
+
+    var html = """
+<!DOCTYPE html>
+<html lang="__LANG__">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>__TITLE__ · PromptToMars</title>
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0f172a;color:#e5e7eb;}
+    .card{max-width:720px;margin:0 auto;padding:20px;border:1px solid rgba(148,163,184,.18);border-radius:20px;background:rgba(15,23,42,.92);}
+    a{color:#93c5fd;text-decoration:none;}
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#1d4ed8;color:#fff;font-size:12px;font-weight:700;}
+    h1{margin:12px 0 10px;font-size:24px;line-height:1.2;}
+    p{margin:0 0 16px;color:#94a3b8;line-height:1.6;}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;}
+    .btn{display:inline-block;padding:12px 14px;border-radius:12px;background:#2563eb;color:#fff;font-weight:700;}
+    .btn.secondary{background:transparent;border:1px solid rgba(148,163,184,.2);}
+    code{display:block;padding:12px;border-radius:12px;background:#111827;color:#cbd5e1;overflow:auto;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">PromptToMars</span>
+    <h1>__TITLE__</h1>
+    <p>__DESCRIPTION__</p>
+    <div class="actions">
+      <a class="btn" href="__SEO_URL__">Open prompt page</a>
+      <a class="btn secondary" href="__GENERATOR_URL__">Use in generator</a>
+    </div>
+    <h2 style="font-size:16px;margin:20px 0 10px;">Embed code</h2>
+    <code>&lt;iframe src="__EMBED_URL__" width="100%" height="420" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"&gt;&lt;/iframe&gt;</code>
+  </div>
+</body>
+</html>
+"""
+    .Replace("__LANG__", language)
+    .Replace("__TITLE__", System.Net.WebUtility.HtmlEncode(title))
+    .Replace("__DESCRIPTION__", System.Net.WebUtility.HtmlEncode(description))
+    .Replace("__SEO_URL__", System.Net.WebUtility.HtmlEncode(seoUrl))
+    .Replace("__GENERATOR_URL__", System.Net.WebUtility.HtmlEncode(generatorUrl))
+    .Replace("__EMBED_URL__", System.Net.WebUtility.HtmlEncode($"{context.Request.Scheme}://{context.Request.Host.Value}/embed/prompt/{Uri.EscapeDataString(preset.Slug)}"));
+
+    context.Response.Headers["Cache-Control"] = "public, max-age=300";
+    return Results.Text(html, "text/html; charset=utf-8");
+}).RequireRateLimiting("seo-assets");
+
+app.MapGet("/api/collections/{slug}", async (string slug, IPresetService presetService, HttpContext context) =>
+{
+    var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
+    var collection = GetCollectionDefinition(slug, language);
+    if (collection is null)
+    {
+        return Results.NotFound(new { error = "Collection not found" });
+    }
+
+    var presets = await presetService.GetAllAsync();
+    var selected = GetCollectionPresets(collection, presets, language);
+
+    var payload = new
+    {
+        collection.Slug,
+        title = collection.GetTitle(language),
+        description = collection.GetDescription(language),
+        shareUrl = AppRoutes.CollectionsPathForSlug(collection.Slug),
+        items = selected.Select(p => new
+        {
+            p.Id,
+            p.Slug,
+            p.Category,
+            title = p.GetTitle(language),
+            description = p.GetDescription(language),
+            shareUrl = AppRoutes.ShortPromptPathForPreset(p.Slug),
+            generatorUrl = AppRoutes.GeneratorPathForCulture(language) + $"?preset={Uri.EscapeDataString(p.Slug)}"
+        }).ToArray()
+    };
+
+    context.Response.Headers["Cache-Control"] = "public, max-age=300";
+    return Results.Json(payload);
+}).RequireRateLimiting("seo-assets");
+
+app.MapGet("/collections/{slug}", async (string slug, IPresetService presetService, HttpContext context) =>
+{
+    var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
+    var collection = GetCollectionDefinition(slug, language);
+    if (collection is null)
+    {
+        return Results.NotFound("<html><body><p>Collection not found.</p></body></html>");
+    }
+
+    var presets = await presetService.GetAllAsync();
+    var selected = GetCollectionPresets(collection, presets, language);
+    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host.Value}".TrimEnd('/');
+    var canonicalUrl = $"{baseUrl}{AppRoutes.CollectionsPathForSlug(collection.Slug)}";
+    var generatorUrl = selected.FirstOrDefault() is { } firstPreset
+        ? AppRoutes.GeneratorPathForCulture(language) + $"?preset={Uri.EscapeDataString(firstPreset.Slug)}"
+        : AppRoutes.GeneratorPathForCulture(language);
+
+    var itemCards = string.Join(string.Empty, selected.Take(12).Select(preset =>
+    {
+        var title = System.Net.WebUtility.HtmlEncode(preset.GetTitle(language));
+        var description = System.Net.WebUtility.HtmlEncode(preset.GetDescription(language));
+        var shareUrl = AppRoutes.ShortPromptPathForPreset(preset.Slug);
+        var seoUrl = AppRoutes.PromptsPathForSlug(preset.Slug);
+        var useUrl = AppRoutes.GeneratorPathForCulture(language) + $"?preset={Uri.EscapeDataString(preset.Slug)}";
+        return $"""
+        <div class="col-md-6 col-xl-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+              <h2 class="h6">{title}</h2>
+              <p class="small text-secondary">{description}</p>
+              <div class="mt-auto d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-primary" href="{seoUrl}">Open page</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{useUrl}">Use in generator</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{shareUrl}">Share</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        """;
+    }));
+
+    var relatedCollectionLinks = string.Join(string.Empty, GetCollectionDefinitions(language)
+        .Where(x => !x.Slug.Equals(collection.Slug, StringComparison.OrdinalIgnoreCase))
+        .Take(6)
+        .Select(x => $"<a class=\"btn btn-sm btn-outline-secondary\" href=\"{AppRoutes.CollectionsPathForSlug(x.Slug)}\">{System.Net.WebUtility.HtmlEncode(x.GetTitle(language))}</a>"));
+
+    var html = """
+<!DOCTYPE html>
+<html lang="__LANG__">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <link rel="canonical" href="__CANONICAL__" />
+  <title>__TITLE__ · PromptToMars</title>
+  <meta name="description" content="__DESCRIPTION__" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="__TITLE__" />
+  <meta property="og:description" content="__DESCRIPTION__" />
+  <meta property="og:site_name" content="PromptToMars" />
+  <meta property="og:url" content="__CANONICAL__" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#0f172a;color:#e5e7eb}
+    .wrap{max-width:1180px;margin:0 auto;padding:24px}
+    .hero,.section{background:rgba(15,23,42,.9);border:1px solid rgba(148,163,184,.16);border-radius:24px;padding:24px;margin-bottom:24px}
+    .muted{color:#94a3b8}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+    .btn{display:inline-block;padding:12px 14px;border-radius:12px;background:#2563eb;color:#fff;text-decoration:none;font-weight:700}
+    .btn.secondary{background:transparent;border:1px solid rgba(148,163,184,.2)}
+    .chip{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(37,99,235,.14);border:1px solid rgba(96,165,250,.22);color:#dbeafe;font-size:12px;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="chip">PromptToMars Collection</span>
+      <h1>__TITLE__</h1>
+      <p class="muted">__DESCRIPTION__</p>
+      <div class="actions">
+        <a class="btn" href="__GENERATOR__">Open generator</a>
+        <a class="btn secondary" href="__PRESETS__">Browse presets</a>
+        <a class="btn secondary" href="__SHARE_FIRST__">Share first prompt</a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Prompt collection</h2>
+      <div class="grid">__ITEMS__</div>
+    </section>
+
+    <section class="section">
+      <h2>Related collections</h2>
+      <div class="actions">__RELATED__</div>
+    </section>
+  </div>
+</body>
+</html>
+"""
+    .Replace("__LANG__", language)
+    .Replace("__CANONICAL__", canonicalUrl)
+    .Replace("__TITLE__", System.Net.WebUtility.HtmlEncode(collection.GetTitle(language)))
+    .Replace("__DESCRIPTION__", System.Net.WebUtility.HtmlEncode(collection.GetDescription(language)))
+    .Replace("__GENERATOR__", System.Net.WebUtility.HtmlEncode(generatorUrl))
+    .Replace("__PRESETS__", System.Net.WebUtility.HtmlEncode(AppRoutes.PresetsPathForCulture(language)))
+    .Replace("__SHARE_FIRST__", System.Net.WebUtility.HtmlEncode(AppRoutes.ShortPromptPathForPreset(selected.FirstOrDefault()?.Slug ?? string.Empty)))
+    .Replace("__ITEMS__", itemCards)
+    .Replace("__RELATED__", relatedCollectionLinks);
+
+    context.Response.Headers["Cache-Control"] = "public, max-age=300";
+    return Results.Text(html, "text/html; charset=utf-8");
+}).RequireRateLimiting("seo-assets");
+
+static int ScorePreset(PromptPreset preset, string query, string language)
+{
+    var score = 0;
+    if (preset.GetTitle(language).Contains(query, StringComparison.OrdinalIgnoreCase)) score += 12;
+    if (preset.GetDescription(language).Contains(query, StringComparison.OrdinalIgnoreCase)) score += 6;
+    if (preset.GetSubcategory(language).Contains(query, StringComparison.OrdinalIgnoreCase)) score += 4;
+    score += preset.GetTags(language).Count(tag => tag.Contains(query, StringComparison.OrdinalIgnoreCase)) * 3;
+    return score;
+}
 
 app.MapMethods("/sitemaps/landingpages.xml", ["GET", "HEAD"], (HttpContext context, ISeoLandingContentRepository seoContentRepository) =>
 {
@@ -775,10 +1097,89 @@ static (string PathPart, string SuffixPart) SplitPathAndSuffix(string relativeUr
     return (pathPart, suffixPart);
 }
 
+static IReadOnlyList<CollectionDefinition> GetCollectionDefinitions(string culture)
+{
+    var german = culture.Equals("de", StringComparison.OrdinalIgnoreCase);
+
+    return german
+        ?
+        [
+            new("marketing", "Marketing Prompt Collection", "Marketing Prompt-Sammlung", "Best prompts for ad copy, email sequences, campaigns, and product messaging.", "Beste Prompts für Werbetexte, E-Mail-Sequenzen, Kampagnen und Produktbotschaften.", ["marketing", "copywriting", "ads", "campaign", "email"]),
+            new("seo", "SEO Prompt Collection", "SEO Prompt-Sammlung", "Prompt packs for briefs, outlines, keyword research, and ranking content.", "Prompt-Pakete für Briefings, Outlines, Keyword-Recherche und rankende Inhalte.", ["seo", "keyword", "blog", "outline", "content"]),
+            new("coding", "Coding Prompt Collection", "Coding Prompt-Sammlung", "Prompts for debugging, code review, refactoring, and architecture.", "Prompts für Debugging, Code-Review, Refactoring und Architektur.", ["coding", "debug", "refactor", "architecture", "qa"]),
+            new("startup", "Startup Prompt Collection", "Startup Prompt-Sammlung", "Prompts for idea validation, positioning, landing pages, and growth experiments.", "Prompts für Ideentests, Positionierung, Landingpages und Growth-Experimente.", ["startup", "validation", "positioning", "growth", "landing page"]),
+            new("student", "Student Prompt Collection", "Studenten Prompt-Sammlung", "Prompts for studying, research, notes, and exam prep.", "Prompts für Lernen, Recherche, Mitschriften und Prüfungsvorbereitung.", ["student", "study", "research", "exam", "notes"]),
+            new("resume", "Resume Prompt Collection", "Lebenslauf Prompt-Sammlung", "Prompts for resumes, cover letters, and interviews.", "Prompts für Lebensläufe, Anschreiben und Interviews.", ["resume", "cover letter", "interview", "career", "job"])
+        ]
+        :
+        [
+            new("marketing", "Marketing Prompt Collection", "Marketing Prompt Collection", "Best prompts for ad copy, email sequences, campaigns, and product messaging.", "Best prompts for ad copy, email sequences, campaigns, and product messaging.", ["marketing", "copywriting", "ads", "campaign", "email"]),
+            new("seo", "SEO Prompt Collection", "SEO Prompt Collection", "Prompt packs for briefs, outlines, keyword research, and ranking content.", "Prompt packs for briefs, outlines, keyword research, and ranking content.", ["seo", "keyword", "blog", "outline", "content"]),
+            new("coding", "Coding Prompt Collection", "Coding Prompt Collection", "Prompts for debugging, code review, refactoring, and architecture.", "Prompts for debugging, code review, refactoring, and architecture.", ["coding", "debug", "refactor", "architecture", "qa"]),
+            new("startup", "Startup Prompt Collection", "Startup Prompt Collection", "Prompts for idea validation, positioning, landing pages, and growth experiments.", "Prompts for idea validation, positioning, landing pages, and growth experiments.", ["startup", "validation", "positioning", "growth", "landing page"]),
+            new("student", "Student Prompt Collection", "Student Prompt Collection", "Prompts for studying, research, notes, and exam prep.", "Prompts for studying, research, notes, and exam prep.", ["student", "study", "research", "exam", "notes"]),
+            new("resume", "Resume Prompt Collection", "Resume Prompt Collection", "Prompts for resumes, cover letters, and interviews.", "Prompts for resumes, cover letters, and interviews.", ["resume", "cover letter", "interview", "career", "job"])
+        ];
+}
+
+static CollectionDefinition? GetCollectionDefinition(string slug, string culture)
+    => GetCollectionDefinitions(culture).FirstOrDefault(x => x.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+
+static IReadOnlyList<PromptPreset> GetCollectionPresets(CollectionDefinition collection, IReadOnlyList<PromptPreset> presets, string culture)
+{
+    return presets
+        .Select(preset => new
+        {
+            Preset = preset,
+            Score = ScoreCollectionPreset(preset, collection, culture)
+        })
+        .Where(x => x.Score > 0)
+        .OrderByDescending(x => x.Score)
+        .ThenByDescending(x => x.Preset.PopularityScore)
+        .Take(12)
+        .Select(x => x.Preset)
+        .ToList();
+}
+
+static int ScoreCollectionPreset(PromptPreset preset, CollectionDefinition collection, string culture)
+{
+    var score = 0;
+    var title = preset.GetTitle(culture);
+    var description = preset.GetDescription(culture);
+    var subcategory = preset.GetSubcategory(culture);
+    var tags = preset.GetTags(culture);
+
+    foreach (var keyword in collection.Keywords)
+    {
+        if (title.Contains(keyword, StringComparison.OrdinalIgnoreCase)) score += 10;
+        if (description.Contains(keyword, StringComparison.OrdinalIgnoreCase)) score += 5;
+        if (subcategory.Contains(keyword, StringComparison.OrdinalIgnoreCase)) score += 4;
+        score += tags.Count(tag => tag.Contains(keyword, StringComparison.OrdinalIgnoreCase)) * 3;
+    }
+
+    return score;
+}
+
+
 readonly record struct SitemapUrlEntry(
     string Path,
     string ChangeFreq,
     string Priority,
     string? AlternateDe = null,
     string? AlternateEn = null);
+
+sealed record CollectionDefinition(
+    string Slug,
+    string TitleEn,
+    string TitleDe,
+    string DescriptionEn,
+    string DescriptionDe,
+    string[] Keywords)
+{
+    public string GetTitle(string culture)
+        => culture.Equals("de", StringComparison.OrdinalIgnoreCase) ? TitleDe : TitleEn;
+
+    public string GetDescription(string culture)
+        => culture.Equals("de", StringComparison.OrdinalIgnoreCase) ? DescriptionDe : DescriptionEn;
+}
 

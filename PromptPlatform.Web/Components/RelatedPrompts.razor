@@ -1,0 +1,62 @@
+@using PromptPlatform.Web.Models
+
+@if (Prompts.Count > 0)
+{
+    <section class="mb-5" aria-labelledby="related-prompts-title">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <h2 id="related-prompts-title" class="h3 mb-0">@Heading</h2>
+            @if (!string.IsNullOrWhiteSpace(Subheading))
+            {
+                <p class="text-secondary mb-0">@Subheading</p>
+            }
+        </div>
+
+        <div class="row g-3">
+            @foreach (var prompt in Prompts)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <PromptCard Prompt="@prompt"
+                                Language="@Language"
+                                PreviewText="@prompt.GetDescription(Language)"
+                                OpenUrl="@OpenUrl(prompt)"
+                                ShareUrl="@ShareUrl(prompt)"
+                                CopyText="@prompt.GetExamplePrompt(Language)"
+                                CopyLabel="@CopyLabel"
+                                OpenLabel="@OpenLabel"
+                                ShareLabel="@ShareLabel"
+                                CategoryLabel="@prompt.GetSubcategory(Language)"
+                                PopularityLabel="@($"{prompt.PopularityScore:N0}")" />
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<PromptPreset> Prompts { get; set; } = [];
+
+    [Parameter]
+    public string Language { get; set; } = "en";
+
+    [Parameter]
+    public string Heading { get; set; } = "Related prompts";
+
+    [Parameter]
+    public string? Subheading { get; set; }
+
+    [Parameter]
+    public string CopyLabel { get; set; } = "Copy";
+
+    [Parameter]
+    public string OpenLabel { get; set; } = "Open";
+
+    [Parameter]
+    public string ShareLabel { get; set; } = "Share";
+
+    [Parameter]
+    public Func<PromptPreset, string> OpenUrl { get; set; } = preset => string.Empty;
+
+    [Parameter]
+    public Func<PromptPreset, string> ShareUrl { get; set; } = preset => string.Empty;
+}

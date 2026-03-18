@@ -1,4 +1,5 @@
 @page "/presets"
+@page "/prompt-presets"
 @page "/de/presets"
 @page "/en/presets"
 @implements IAsyncDisposable
@@ -182,8 +183,8 @@
                         <pre class="history-prompt preset-example mb-3">@GetExamplePrompt(preset)</pre>
 
                         <div class="d-flex gap-2 mt-auto flex-wrap">
-                            <a class="btn btn-primary btn-sm"
-                               href="@($"{GeneratorPath}?preset={preset.Id}")"
+                                <a class="btn btn-primary btn-sm"
+                                   href="@AppRoutes.PromptPathForPreset(preset.Slug)"
                                data-track="presets.use"
                                data-track-context="@preset.Category">@UsePresetLabel</a>
                             @if (!string.IsNullOrWhiteSpace(landingPath))
@@ -263,11 +264,11 @@
     private string ComplexityLabel => IsGerman ? "Komplexität" : "Complexity";
     private string LoadingMoreLabel => IsGerman ? "Weitere Presets werden geladen..." : "Loading more presets...";
     private string PresetsTitle => IsGerman
-        ? "KI Prompt Presets, Vorlagen & Beispiele | PromptToMars"
-        : "AI Prompt Presets, Templates & Examples | PromptToMars";
+        ? "KI Prompt Presets, Vorlagen, Beispiele & Shareable Prompts | PromptToMars"
+        : "AI Prompt Presets, Templates, Examples & Shareable Prompts | PromptToMars";
     private string PresetsMetaDescription => IsGerman
-        ? "Durchsuchbare Bibliothek für KI Prompt Presets, Prompt-Vorlagen und Beispiele mit Filtern nach Kategorie, Plattform und Unterkategorie sowie direkter Generator-Übernahme."
-        : "Searchable library of AI prompt presets, prompt templates, and examples with filters by category, platform, and subcategory plus direct generator handoff.";
+        ? "Durchsuchbare Bibliothek für KI Prompt Presets, Vorlagen und Beispiele mit Filtern nach Kategorie, Plattform und Unterkategorie, teilbaren Prompt-Links und direkter Generator-Übernahme."
+        : "Searchable library of AI prompt presets, templates, and examples with filters by category, platform, and subcategory, shareable prompt links, and direct generator handoff.";
     private string GeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
     private string LocalizedPresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
     private string CanonicalUrl => ToAbsolute(LocalizedPresetsPath);

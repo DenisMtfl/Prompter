@@ -156,8 +156,8 @@
     private string SiteImageUrl => ToAbsolute("/favicon.png");
 
     private string PageTitle => IsGerman
-        ? "FAQ zu KI Prompts, Presets & Prompt Optimizer | PromptToMars"
-        : "FAQ for AI Prompts, Presets & Prompt Optimizer | PromptToMars";
+        ? "FAQ zu KI Prompts, Presets, Prompt Optimizer & Shareable Prompts | PromptToMars"
+        : "FAQ for AI Prompts, Presets, Prompt Optimizer & Shareable Prompts | PromptToMars";
 
     private string ImageMetadataJsonLd => JsonSerializer.Serialize(new
     {
@@ -172,8 +172,8 @@
     });
 
     private string MetaDescription => IsGerman
-        ? "Detaillierte FAQ zu PromptToMars mit Antworten zu KI Prompt Generator, Prompt Optimizer, Prompt-Vorlagen, Presets, SEO-Landingpages, Lokalisierung und Datenhaltung."
-        : "Detailed PromptToMars FAQ covering the AI prompt generator, prompt optimizer, prompt templates, presets, SEO landing pages, localization, and data handling.";
+        ? "Umfassende FAQ zu PromptToMars mit detaillierten Antworten zu KI Prompt Generator, Prompt Optimizer, Prompt-Vorlagen, Presets, teilbaren Prompt-Seiten, SEO-Landingpages, Lokalisierung und Datenhaltung."
+        : "Comprehensive PromptToMars FAQ providing detailed answers about the AI prompt generator, prompt optimizer, prompt templates, presets, shareable prompt pages, SEO landing pages, localization, and data handling.";
 
     private string HeroBadge => IsGerman ? "Produkt- und Plattform-FAQ" : "Product and Platform FAQ";
     private string HeroTitle => IsGerman

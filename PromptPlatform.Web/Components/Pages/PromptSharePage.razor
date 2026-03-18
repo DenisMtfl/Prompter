@@ -1,0 +1,309 @@
+@page "/prompt/{Slug}"
+@page "/p/{Slug}"
+@using System.Globalization
+@using System.Text.Json
+@inject IPresetService PresetService
+@inject IJSRuntime JsRuntime
+@inject NavigationManager Navigation
+
+<PageTitle>@PageTitle</PageTitle>
+<HeadContent>
+    <meta name="application-name" content="PromptToMars" />
+    <meta name="description" content="@MetaDescription" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="@PageTitle" />
+    <meta property="og:description" content="@MetaDescription" />
+    <meta property="og:site_name" content="PromptToMars" />
+    <meta property="og:url" content="@CanonicalUrl" />
+    <meta property="og:image" content="@OgImageUrl" />
+    <meta property="og:image:alt" content="@PageTitle" />
+    <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
+    <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@PageTitle" />
+    <meta name="twitter:description" content="@MetaDescription" />
+    <meta name="twitter:image" content="@OgImageUrl" />
+    <link rel="canonical" href="@CanonicalUrl" />
+    <script type="application/ld+json">@((MarkupString)WebPageJsonLd)</script>
+    <script type="application/ld+json">@((MarkupString)BreadcrumbJsonLd)</script>
+</HeadContent>
+
+@if (Preset is null)
+{
+    <section class="py-5 text-center">
+        <h1 class="h2 mb-3">@NotFoundTitle</h1>
+        <p class="text-secondary mb-4">@NotFoundDescription</p>
+        <a class="btn btn-primary" href="@PresetsUrl">@NotFoundCta</a>
+    </section>
+}
+else
+{
+    <article class="share-page">
+        <nav class="mb-3" aria-label="breadcrumb">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a href="@HomeUrl">PromptToMars</a></li>
+                <li class="breadcrumb-item"><a href="@PresetsUrl">@PresetsLabel</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@PageTitle</li>
+            </ol>
+        </nav>
+
+        <section class="hero-section rounded-4 p-4 p-lg-5 mb-4">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-8">
+                    <span class="badge text-bg-primary mb-3">@ShareBadge</span>
+                    <h1 class="display-6 fw-bold mb-3">@PageTitle</h1>
+                    <p class="lead mb-0">@MetaDescription</p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h2 class="h6">@QuickActionsTitle</h2>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" @onclick="CopyPromptAsync">@CopyPromptLabel</button>
+                                <button class="btn btn-outline-secondary" @onclick="CopyShareLinkAsync">@CopyLinkLabel</button>
+                                <button class="btn btn-outline-secondary" @onclick="ShareAsync">@ShareLabel</button>
+                                <a class="btn btn-outline-secondary" href="@GeneratorUrl">@UseInGeneratorLabel</a>
+                            </div>
+                            <div class="mt-3 small text-secondary">@ShareHint</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <PromptCard Prompt="@Preset"
+                        Language="@CurrentLanguage"
+                        PreviewText="@Preset.GetExamplePrompt(CurrentLanguage)"
+                        OpenUrl="@GeneratorUrl"
+                        ShareUrl="@ShareUrl"
+                        CopyText="@Preset.GetExamplePrompt(CurrentLanguage)"
+                        CopyLabel="@CopyPromptLabel"
+                        OpenLabel="@UseInGeneratorLabel"
+                        ShareLabel="@ShareLabel"
+                        CategoryLabel="@Preset.GetSubcategory(CurrentLanguage)"
+                        PopularityLabel="@($"{Preset.PopularityScore:N0}")" />
+        </section>
+
+        <section class="mb-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-3">@DetailsTitle</h2>
+                    <p class="text-secondary mb-0">@Preset.GetDescription(CurrentLanguage)</p>
+                </div>
+            </div>
+        </section>
+
+        <RelatedPrompts Prompts="RelatedPromptsList"
+                        Language="@CurrentLanguage"
+                        Heading="@RelatedPromptsTitle"
+                        Subheading="@RelatedPromptsSubtitle"
+                        CopyLabel="@CopyPromptLabel"
+                        OpenLabel="@UseInGeneratorLabel"
+                        ShareLabel="@ShareLabel"
+                        OpenUrl="@GetPromptUrl"
+                        ShareUrl="@GetShareUrl" />
+
+        <section class="mb-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-3">@ShareButtonsTitle</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-outline-primary" href="@TwitterShareUrl" target="_blank" rel="noopener noreferrer" @onclick="TrackTwitterAsync">@TwitterLabel</a>
+                        <a class="btn btn-outline-primary" href="@LinkedInShareUrl" target="_blank" rel="noopener noreferrer" @onclick="TrackLinkedInAsync">@LinkedInLabel</a>
+                        <button class="btn btn-outline-secondary" @onclick="CopyShareLinkAsync">@CopyLinkLabel</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </article>
+}
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private PromptPreset? Preset { get; set; }
+    private IReadOnlyList<PromptPreset> AllPresets { get; set; } = [];
+    private IReadOnlyList<PromptPreset> RelatedPromptsList { get; set; } = [];
+    private bool IsFirstRenderTracked { get; set; }
+
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
+    private bool IsGerman => CurrentLanguage == "de";
+    private string HomeUrl => AppRoutes.HomePathForCulture(CurrentLanguage);
+    private string PresetsUrl => AppRoutes.PresetsPathForCulture(CurrentLanguage);
+    private string PresetsLabel => IsGerman ? "Presets" : "Presets";
+    private string QuickActionsTitle => IsGerman ? "Schnellaktionen" : "Quick actions";
+    private string ShareBadge => IsGerman ? "Teilen & Kopieren" : "Share & copy";
+    private string CopyPromptLabel => IsGerman ? "Prompt kopieren" : "Copy prompt";
+    private string CopyLinkLabel => IsGerman ? "Link kopieren" : "Copy link";
+    private string ShareLabel => IsGerman ? "Teilen" : "Share";
+    private string UseInGeneratorLabel => IsGerman ? "Im Generator öffnen" : "Open in generator";
+    private string RelatedPromptsTitle => IsGerman ? "Verwandte Prompts" : "Related prompts";
+    private string RelatedPromptsSubtitle => IsGerman ? "Ähnliche Prompts aus derselben Kategorie und mit ähnlichen Tags." : "Similar prompts from the same category and related tags.";
+    private string ShareButtonsTitle => IsGerman ? "Social Sharing" : "Social sharing";
+    private string TwitterLabel => IsGerman ? "Auf X teilen" : "Share on X";
+    private string LinkedInLabel => IsGerman ? "Auf LinkedIn teilen" : "Share on LinkedIn";
+    private string ShareHint => IsGerman ? "Tipp: Kopiere den Link oder nutze die Social-Buttons für eine schnelle Verteilung." : "Tip: copy the link or use the social buttons for quick distribution.";
+    private string DetailsTitle => IsGerman ? "Prompt-Details" : "Prompt details";
+    private string NotFoundTitle => IsGerman ? "Prompt nicht gefunden" : "Prompt not found";
+    private string NotFoundDescription => IsGerman ? "Dieser öffentliche Prompt-Link ist nicht mehr verfügbar." : "This public prompt link is no longer available.";
+    private string NotFoundCta => IsGerman ? "Zu den Presets" : "Browse presets";
+    private string PageTitle => Preset is null ? NotFoundTitle : SeoService.BuildPromptTitle(Preset, CurrentLanguage);
+    private string MetaDescription => Preset is null ? NotFoundDescription : SeoService.BuildPromptDescription(Preset, CurrentLanguage);
+    private string CanonicalUrl => ToAbsolute(Preset is null ? AppRoutes.PromptPathForPreset(Slug) : AppRoutes.PromptPathForPreset(Preset.Slug));
+    private string ShareUrl => ToAbsolute(AppRoutes.ShortPromptPathForPreset(Preset?.Slug ?? Slug));
+    private string GeneratorUrl => Preset is null
+        ? AppRoutes.GeneratorPathForCulture(CurrentLanguage)
+        : AppRoutes.GeneratorPathForCulture(CurrentLanguage) + $"?preset={Uri.EscapeDataString(Preset.Slug)}";
+    private string OgImageUrl => ToAbsolute(Preset is null ? "/favicon.png" : SeoService.BuildPromptOgImagePath(Preset.Slug));
+    private string TwitterShareUrl => $"https://twitter.com/intent/tweet?text={Uri.EscapeDataString(PageTitle)}&url={Uri.EscapeDataString(ShareUrl)}";
+    private string LinkedInShareUrl => $"https://www.linkedin.com/sharing/share-offsite/?url={Uri.EscapeDataString(ShareUrl)}";
+    private string WebPageJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "WebPage",
+        name = PageTitle,
+        description = MetaDescription,
+        url = CanonicalUrl,
+        inLanguage = CurrentLanguage,
+        isPartOf = new { @type = "WebSite", name = "PromptToMars", url = ToAbsolute("/") }
+    });
+    private string BreadcrumbJsonLd => JsonSerializer.Serialize(new
+    {
+        @context = "https://schema.org",
+        @type = "BreadcrumbList",
+        itemListElement = new object[]
+        {
+            new { @type = "ListItem", position = 1, name = "PromptToMars", item = ToAbsolute(HomeUrl) },
+            new { @type = "ListItem", position = 2, name = PresetsLabel, item = ToAbsolute(PresetsUrl) },
+            new { @type = "ListItem", position = 3, name = PageTitle, item = CanonicalUrl }
+        }
+    });
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Preset = await PresetService.GetByIdAsync(Slug);
+        if (Preset is null)
+        {
+            if (HttpContext is not null)
+            {
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            }
+            return;
+        }
+
+        AllPresets = await PresetService.GetAllAsync();
+        RelatedPromptsList = BuildRelatedPrompts(Preset, AllPresets, CurrentLanguage);
+
+        if (HttpContext is not null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status200OK;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Preset is not null && !IsFirstRenderTracked)
+        {
+            IsFirstRenderTracked = true;
+            await TrackAsync("prompt_page_view", CurrentLanguage);
+        }
+    }
+
+    private IReadOnlyList<PromptPreset> BuildRelatedPrompts(PromptPreset current, IReadOnlyList<PromptPreset> candidates, string language)
+    {
+        return candidates
+            .Where(x => !x.Slug.Equals(current.Slug, StringComparison.OrdinalIgnoreCase))
+            .Select(x => new
+            {
+                Preset = x,
+                Score = ScoreRelatedPrompt(current, x, language)
+            })
+            .Where(x => x.Score > 0)
+            .OrderByDescending(x => x.Score)
+            .ThenByDescending(x => x.Preset.PopularityScore)
+            .Take(6)
+            .Select(x => x.Preset)
+            .ToList();
+    }
+
+    private static int ScoreRelatedPrompt(PromptPreset current, PromptPreset candidate, string language)
+    {
+        var score = 0;
+        if (current.Category == candidate.Category) score += 12;
+        if (current.GetSubcategory(language).Equals(candidate.GetSubcategory(language), StringComparison.OrdinalIgnoreCase)) score += 8;
+
+        var currentTags = current.GetTags(language);
+        var candidateTags = candidate.GetTags(language);
+        score += currentTags.Intersect(candidateTags, StringComparer.OrdinalIgnoreCase).Count() * 5;
+
+        if (current.GetTitle(language).Contains(candidate.GetTitle(language), StringComparison.OrdinalIgnoreCase) || candidate.GetTitle(language).Contains(current.GetTitle(language), StringComparison.OrdinalIgnoreCase))
+        {
+            score += 3;
+        }
+
+        return score;
+    }
+
+    private string GetPromptUrl(PromptPreset preset) => ToAbsolute(AppRoutes.PromptPathForPreset(preset.Slug));
+    private string GetShareUrl(PromptPreset preset) => ToAbsolute(AppRoutes.ShortPromptPathForPreset(preset.Slug));
+
+    private async Task CopyPromptAsync()
+    {
+        if (Preset is null)
+        {
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("promptUi.copyText", Preset.GetExamplePrompt(CurrentLanguage));
+        await TrackAsync("prompt_copy", "copy-button");
+    }
+
+    private async Task CopyShareLinkAsync()
+    {
+        if (Preset is null)
+        {
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("promptUi.copyText", ShareUrl);
+        await TrackAsync("prompt_copy", "share-link");
+    }
+
+    private async Task ShareAsync()
+    {
+        if (Preset is null)
+        {
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("promptUi.sharePrompt", PageTitle, MetaDescription, ShareUrl);
+        await TrackAsync("prompt_share", "web-share");
+    }
+
+    private Task TrackTwitterAsync() => TrackAsync("prompt_share", "twitter");
+
+    private Task TrackLinkedInAsync() => TrackAsync("prompt_share", "linkedin");
+
+    private async Task TrackAsync(string eventName, string context)
+    {
+        await JsRuntime.InvokeVoidAsync("promptGrowth.track", eventName, new
+        {
+            key = Slug,
+            context,
+            language = CurrentLanguage,
+            pageType = "prompt"
+        });
+    }
+
+    private string ToAbsolute(string relativePath)
+    {
+        var normalized = string.IsNullOrWhiteSpace(relativePath) ? "/" : relativePath;
+        return new Uri(new Uri(Navigation.BaseUri), normalized).ToString();
+    }
+}

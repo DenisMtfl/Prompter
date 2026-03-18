@@ -1,4 +1,6 @@
 @page "/generator"
+@page "/prompt-generator"
+@page "/template/{Slug}"
 @page "/de/generator"
 @page "/en/generator"
 @using System.Globalization
@@ -267,6 +269,10 @@
                     </div>
                     <div class="d-flex gap-2">
                         <button class="btn btn-sm btn-outline-secondary" @onclick="CopyAsync" disabled="@string.IsNullOrWhiteSpace(GeneratedPrompt)">@L["Action_Copy"]</button>
+                        @if (HasShareablePrompt)
+                        {
+                            <button class="btn btn-sm btn-outline-primary" @onclick="ShareAsync">@ShareButtonLabel</button>
+                        }
                     </div>
                 </div>
 
@@ -288,6 +294,23 @@
                 else
                 {
                     <textarea class="form-control flex-fill prompt-result-textarea" rows="24" readonly>@GeneratedPrompt</textarea>
+                }
+
+                @if (HasShareablePrompt)
+                {
+                    <div class="mt-3 p-3 rounded-3 border bg-body-tertiary">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                            <div>
+                                <div class="fw-semibold">@ShareCardTitle</div>
+                                <div class="small text-secondary">@ShareCardSubtitle</div>
+                            </div>
+                            <span class="badge text-bg-light border">@ShareCardBadge</span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <input class="form-control form-control-sm flex-grow-1" value="@ShareablePromptUrl" readonly />
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="CopyShareLinkAsync">@CopyShareLinkLabel</button>
+                        </div>
+                    </div>
                 }
             </div>
         </div>
@@ -337,6 +360,9 @@
     [SupplyParameterFromQuery(Name = "preset")]
     public string? PresetId { get; set; }
 
+    [Parameter]
+    public string? Slug { get; set; }
+
     [SupplyParameterFromQuery(Name = "history")]
     public Guid? HistoryId { get; set; }
 
@@ -348,7 +374,7 @@
 
     private IReadOnlyList<PromptPreset> PresetsCollection { get; set; } = [];
     private PromptPreset? ActivePreset { get; set; }
-    private string? LastLoadedPresetId { get; set; }
+    private string? LastLoadedPresetKey { get; set; }
     private Guid? LastLoadedHistoryId { get; set; }
     private string SelectedPlatformOption { get; set; } = "ChatGPT";
     private string SelectedSubcategoryOption { get; set; } = string.Empty;
@@ -389,9 +415,18 @@
     private bool IsCustomRoleSelected => SelectedRoleOption.Equals(CustomRoleOptionValue, StringComparison.Ordinal);
     private string GeneratorProcessingButtonLabel => IsGerman ? "KI erstellt Prompt..." : "AI is generating...";
     private string GeneratorProcessingHint => IsGerman ? "Die KI analysiert deine Eingaben und erstellt die optimale Struktur." : "AI is analyzing your input and building the optimal structure.";
-    private string GeneratorPageTitle => IsGerman
-        ? "KI Prompt Generator & Prompt-Vorlagen | PromptToMars"
-        : "AI Prompt Generator & Prompt Templates | PromptToMars";
+    private string ShareButtonLabel => IsGerman ? "Prompt teilen" : "Share prompt";
+    private string CopyShareLinkLabel => IsGerman ? "Link kopieren" : "Copy link";
+    private string ShareCardTitle => IsGerman ? "Shareable Prompt Card" : "Shareable Prompt Card";
+    private string ShareCardSubtitle => IsGerman
+        ? "Teile diesen Prompt-Link auf Social Media, in Communities oder per Direktnachricht."
+        : "Share this prompt link on social media, in communities, or via direct message.";
+    private string ShareCardBadge => IsGerman ? "Viral-ready" : "Viral-ready";
+    private string GeneratorPageTitle => ActivePreset is null
+        ? (IsGerman
+            ? "KI Prompt Generator, Prompt-Vorlagen & Shareable Prompts | PromptToMars"
+            : "AI Prompt Generator, Prompt Templates & Shareable Prompts | PromptToMars")
+        : $"{ActivePreset.GetTitle(CurrentLanguage)} | PromptToMars";
     private string GeneratorBenefitsTitle => IsGerman ? "Warum dieser KI Prompt Generator suchstark ist" : "Why this AI prompt generator is search-friendly";
     private string GeneratorBenefitsIntro => IsGerman
         ? "Die Seite kombiniert klar strukturierte Eingaben, interne Verlinkung und thematische Hilfestellungen, damit Nutzer und Suchmaschinen den Nutzen sofort erkennen."
@@ -443,13 +478,18 @@
     private string PresetsPath => AppRoutes.PresetsPathForCulture(CurrentLanguage);
     private string CurrentCategoryPresetsPath
         => $"{AppRoutes.PresetsPathForCulture(CurrentLanguage)}?category={CategoryMappingUtility.ToPresetCategory(Request.MainCategory)}";
-    private string GeneratorMetaDescription => IsGerman
-        ? "Erzeuge hochwertige KI-Prompts und Prompt-Vorlagen mit klarer Zieldefinition, Kategorie-Logik und direktem Zugriff auf Presets für ChatGPT und andere KI-Tools."
-        : "Generate high-quality AI prompts and prompt templates with clear objective setting, category logic, and direct access to presets for ChatGPT and other AI tools.";
+    private string GeneratorMetaDescription => ActivePreset is null
+        ? (IsGerman
+            ? "Erzeuge hochwertige KI-Prompts und Prompt-Vorlagen mit klarer Zieldefinition, Kategorie-Logik, teilbaren Prompt-URLs, Presets, Prompt Engineering und direktem Zugriff auf ChatGPT-Workflows."
+            : "Generate high-quality AI prompts and prompt templates with clear objective setting, category logic, shareable prompt URLs, presets, prompt engineering, and direct access to ChatGPT workflows.")
+        : ActivePreset.GetDescription(CurrentLanguage);
     private string LocalizedGeneratorPath => AppRoutes.GeneratorPathForCulture(CurrentLanguage);
-    private string CanonicalUrl => ToAbsolute(LocalizedGeneratorPath);
-    private string GermanUrl => ToAbsolute(AppRoutes.GeneratorPathForCulture("de"));
-    private string EnglishUrl => ToAbsolute(AppRoutes.GeneratorPathForCulture("en"));
+    private string ShareablePromptPath => ActivePreset is null ? LocalizedGeneratorPath : AppRoutes.PromptPathForPreset(ActivePreset.Slug);
+    private bool HasShareablePrompt => ActivePreset is not null;
+    private string ShareablePromptUrl => ActivePreset is null ? ToAbsolute(LocalizedGeneratorPath) : ToAbsolute(AppRoutes.ShortPromptPathForPreset(ActivePreset.Slug));
+    private string CanonicalUrl => ToAbsolute(ShareablePromptPath);
+    private string GermanUrl => ToAbsolute(ActivePreset is null ? AppRoutes.GeneratorPathForCulture("de") : AppRoutes.PromptPathForPreset(ActivePreset.Slug));
+    private string EnglishUrl => ToAbsolute(ActivePreset is null ? AppRoutes.GeneratorPathForCulture("en") : AppRoutes.PromptPathForPreset(ActivePreset.Slug));
     private string LicenseUrl => ToAbsolute(AppRoutes.LicensePathForCulture(CurrentLanguage));
     private string AcquireLicenseUrl => $"{LicenseUrl}#acquire";
     private string SiteImageUrl => ToAbsolute("/favicon.png");
@@ -480,7 +520,7 @@
             new
             {
                 @type = "WebApplication",
-                name = "PromptToMars Generator",
+                name = ActivePreset is null ? "PromptToMars Generator" : ActivePreset.GetTitle(CurrentLanguage),
                 applicationCategory = "BusinessApplication",
                 operatingSystem = "Web",
                 url = CanonicalUrl,
@@ -495,7 +535,7 @@
         itemListElement = new object[]
         {
             new { @type = "ListItem", position = 1, name = "PromptToMars", item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage)) },
-            new { @type = "ListItem", position = 2, name = GeneratorPageTitle, item = CanonicalUrl }
+            new { @type = "ListItem", position = 2, name = GeneratedTitle, item = CanonicalUrl }
         }
     });
     private string GeneratorHowToJsonLd => JsonSerializer.Serialize(new
@@ -583,7 +623,7 @@
         GeneratedPrompt = historyEntry.Prompt;
         GeneratedTitle = historyEntry.Title;
         ActivePreset = null;
-        LastLoadedPresetId = null;
+        LastLoadedPresetKey = null;
         LastLoadedHistoryId = historyEntry.Id;
         ValidationError = string.Empty;
         SyncAllSelections();
@@ -592,20 +632,24 @@
 
     private async Task LoadPresetFromQueryAsync()
     {
-        if (string.IsNullOrWhiteSpace(PresetId))
+        var presetKey = !string.IsNullOrWhiteSpace(Slug)
+            ? Slug
+            : PresetId;
+
+        if (string.IsNullOrWhiteSpace(presetKey))
         {
             return;
         }
 
-        if (PresetId.Equals(LastLoadedPresetId, StringComparison.OrdinalIgnoreCase))
+        if (presetKey.Equals(LastLoadedPresetKey, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        var preset = PresetsCollection.FirstOrDefault(x => x.Id.Equals(PresetId, StringComparison.OrdinalIgnoreCase));
+        var preset = PresetsCollection.FirstOrDefault(x => x.Id.Equals(presetKey, StringComparison.OrdinalIgnoreCase) || x.Slug.Equals(presetKey, StringComparison.OrdinalIgnoreCase));
         if (preset is null)
         {
-            preset = await PresetService.GetByIdAsync(PresetId);
+            preset = await PresetService.GetByIdAsync(presetKey);
         }
 
         if (preset is null)
@@ -615,7 +659,7 @@
 
         ApplyPreset(preset);
         ActivePreset = preset;
-        LastLoadedPresetId = preset.Id;
+        LastLoadedPresetKey = preset.Slug;
         LastLoadedHistoryId = null;
     }
 
@@ -673,6 +717,11 @@
                 Route = AppRoutes.Generator,
                 RequestPayloadJson = JsonSerializer.Serialize(Request, JsonOptions)
             });
+
+            if (ActivePreset is not null)
+            {
+                LastLoadedPresetKey = ActivePreset.Slug;
+            }
         }
         finally
         {
@@ -688,6 +737,51 @@
         }
 
         await JsRuntime.InvokeVoidAsync("promptUi.copyText", GeneratedPrompt);
+        await JsRuntime.InvokeVoidAsync("promptGrowth.track", "prompt_copy", new
+        {
+            key = ActivePreset?.Slug ?? Request.MainCategory.ToString(),
+            context = "generator-result",
+            language = CurrentLanguage,
+            pageType = "generator"
+        });
+    }
+
+    private async Task CopyShareLinkAsync()
+    {
+        if (!HasShareablePrompt)
+        {
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("promptUi.copyText", ShareablePromptUrl);
+        await JsRuntime.InvokeVoidAsync("promptGrowth.track", "prompt_copy", new
+        {
+            key = ActivePreset?.Slug ?? Request.MainCategory.ToString(),
+            context = "share-link",
+            language = CurrentLanguage,
+            pageType = "generator"
+        });
+    }
+
+    private async Task ShareAsync()
+    {
+        if (!HasShareablePrompt)
+        {
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync(
+            "promptUi.sharePrompt",
+            GeneratorPageTitle,
+            GeneratorMetaDescription,
+            ShareablePromptUrl);
+        await JsRuntime.InvokeVoidAsync("promptGrowth.track", "prompt_share", new
+        {
+            key = ActivePreset?.Slug ?? Request.MainCategory.ToString(),
+            context = "generator-share",
+            language = CurrentLanguage,
+            pageType = "generator"
+        });
     }
 
     private void OnPlatformOptionChanged()
