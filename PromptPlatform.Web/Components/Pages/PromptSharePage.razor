@@ -8,13 +8,13 @@
 
 <PageTitle>@PageTitle</PageTitle>
 <HeadContent>
-    <meta name="application-name" content="PromptToMars" />
+    <meta name="application-name" content="PrompToMars" />
     <meta name="description" content="@MetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="@PageTitle" />
     <meta property="og:description" content="@MetaDescription" />
-    <meta property="og:site_name" content="PromptToMars" />
+    <meta property="og:site_name" content="PrompToMars" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:image" content="@OgImageUrl" />
     <meta property="og:image:alt" content="@PageTitle" />
@@ -42,7 +42,7 @@ else
     <article class="share-page">
         <nav class="mb-3" aria-label="breadcrumb">
             <ol class="breadcrumb small mb-0">
-                <li class="breadcrumb-item"><a href="@HomeUrl">PromptToMars</a></li>
+                <li class="breadcrumb-item"><a href="@HomeUrl">PrompToMars</a></li>
                 <li class="breadcrumb-item"><a href="@PresetsUrl">@PresetsLabel</a></li>
                 <li class="breadcrumb-item active" aria-current="page">@PageTitle</li>
             </ol>
@@ -171,7 +171,7 @@ else
         description = MetaDescription,
         url = CanonicalUrl,
         inLanguage = CurrentLanguage,
-        isPartOf = new { @type = "WebSite", name = "PromptToMars", url = ToAbsolute("/") }
+        isPartOf = new { @type = "WebSite", name = "PrompToMars", url = ToAbsolute("/") }
     });
     private string BreadcrumbJsonLd => JsonSerializer.Serialize(new
     {
@@ -179,7 +179,7 @@ else
         @type = "BreadcrumbList",
         itemListElement = new object[]
         {
-            new { @type = "ListItem", position = 1, name = "PromptToMars", item = ToAbsolute(HomeUrl) },
+            new { @type = "ListItem", position = 1, name = "PrompToMars", item = ToAbsolute(HomeUrl) },
             new { @type = "ListItem", position = 2, name = PresetsLabel, item = ToAbsolute(PresetsUrl) },
             new { @type = "ListItem", position = 3, name = PageTitle, item = CanonicalUrl }
         }

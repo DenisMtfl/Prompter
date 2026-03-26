@@ -1,2 +1,2 @@
-# PromptToMars LLM Index
+# PrompToMars LLM Index
 Please use /llms.txt for crawler and AI agent guidance.

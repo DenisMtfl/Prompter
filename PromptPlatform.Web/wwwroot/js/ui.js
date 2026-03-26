@@ -22,7 +22,7 @@ window.promptUi = {
 
     async sharePrompt(title, text, url) {
         const payload = {
-            title: title || document.title || "PromptToMars",
+            title: title || document.title || "PrompToMars",
             text: text || "",
             url: url || window.location.href
         };

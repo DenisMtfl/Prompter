@@ -48,7 +48,7 @@ public sealed class SeoLandingPageService(
                             ?? string.Empty;
 
         var resolvedSlug = normalizedCulture == "de" ? content.SlugDe : content.SlugEn;
-        var canonicalPath = BuildPromptsPath(resolvedSlug);
+        var canonicalPath = BuildPath(normalizedCulture, resolvedSlug);
         var alternateDe = BuildPath("de", content.SlugDe);
         var alternateEn = BuildPath("en", content.SlugEn);
         var labels = BuildLabels(normalizedCulture);
@@ -63,7 +63,7 @@ public sealed class SeoLandingPageService(
             AlternatePathEn = alternateEn,
             Headline = content.Headline.Resolve(normalizedCulture),
             Intro = content.Intro.Resolve(normalizedCulture),
-            MetaTitle = content.MetaTitle.Resolve(normalizedCulture),
+            MetaTitle = BuildMetaTitle(content.MetaTitle.Resolve(normalizedCulture), normalizedCulture),
             MetaDescription = BuildMetaDescription(content.MetaDescription.Resolve(normalizedCulture), normalizedCulture),
             HeroBadge = labels.HeroBadge,
             BenefitsTitle = labels.BenefitsTitle,
@@ -231,17 +231,45 @@ public sealed class SeoLandingPageService(
     private static string BuildMetaDescription(string description, string culture)
     {
         var seoTail = culture.Equals("de", StringComparison.OrdinalIgnoreCase)
-            ? " Entdecke passende Prompt-Vorlagen, Presets, KI Prompt Generator und shareable Prompt-Links für dieses Thema."
-            : " Discover matching prompt templates, presets, AI prompt generator workflows, and shareable prompt links for this topic.";
+            ? " Entdecke passende Prompt-Vorlagen und Presets."
+            : " Discover matching prompt templates and presets.";
 
-        if (description.Contains("shareable prompt", StringComparison.OrdinalIgnoreCase)
+        var combined = description.Contains("shareable prompt", StringComparison.OrdinalIgnoreCase)
             || description.Contains("Prompt-Links", StringComparison.OrdinalIgnoreCase)
-            || description.Contains("prompt links", StringComparison.OrdinalIgnoreCase))
+            || description.Contains("prompt links", StringComparison.OrdinalIgnoreCase)
+            ? description.Trim()
+            : string.Concat(description.TrimEnd(), seoTail);
+
+        return TrimToLength(combined, 155);
+    }
+
+    private static string BuildMetaTitle(string title, string culture)
+    {
+        var suffix = " | PrompToMars";
+        var maxLength = culture.Equals("de", StringComparison.OrdinalIgnoreCase) ? 58 : 60;
+        return TrimToLength(string.Concat(title.Trim(), suffix), maxLength);
+    }
+
+    private static string TrimToLength(string value, int maxLength)
+    {
+        if (value.Length <= maxLength)
         {
-            return description;
+            return value;
         }
 
-        return string.Concat(description.TrimEnd(), seoTail);
+        if (maxLength <= 1)
+        {
+            return value[..maxLength];
+        }
+
+        var trimmed = value[..(maxLength - 1)].TrimEnd();
+        var lastSpace = trimmed.LastIndexOf(' ');
+        if (lastSpace > 40)
+        {
+            trimmed = trimmed[..lastSpace].TrimEnd();
+        }
+
+        return string.Concat(trimmed, "…");
     }
 
     private static SeoLandingLabels BuildLabels(string culture)

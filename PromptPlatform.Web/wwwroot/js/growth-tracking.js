@@ -3,6 +3,8 @@
     const sessionStorageKey = "prompt-growth-session-id";
     const eventQueue = [];
     let flushScheduled = false;
+    let pageTrackingScheduled = false;
+    let lastTrackedPageKey = null;
 
     function createSessionId() {
         if (window.crypto && window.crypto.randomUUID) {
@@ -75,11 +77,58 @@
         });
     }
 
+    function getCurrentPage() {
+        const url = new URL(window.location.href);
+        url.hash = "";
+
+        return {
+            href: url.toString(),
+            path: `${url.pathname}${url.search}`,
+            pathname: url.pathname,
+            language: (document.documentElement.lang || "").slice(0, 2).toLowerCase()
+        };
+    }
+
+    function trackGa4PageView(page) {
+        if (typeof window.gtag !== "function") {
+            return;
+        }
+
+        window.gtag("event", "page_view", {
+            page_title: document.title,
+            page_location: page.href,
+            page_path: page.path,
+            language: page.language || undefined
+        });
+    }
+
     function trackPageView() {
+        const page = getCurrentPage();
+        const pageKey = page.path.toLowerCase();
+
+        if (pageKey === lastTrackedPageKey) {
+            return;
+        }
+
+        lastTrackedPageKey = pageKey;
         enqueueEvent({
             name: "page_view",
-            key: normalizeString(window.location.pathname, 200)
+            key: normalizeString(page.pathname, 200)
         });
+
+        trackGa4PageView(page);
+    }
+
+    function schedulePageTracking() {
+        if (pageTrackingScheduled) {
+            return;
+        }
+
+        pageTrackingScheduled = true;
+        window.setTimeout(() => {
+            pageTrackingScheduled = false;
+            trackPageView();
+        }, 0);
     }
 
     function trackClick(event) {
@@ -116,11 +165,14 @@
             };
 
             enqueueEvent(payload);
+        },
+        trackPage() {
+            schedulePageTracking();
         }
     };
 
     window.addEventListener("load", () => {
-        trackPageView();
+        schedulePageTracking();
     }, { once: true });
 
     document.addEventListener("click", trackClick, { capture: true });

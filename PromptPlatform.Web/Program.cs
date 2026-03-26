@@ -59,7 +59,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = AppRoutes.AdminLoginPath;
         options.AccessDeniedPath = AppRoutes.AdminLoginPath;
         options.Cookie.HttpOnly = true;
-        options.Cookie.Name = "PromptToMars.Admin";
+        options.Cookie.Name = "PrompToMars.Admin";
         options.Cookie.SameSite = SameSiteMode.Strict;
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
             ? CookieSecurePolicy.SameAsRequest
@@ -432,6 +432,17 @@ app.MapMethods("/sitemap.xml", ["GET", "HEAD"], (HttpContext context) =>
     return Results.Text(index.ToString(), "application/xml; charset=utf-8");
 }).RequireRateLimiting("seo-assets");
 
+app.MapMethods("/robots.txt", ["GET", "HEAD"], (HttpContext context) =>
+{
+    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host.Value}".TrimEnd('/');
+    var robots = BuildRobotsTxt(baseUrl);
+
+    ApplyPublicCacheHeaders(context, TimeSpan.FromHours(12));
+    return Results.Text(robots, "text/plain; charset=utf-8");
+}).RequireRateLimiting("seo-assets");
+
+app.MapMethods("/robot.txt", ["GET", "HEAD"], () => Results.Redirect("/robots.txt", permanent: true));
+
 app.MapMethods("/sitemaps/core.xml", ["GET", "HEAD"], (HttpContext context) =>
 {
     var baseUrl = $"{context.Request.Scheme}://{context.Request.Host.Value}".TrimEnd('/');
@@ -579,7 +590,7 @@ app.MapGet("/embed/prompt/{slug}", async (string slug, IPresetService presetServ
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow" />
-  <title>__TITLE__ · PromptToMars</title>
+  <title>__TITLE__ · PrompToMars</title>
   <style>
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0f172a;color:#e5e7eb;}
     .card{max-width:720px;margin:0 auto;padding:20px;border:1px solid rgba(148,163,184,.18);border-radius:20px;background:rgba(15,23,42,.92);}
@@ -595,7 +606,7 @@ app.MapGet("/embed/prompt/{slug}", async (string slug, IPresetService presetServ
 </head>
 <body>
   <div class="card">
-    <span class="badge">PromptToMars</span>
+    <span class="badge">PrompToMars</span>
     <h1>__TITLE__</h1>
     <p>__DESCRIPTION__</p>
     <div class="actions">
@@ -707,12 +718,12 @@ app.MapGet("/collections/{slug}", async (string slug, IPresetService presetServi
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
   <link rel="canonical" href="__CANONICAL__" />
-  <title>__TITLE__ · PromptToMars</title>
+  <title>__TITLE__ · PrompToMars</title>
   <meta name="description" content="__DESCRIPTION__" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="__TITLE__" />
   <meta property="og:description" content="__DESCRIPTION__" />
-  <meta property="og:site_name" content="PromptToMars" />
+  <meta property="og:site_name" content="PrompToMars" />
   <meta property="og:url" content="__CANONICAL__" />
   <meta name="twitter:card" content="summary_large_image" />
   <style>
@@ -730,7 +741,7 @@ app.MapGet("/collections/{slug}", async (string slug, IPresetService presetServi
 <body>
   <div class="wrap">
     <section class="hero">
-      <span class="chip">PromptToMars Collection</span>
+      <span class="chip">PrompToMars Collection</span>
       <h1>__TITLE__</h1>
       <p class="muted">__DESCRIPTION__</p>
       <div class="actions">
@@ -941,6 +952,61 @@ static bool IsInfrastructurePath(string path)
            || normalized.StartsWith("/culture/", StringComparison.Ordinal)
            || normalized.StartsWith("/sitemap", StringComparison.Ordinal)
            || normalized is "/robots.txt" or "/llms.txt" or "/ai.txt";
+}
+
+static string BuildRobotsTxt(string baseUrl)
+{
+    var sitemapPaths = new[]
+    {
+        "/sitemap.xml",
+        "/sitemaps/core.xml",
+        "/sitemaps/landingpages.xml",
+        "/sitemaps/prompts.xml",
+        "/sitemaps/categories.xml",
+        "/sitemaps/collections.xml"
+    };
+
+    var allowAllAgent = new List<string>
+    {
+        "User-agent: *",
+        "Disallow: /de/history",
+        "Disallow: /en/history",
+        "Disallow: /history",
+        "Disallow: /de/favorites",
+        "Disallow: /en/favorites",
+        "Disallow: /favorites",
+        "Disallow: /health",
+        "Disallow: /monitor",
+        "Disallow: /rum",
+        "Disallow: /analytics",
+        "Disallow: /admin",
+        "Disallow: /culture/",
+        "Allow: /",
+    };
+
+    allowAllAgent.AddRange(sitemapPaths.Select(path => $"Sitemap: {baseUrl}{path}"));
+    allowAllAgent.Add(string.Empty);
+    allowAllAgent.AddRange(new[]
+    {
+        "User-agent: Bingbot",
+        "Disallow: /de/history",
+        "Disallow: /en/history",
+        "Disallow: /history",
+        "Disallow: /de/favorites",
+        "Disallow: /en/favorites",
+        "Disallow: /favorites",
+        "Disallow: /health",
+        "Disallow: /monitor",
+        "Disallow: /rum",
+        "Disallow: /analytics",
+        "Disallow: /admin",
+        "Disallow: /culture/",
+        "Allow: /",
+    });
+
+    allowAllAgent.AddRange(sitemapPaths.Select(path => $"Sitemap: {baseUrl}{path}"));
+
+    return string.Join(Environment.NewLine, allowAllAgent);
 }
 
 static string GetRateLimitKey(HttpContext context)

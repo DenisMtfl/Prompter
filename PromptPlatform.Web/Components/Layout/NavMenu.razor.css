@@ -62,10 +62,15 @@
 
 .app-navbar .navbar-toggler {
     border-color: var(--app-border-soft);
+    background: color-mix(in srgb, var(--app-surface) 72%, transparent);
+}
+
+.app-navbar .navbar {
+    --bs-navbar-toggler-icon-bg: var(--app-navbar-toggler-icon-bg);
 }
 
 .app-navbar .navbar-toggler-icon {
-    filter: var(--app-navbar-toggler-filter);
+    background-image: var(--app-navbar-toggler-icon-bg);
 }
 
 @media (max-width: 991.98px) {

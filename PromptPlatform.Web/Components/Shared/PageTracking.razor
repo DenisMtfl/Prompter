@@ -1,0 +1,45 @@
+@implements IDisposable
+@inject IJSRuntime JsRuntime
+@inject NavigationManager Navigation
+
+@code {
+    private bool _pendingPageTracking = true;
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_pendingPageTracking)
+        {
+            return;
+        }
+
+        _pendingPageTracking = false;
+
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("promptGrowth.trackPage");
+        }
+        catch (InvalidOperationException)
+        {
+            _pendingPageTracking = true;
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _pendingPageTracking = true;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

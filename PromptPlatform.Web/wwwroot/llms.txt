@@ -1,6 +1,6 @@
-# PromptToMars
+# PrompToMars
 
-> PromptToMars is a bilingual prompt platform (German/English) with generator, optimizer, preset library, and topic landing pages.
+> PrompToMars is a bilingual prompt platform (German/English) with generator, optimizer, preset library, and topic landing pages.
 
 ## Primary entry points
 - /de

@@ -29,18 +29,18 @@
         : "en";
 
     private bool IsGerman => CurrentLanguage == "de";
-    private string PageTitle => IsGerman ? "Bildlizenzen und Nutzungsrechte | PromptToMars" : "Image licenses and usage rights | PromptToMars";
+    private string PageTitle => IsGerman ? "Bildlizenzen und Nutzungsrechte | PrompToMars" : "Image licenses and usage rights | PrompToMars";
     private string MetaDescription => IsGerman
-        ? "Informationen zu Bildnutzung, Credits und Lizenzen bei PromptToMars."
-        : "Information about image usage, credits, and licensing on PromptToMars.";
+        ? "Informationen zu Bildnutzung, Credits und Lizenzen bei PrompToMars."
+        : "Information about image usage, credits, and licensing on PrompToMars.";
     private string Heading => IsGerman ? "Bildlizenzen" : "Image licensing";
     private string Intro => IsGerman
-        ? "Die auf PromptToMars verwendeten Marken- und Produktbilder stehen unter den hier beschriebenen Nutzungsbedingungen."
-        : "Brand and product images used on PromptToMars are subject to the usage terms described here.";
+        ? "Die auf PrompToMars verwendeten Marken- und Produktbilder stehen unter den hier beschriebenen Nutzungsbedingungen."
+        : "Brand and product images used on PrompToMars are subject to the usage terms described here.";
     private string AcquireTitle => IsGerman ? "Lizenz erwerben" : "Acquire a license";
     private string AcquireText => IsGerman
-        ? "Für individuelle Nutzungsrechte oder erweiterte Lizenzfragen kontaktiere bitte das PromptToMars-Team."
-        : "For individual usage rights or extended license requests, contact the PromptToMars team.";
+        ? "Für individuelle Nutzungsrechte oder erweiterte Lizenzfragen kontaktiere bitte das PrompToMars-Team."
+        : "For individual usage rights or extended license requests, contact the PrompToMars team.";
 
     private string CanonicalUrl => ToAbsolute(AppRoutes.LicensePathForCulture(CurrentLanguage));
     private string GermanUrl => ToAbsolute(AppRoutes.LicensePathForCulture("de"));

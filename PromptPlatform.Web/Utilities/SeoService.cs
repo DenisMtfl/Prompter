@@ -5,15 +5,15 @@ namespace PromptPlatform.Web.Utilities;
 public static class SeoService
 {
     public static string BuildPromptTitle(PromptPreset preset, string culture)
-        => $"{preset.GetTitle(culture)} | PromptToMars";
+        => $"{preset.GetTitle(culture)} | PrompToMars";
 
     public static string BuildPromptDescription(PromptPreset preset, string culture)
         => preset.GetDescription(culture);
 
     public static string BuildCategoryTitle(string title, string culture)
         => culture.Equals("de", StringComparison.OrdinalIgnoreCase)
-            ? $"Beste KI Prompts für {title} | PromptToMars"
-            : $"Best ChatGPT Prompts for {title} | PromptToMars";
+            ? $"Beste KI Prompts für {title} | PrompToMars"
+            : $"Best ChatGPT Prompts for {title} | PrompToMars";
 
     public static string BuildCategoryDescription(string title, string culture)
         => culture.Equals("de", StringComparison.OrdinalIgnoreCase)

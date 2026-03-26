@@ -10,13 +10,13 @@
 
 <PageTitle>@HomeTitle</PageTitle>
 <HeadContent>
-    <meta name="application-name" content="PromptToMars" />
+    <meta name="application-name" content="PrompToMars" />
     <meta name="description" content="@HomeMetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="@HomeTitle" />
     <meta property="og:description" content="@HomeMetaDescription" />
-    <meta property="og:site_name" content="PromptToMars" />
+    <meta property="og:site_name" content="PrompToMars" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
@@ -38,7 +38,7 @@
             <div class="col-lg-8">
                 <div class="hero-brand-stack mb-2">
                     <span class="badge text-bg-primary awesome-kicker">@L["Landing_HeroBadge"]</span>
-                    <div class="hero-wordmark">PromptToMars</div>
+                    <div class="hero-wordmark">PrompToMars</div>
                 </div>
                 <p class="awesome-tagline mb-1">@HeroSlogan</p>
                 <p class="hero-catchline mb-3">@HeroCatchline</p>
@@ -62,7 +62,7 @@
             </div>
             <div class="col-lg-4">
                 <div class="hero-logo-panel mb-3">
-                    <img src="/images/PromptToMars-logo.png" alt="@HeroLogoAlt" class="hero-logo-transparent" loading="eager" decoding="async" />
+                    <img src="/images/PrompToMars-logo.png" alt="@HeroLogoAlt" class="hero-logo-transparent" loading="eager" decoding="async" />
                 </div>
                 <div class="card shadow-sm border-0 h-100 hero-facts-card awesome-facts-card">
                     <div class="card-body">
@@ -291,39 +291,49 @@
         ? (IsGerman ? "Jetzt Prompt erstellen" : "Create prompt now")
         : L["Landing_CtaPrimary"];
     private string HeroSlogan => IsGerman
-        ? "Von der Idee bis zur Wirkung — PromptToMars bringt deine Prompts auf ein neues Level."
-        : "From first idea to real impact — PromptToMars takes your prompts to the next level.";
+        ? "Von der Idee bis zur Wirkung — PrompToMars bringt deine Prompts auf ein neues Level."
+        : "From first idea to real impact — PrompToMars takes your prompts to the next level.";
     private string HeroCatchline => IsGerman
         ? "Schneller. Präziser. Unvergesslich bessere Prompts."
         : "Faster. Sharper. Unforgettable prompts.";
-    private string HeroLogoAlt => IsGerman ? "PromptToMars Logo als Hero-Visual" : "PromptToMars logo as hero visual";
+    private string HeroLogoAlt => IsGerman ? "PrompToMars Logo als Hero-Visual" : "PrompToMars logo as hero visual";
 
     private string HomeTitle => IsGerman
-        ? "KI Prompt Generator, Prompt Optimizer, Prompt-Vorlagen & Shareable Prompts | PromptToMars"
-        : "AI Prompt Generator, Prompt Optimizer, Prompt Templates & Shareable Prompts | PromptToMars";
+        ? "KI Prompt Generator, Optimizer & Vorlagen | PrompToMars"
+        : "AI Prompt Generator, Optimizer & Templates | PrompToMars";
     private string HomeMetaDescription => IsGerman
-        ? "PromptToMars ist eine Plattform für KI Prompt Generator, Prompt Optimizer, Prompt-Vorlagen, teilbare Prompt-Links, Presets, Prompt Engineering und SEO-Landingpages. Erstelle bessere ChatGPT-Prompts und skaliere deine Themencluster effizient."
-        : "PromptToMars is a platform for an AI prompt generator, prompt optimizer, prompt templates, shareable prompt links, presets, prompt engineering, and SEO landing pages. Create better ChatGPT prompts and scale your topic clusters efficiently.";
+        ? "PrompToMars hilft dir, KI-Prompts mit Vorlagen, Presets, SEO-Landingpages und einem schnellen zweisprachigen Workflow zu erstellen und zu teilen."
+        : "PrompToMars helps you create, refine, and share AI prompts with templates, presets, SEO landing pages, and a fast bilingual workflow.";
     private int TotalPresetCount { get; set; }
     private string HeroPresetCountLabel => IsGerman
         ? $"{TotalPresetCount.ToString("N0", CultureInfo.CurrentCulture)} Presets verfügbar"
         : $"{TotalPresetCount.ToString("N0", CultureInfo.CurrentCulture)} presets available";
-    private string CanonicalUrl => ToAbsolute(IsGerman ? "/de" : "/en");
+    private string CanonicalUrl => ToAbsolute(GetCurrentPath());
     private string GermanHomeUrl => ToAbsolute("/de");
     private string EnglishHomeUrl => ToAbsolute("/en");
     private string LicenseUrl => ToAbsolute(AppRoutes.LicensePathForCulture(CurrentLanguage));
     private string AcquireLicenseUrl => $"{LicenseUrl}#acquire";
     private string SiteImageUrl => ToAbsolute("/favicon.png");
+
+    private string GetCurrentPath()
+    {
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var path = string.IsNullOrWhiteSpace(relativePath)
+            ? "/"
+            : "/" + relativePath.Split('?', '#')[0].Trim('/');
+
+        return path.ToLowerInvariant();
+    }
     private string ImageMetadataJsonLd => JsonSerializer.Serialize(new
     {
         @context = "https://schema.org",
         @type = "ImageObject",
         contentUrl = SiteImageUrl,
         url = SiteImageUrl,
-        creditText = "PromptToMars",
+        creditText = "PrompToMars",
         acquireLicensePage = AcquireLicenseUrl,
         license = LicenseUrl,
-        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptToMars"
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PrompToMars"
     });
     private string HomeJsonLd => JsonSerializer.Serialize(new
     {
@@ -333,26 +343,26 @@
             new
             {
                 @type = "Organization",
-                name = "PromptToMars",
+                name = "PrompToMars",
                 url = ToAbsolute("/"),
                 sameAs = Array.Empty<string>()
             },
             new
             {
                 @type = "WebSite",
-                name = "PromptToMars",
+                name = "PrompToMars",
                 url = ToAbsolute("/"),
                 inLanguage = new[] { "de", "en" },
                 publisher = new
                 {
                     @type = "Organization",
-                    name = "PromptToMars"
+                    name = "PrompToMars"
                 }
             },
             new
             {
                 @type = "SoftwareApplication",
-                name = "PromptToMars",
+                name = "PrompToMars",
                 applicationCategory = "BusinessApplication",
                 operatingSystem = "Web",
                 offers = new { @type = "Offer", price = "0", priceCurrency = "USD" },

@@ -13,13 +13,13 @@
 
 <PageTitle>@OptimizerPageTitle</PageTitle>
 <HeadContent>
-    <meta name="application-name" content="PromptToMars" />
+    <meta name="application-name" content="PrompToMars" />
     <meta name="description" content="@OptimizerMetaDescription" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="@OptimizerPageTitle" />
     <meta property="og:description" content="@OptimizerMetaDescription" />
-    <meta property="og:site_name" content="PromptToMars" />
+    <meta property="og:site_name" content="PrompToMars" />
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:locale" content="@(IsGerman ? "de_DE" : "en_US")" />
     <meta property="og:locale:alternate" content="@(IsGerman ? "en_US" : "de_DE")" />
@@ -38,7 +38,7 @@
 
 <nav class="mb-3" aria-label="breadcrumb">
     <ol class="breadcrumb small mb-0">
-        <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PromptToMars</a></li>
+        <li class="breadcrumb-item"><a href="@AppRoutes.HomePathForCulture(CurrentLanguage)">PrompToMars</a></li>
         <li class="breadcrumb-item active" aria-current="page">@OptimizerPageTitle</li>
     </ol>
 </nav>
@@ -229,8 +229,8 @@
     private string ContextPresetsCta => IsGerman ? "Preset-Bibliothek" : "Preset library";
     private string ContextGeneratorCta => IsGerman ? "Zum Generator" : "Open generator";
     private string OptimizerPageTitle => IsGerman
-        ? "Prompt Optimizer für KI-Prompts, Vorlagen & Shareable Prompts | PromptToMars"
-        : "Prompt Optimizer for AI Prompts, Templates & Shareable Prompts | PromptToMars";
+        ? "Prompt Optimizer für KI-Prompts, Vorlagen & Shareable Prompts | PrompToMars"
+        : "Prompt Optimizer for AI Prompts, Templates & Shareable Prompts | PrompToMars";
     private string OptimizerBenefitsTitle => IsGerman ? "Warum der Prompt Optimizer nützlich ist" : "Why the prompt optimizer is useful";
     private string OptimizerBenefitsIntro => IsGerman
         ? "Die Seite ergänzt dünne Ausgangsprompts um klarere Ziele, robusterer Struktur und kontextgerechte Qualitätsregeln."
@@ -286,10 +286,10 @@
         @type = "ImageObject",
         contentUrl = SiteImageUrl,
         url = SiteImageUrl,
-        creditText = "PromptToMars",
+        creditText = "PrompToMars",
         acquireLicensePage = AcquireLicenseUrl,
         license = LicenseUrl,
-        copyrightNotice = $"© {DateTime.UtcNow.Year} PromptToMars"
+        copyrightNotice = $"© {DateTime.UtcNow.Year} PrompToMars"
     });
     private IReadOnlyList<SeoLandingPageLinkViewModel> OptimizerContextPages
         => SeoLandingPageService.GetGeneratorContextPages(CurrentLanguage, MapContextToMainCategory(Request.Context), maxItems: 4);
@@ -309,7 +309,7 @@
             new
             {
                 @type = "WebApplication",
-                name = "PromptToMars Optimizer",
+                name = "PrompToMars Optimizer",
                 applicationCategory = "BusinessApplication",
                 operatingSystem = "Web",
                 url = CanonicalUrl,
@@ -323,7 +323,7 @@
         @type = "BreadcrumbList",
         itemListElement = new object[]
         {
-            new { @type = "ListItem", position = 1, name = "PromptToMars", item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage)) },
+            new { @type = "ListItem", position = 1, name = "PrompToMars", item = ToAbsolute(AppRoutes.HomePathForCulture(CurrentLanguage)) },
             new { @type = "ListItem", position = 2, name = OptimizerPageTitle, item = CanonicalUrl }
         }
     });

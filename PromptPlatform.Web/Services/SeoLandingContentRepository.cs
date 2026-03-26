@@ -463,8 +463,8 @@ public sealed class SeoLandingContentRepository : ISeoLandingContentRepository
                     SlugDe = slugDe,
                     SlugEn = slugEn,
                     MetaTitle = Txt(
-                        $"{theme.NameDe}: {variant.MetaTailDe} | PromptToMars",
-                        $"{theme.NameEn}: {variant.MetaTailEn} | PromptToMars"),
+                        $"{theme.NameDe}: {variant.MetaTailDe} | PrompToMars",
+                        $"{theme.NameEn}: {variant.MetaTailEn} | PrompToMars"),
                     MetaDescription = Txt(
                         $"{theme.IntroDe} {variant.IntroTailDe} Mit Presets, Beispielen und direktem Einstieg in den Prompt Generator.",
                         $"{theme.IntroEn} {variant.IntroTailEn} Includes presets, examples, and direct access to the prompt generator."),

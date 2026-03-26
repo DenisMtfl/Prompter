@@ -17,17 +17,17 @@
   <data name="Theme_Light" xml:space="preserve"><value>Hell</value></data>
   <data name="Theme_Dark" xml:space="preserve"><value>Dunkel</value></data>
 
-  <data name="Footer_Copyright" xml:space="preserve"><value>© {0} PromptToMars</value></data>
+  <data name="Footer_Copyright" xml:space="preserve"><value>© {0} PrompToMars</value></data>
   <data name="Footer_Tagline" xml:space="preserve"><value>Skalierbare mehrsprachige Plattform für hochwertige AI-Prompts.</value></data>
 
-  <data name="PageTitle_Landing" xml:space="preserve"><value>PromptToMars - Landingpage</value></data>
-  <data name="PageTitle_Generator" xml:space="preserve"><value>PromptToMars - Generator</value></data>
-  <data name="PageTitle_Optimizer" xml:space="preserve"><value>PromptToMars - Optimizer</value></data>
-  <data name="PageTitle_Presets" xml:space="preserve"><value>PromptToMars - Presets</value></data>
-  <data name="PageTitle_History" xml:space="preserve"><value>PromptToMars - Verlauf</value></data>
-  <data name="PageTitle_Favorites" xml:space="preserve"><value>PromptToMars - Favoriten</value></data>
-  <data name="PageTitle_NotFound" xml:space="preserve"><value>PromptToMars - Nicht gefunden</value></data>
-  <data name="PageTitle_Error" xml:space="preserve"><value>PromptToMars - Fehler</value></data>
+  <data name="PageTitle_Landing" xml:space="preserve"><value>PrompToMars - Landingpage</value></data>
+  <data name="PageTitle_Generator" xml:space="preserve"><value>PrompToMars - Generator</value></data>
+  <data name="PageTitle_Optimizer" xml:space="preserve"><value>PrompToMars - Optimizer</value></data>
+  <data name="PageTitle_Presets" xml:space="preserve"><value>PrompToMars - Presets</value></data>
+  <data name="PageTitle_History" xml:space="preserve"><value>PrompToMars - Verlauf</value></data>
+  <data name="PageTitle_Favorites" xml:space="preserve"><value>PrompToMars - Favoriten</value></data>
+  <data name="PageTitle_NotFound" xml:space="preserve"><value>PrompToMars - Nicht gefunden</value></data>
+  <data name="PageTitle_Error" xml:space="preserve"><value>PrompToMars - Fehler</value></data>
 
   <data name="Action_Copy" xml:space="preserve"><value>Kopieren</value></data>
   <data name="Action_Delete" xml:space="preserve"><value>Löschen</value></data>
@@ -62,7 +62,7 @@
   <data name="Landing_CtaPrimary" xml:space="preserve"><value>Prompt Generator starten</value></data>
   <data name="Landing_CtaSecondary" xml:space="preserve"><value>Presets entdecken</value></data>
 
-  <data name="Landing_QuickFacts_Title" xml:space="preserve"><value>Warum Teams PromptToMars nutzen</value></data>
+  <data name="Landing_QuickFacts_Title" xml:space="preserve"><value>Warum Teams PrompToMars nutzen</value></data>
   <data name="Landing_QuickFacts_Item1" xml:space="preserve"><value>Strukturierte Prompt-Workflows für viele Domänen</value></data>
   <data name="Landing_QuickFacts_Item2" xml:space="preserve"><value>Integrierte Optimierung mit Qualitätsscore</value></data>
   <data name="Landing_QuickFacts_Item3" xml:space="preserve"><value>Wiederverwendbare Presets und sofort einsetzbare Workflows</value></data>
